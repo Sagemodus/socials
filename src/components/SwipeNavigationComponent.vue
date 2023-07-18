@@ -11,6 +11,7 @@
   <script>
   import { ref, reactive } from 'vue';
   import Hammer from 'hammerjs';
+  import { iconColor } from './farben'
   
   export default {
     name: 'SwipeNavigation',
@@ -46,7 +47,7 @@
         switchToTabByIndex(currentIndex - 1);
       };
   
-      return { activeTab, nextTab, previousTab, switchTab, tabs };
+      return { activeTab, nextTab, previousTab, switchTab, tabs, iconColor };
     },
     mounted() {
   const el = document;
@@ -54,6 +55,7 @@
   hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
   hammer.on('swiperight', this.previousTab);
   hammer.on('swipeleft', this.nextTab);
+  document.documentElement.style.setProperty('--iconColor', this.iconColor);
 }
 ,
   };
@@ -86,14 +88,14 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: blue;
+  background-color: var(--iconColor);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s ease;
 }
 
 .tab.active {
-  color: blue;
+  color: var(--iconColor);
 }
 
 .tab.active::after {

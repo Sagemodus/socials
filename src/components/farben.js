@@ -1,1 +1,1 @@
-export const iconColor = 'orange'; // Hexadezimal-Notation für Rot (#FF0000)
+export const iconColor = 'green'; // Hexadezimal-Notation für Rot (#FF0000)

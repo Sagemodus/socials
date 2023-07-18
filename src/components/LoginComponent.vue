@@ -22,32 +22,43 @@
 </template>
 
 <script>
+import firebase from 'firebase/app';
+import 'firebase/auth';
+
 export default {
   data() {
     return {
-      username: '',
-      password: '',
-      email:''
+      email: '',
+      password: ''
     };
   },
   methods: {
-    login(event) {
+    async login(event) {
       event.preventDefault();
 
-      // Perform login logic here
-      // You can make an API call or use any authentication mechanism
-
-      // Example code to simulate a successful login
-      if (this.username === 'admin' && this.password === 'password') {
+      try {
+        const { user } = await firebase.auth().signInWithEmailAndPassword(this.email, this.password);
+        console.log('Login successful:', user);
         alert('Login successful');
-      } else {
-        alert('Invalid username or password');
+        // Perform any additional actions or routing here after successful login
+      } catch (error) {
+        console.error('Login error:', error);
+        alert('Invalid email or password');
       }
 
       // Reset the form fields
-      this.username = '';
+      this.email = '';
       this.password = '';
     }
+  },
+  mounted() {
+    // Initialize Firebase
+    const firebaseConfig = {
+      // Add your Firebase project configuration here
+    };
+
+    // Initialize Firebase app
+    firebase.initializeApp(firebaseConfig);
   }
 };
 </script>

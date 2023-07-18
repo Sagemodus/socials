@@ -23,6 +23,11 @@ const routes = [
     name: 'login', 
     component: () => import('../views/LoginView.vue')
   },
+  {
+    path: '/register',
+    name: 'register',
+    component: () => import('../views/Register_view.vue')
+  },
 //Navbar einbindung
   //{ path: '/', component: Home_view },
   //{ path: '/search', component: Search_view },

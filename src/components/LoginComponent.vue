@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import firebase from 'firebase/app';
+import { signInWithEmailAndPassword,getAuth } from 'firebase/auth'
 import 'firebase/auth';
 
 export default {
@@ -33,32 +33,41 @@ export default {
     };
   },
   methods: {
-    async login(event) {
-      event.preventDefault();
-
-      try {
-        const { user } = await firebase.auth().signInWithEmailAndPassword(this.email, this.password);
-        console.log('Login successful:', user);
-        alert('Login successful');
-        // Perform any additional actions or routing here after successful login
-      } catch (error) {
-        console.error('Login error:', error);
-        alert('Invalid email or password');
-      }
-
-      // Reset the form fields
-      this.email = '';
-      this.password = '';
+    login() {
+      try{
+      // login user
+      if(this.email=="" || this.password=="")
+        {
+        alert("Please fill out the fields");
+        return
+        }
+      signInWithEmailAndPassword(getAuth(),this.email,this.password)
+      .then(() => {
+        console.log("Successfully signed in!");
+        this.router.push('/feed')
+        this.$emit('loggedIn')
+      })
+      .catch((error) => {
+    console.log(error.code);
+    switch(error.code) {
+        case "auth/invalid-email":
+            this.errMsg.value = "The Email that was provided either doesnt exist or is wrong"
+            break;
+        case "auth/user-not-found":
+            this.errMsg.value = "No account with that email was found";
+            break;
+        case "auth/wrong-password":
+            this.errMsg.value = "The password you provided is not correct"
+            break;
+        default:
+            this.errMsg.value = "Email or password was incorrect";
+            break;
     }
-  },
-  mounted() {
-    // Initialize Firebase
-    const firebaseConfig = {
-      // Add your Firebase project configuration here
-    };
-
-    // Initialize Firebase app
-    firebase.initializeApp(firebaseConfig);
+})
+      }catch(error){
+        console.error(error);
+      }
+    },
   }
 };
 </script>

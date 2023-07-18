@@ -15,8 +15,9 @@
     "@fortawesome/vue-fontawesome": "^3.0.3",
     "core-js": "^3.8.3",
     "firebase": "^10.0.0",
+    "hammerjs": "^2.0.8",
     "vue": "^3.2.13",
-    "vue-router": "^4.0.3"
+    "vue-router": "^4.2.4"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",

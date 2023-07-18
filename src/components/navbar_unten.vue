@@ -1,6 +1,6 @@
 <template>
   <div class="nav-bar">
-    <router-link to="/" :class="{ 'selected': $route.path === '/' }" :style="{ color: $route.path === '/' ? 'black' : iconColor }" class="nav-link">
+    <router-link to="/feed" :class="{ 'selected': $route.path === '/feed' }" :style="{ color: $route.path === '/feed' ? 'black' : iconColor }" class="nav-link">
       <font-awesome-icon :icon="['fas', 'home']" class="icon"/>
     </router-link>
     <router-link to="/search" :class="{ 'selected': $route.path === '/search' }" :style="{ color: $route.path === '/search' ? 'black' : iconColor }" class="nav-link">

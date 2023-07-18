@@ -53,8 +53,12 @@
         uName: "",
         TelNumber: "",
         dob: "",
-        router: useRouter()
+        router: null
       }
+    },
+  
+    mounted() {
+      this.router = useRouter();
     },
   
     methods: {
@@ -85,21 +89,27 @@
               coins: 0,
               multiplier: 1,
               activeBet: {}
-
             };
             updateProfile(userAuth, {
-            displayName: this.uName})
-            .then(() => {
-            console.log("User profile updated!");
+              displayName: this.uName
             })
-            .catch((error) => {
-            console.log(error.code);
-            alert(error.message);
-            });
+              .then(() => {
+                console.log("User profile updated!");
+              })
+              .catch((error) => {
+                console.log(error.code);
+                alert(error.message);
+              });
   
-            const docRef = addDoc(colRef, user);
-            console.log('Document was created with following ID:', docRef.id)
-            this.router.push('/feed')
+            addDoc(colRef, user)
+              .then((docRef) => {
+                console.log('Document was created with following ID:', docRef.id)
+                this.router.push('/feed');
+              })
+              .catch((error) => {
+                console.log(error.code);
+                alert(error.message);
+              });
           })
           .catch((error) => {
             console.log(error.code);
@@ -109,6 +119,7 @@
     }
   }
   </script>
+  
   <style>
   .login-container {
     display: flex;

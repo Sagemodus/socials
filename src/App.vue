@@ -1,17 +1,9 @@
 <template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link> |
-    <router-link to="/login">login</router-link>
-  </nav>
-  <router-view/>
-  <div class="container">
-    <div class="content">
-      <!-- Hier kannst du den restlichen Inhalt deiner View hinzufügen -->
-    </div>
 
-    <navbar class="navbar-fixed"/>
-  </div>
+  <router-view/>
+
+  <navbar class="navbar-fixed"/>
+ 
 </template>
 
 
@@ -24,7 +16,6 @@ export default {
   }
 }
 </script>
-
 
 <style>
 #app {
@@ -55,7 +46,5 @@ nav a.router-link-exact-active {
   width: 100%;  /* volle Breite */
   z-index: 999; /* Damit die Navbar über anderen Elementen liegt */
 }
-.container {
-  height: 999px;
-}
+
 </style>

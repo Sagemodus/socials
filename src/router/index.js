@@ -1,6 +1,4 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
-
-
 import FeedView from '../views/FeedView.vue';
 import Search_view from '../views/Search_view.vue';
 import Notifications_view from '../views/Notifications_view.vue';
@@ -21,6 +19,7 @@ const routes = [
     component: FeedView
   },
   {
+
     path: '/search',
     component: Search_view
   },

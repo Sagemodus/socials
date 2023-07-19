@@ -1,12 +1,14 @@
 <template>
-    <div class="navigation">
-      <div class="tabs">
+  <div class="navigation">
+    <div class="tabs" ref="tabsContainer">
+      <div class="tabs-inner">
         <div v-for="tab in tabs" :key="tab.path" class="tab" @click="switchTab(tab.path)" :class="{ active: activeTab === tab.path }">
           {{ tab.name }}
         </div>
       </div>
     </div>
-  </template>
+  </div>
+</template>
   
   <script>
   import { ref, reactive } from 'vue';
@@ -64,10 +66,17 @@
 <style scoped>
 .tabs {
   display: flex;
-  justify-content: center;
-  gap: 20px;
+  justify-content: center; /* Center the tabs horizontally */
+  overflow-x: auto;
   padding: 10px;
   background: #ffffff;
+}
+
+.tabs-inner {
+  display: flex;
+  gap: 20px;
+  min-width: 100%;
+  justify-content:space-evenly; /* Ensure equal spacing between tabs */
 }
 
 .tab {
@@ -75,7 +84,7 @@
   font-size: 16px;
   color: #333;
   text-align: center;
-  flex-grow: 1;
+  flex-shrink: 0;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
@@ -101,4 +110,6 @@
 .tab.active::after {
   transform: scaleX(1);
 }
+
+
 </style>

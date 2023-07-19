@@ -1,7 +1,15 @@
 <template>
-    <div>
-      <h1>Public Component</h1>
-      <!-- Hier kommt der Inhalt Ihrer Public-Komponente hin -->
+  <div>
+    <h1>public</h1>
+    <!-- Hier zeigen Sie die Suchergebnisse an -->
+    <div v-for="result in searchResults" :key="result.id">
+      <!-- Display your search results here -->
     </div>
-  </template>
-  
+  </div>
+</template>
+
+<script>
+export default {
+  props: ['searchResults']
+};
+</script>

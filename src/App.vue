@@ -1,10 +1,15 @@
-<template>
 
+<template>
   <router-view/>
 
-  <navbar class="navbar-fixed"/>
- 
+<navbar class="navbar-fixed"/>
+
+
 </template>
+
+
+
+
 
 
 <script>

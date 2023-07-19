@@ -1,3 +1,4 @@
+
 <template>
   <nav>
     <router-link to="/">Home</router-link> |
@@ -5,11 +6,17 @@
     <router-link to="/login">login</router-link> |
     <router-link to="/register">Register</router-link>
   </nav>
+
   <router-view/>
 
-  <navbar class="navbar-fixed"/>
- 
+<navbar class="navbar-fixed"/>
+
+
 </template>
+
+
+
+
 
 
 <script>
@@ -31,18 +38,9 @@ export default {
   color: #2c3e50;
 }
 
-nav {
-  padding: 30px;
-}
 
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
 
-nav a.router-link-exact-active {
-  color: #42b983;
-}
+
 
 .navbar-fixed {
   position: fixed;

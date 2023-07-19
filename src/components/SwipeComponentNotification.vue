@@ -13,26 +13,24 @@
 <script>
 import { ref, reactive, onMounted } from 'vue';
 import Hammer from 'hammerjs';
-import { iconColor } from './farben'
+import { iconColor } from '../components/farben';
 
 export default {
-  name: 'SwipeNavigation',
+  name: 'SwipeComponentNotification',
   props: ['onTabSwitch'],
   data() {
     return {
       iconColor
-    }
+    };
   },
   setup(props) {
     const tabs = reactive([
-      { name: 'Popular', path: '/popular' },
-      { name: 'Recent', path: '/recent' },
-      { name: 'People', path: '/people' },
-      { name: 'Conversation', path: '/conversation' },
+      { name: 'All', path: '/all' },
+      { name: 'Mentions', path: '/mentions' },
+      { name: 'Conversation', path: '/notification-conversation' },
     ]);
 
     const activeTab = ref(tabs[0].path);
-
     const tabIndexes = tabs.reduce((acc, tab, i) => ({ ...acc, [tab.path]: i }), {});
 
     const switchTab = (path) => {
@@ -117,20 +115,4 @@ export default {
   transform: scaleX(1);
 }
 
-@media (max-width: 480px) {
-  .tabs {
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    overflow-x: scroll;
-  }
-
-  .tabs-inner {
-    min-width: fit-content;
-    justify-content: flex-start;
-  }
-
-  .tab {
-    white-space: nowrap;
-  }
-}
 </style>

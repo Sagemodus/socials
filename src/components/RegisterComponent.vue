@@ -31,7 +31,7 @@
             <a href="/login">Already have an account?</a>
             <p><a href="#">Forgot your password?</a></p>
           </div>
-          <button type="submit">Login</button>
+          <button type="submit" @click="register">Login</button>
         </form>
       </div>
     </div>
@@ -47,14 +47,14 @@
   
   export default {
     data() {
-      return {
-        email: "",
-        password: "",
-        uName: "",
-        TelNumber: "",
-        dob: "",
-        router: null
-      }
+        return {
+    email: "",
+    password: "",
+    uName: "", // Add this line
+    TelNumber: "", // Add this line
+    dob: "", // Add this line
+    router: null
+  };
     },
   
     mounted() {

@@ -22,52 +22,58 @@
 </template>
 
 <script>
-import { signInWithEmailAndPassword,getAuth } from 'firebase/auth'
-import 'firebase/auth';
+import { signInWithEmailAndPassword, getAuth } from 'firebase/auth';
+// eslint-disable-next-line no-unused-vars
+import firebase from '@/firebase/init.js';
+
 
 export default {
   data() {
-    return {
-      email: '',
-      password: ''
-    };
-  },
+  return {
+    username: '',
+    password: '',
+    isConnected: false,
+    connectionStatus: '',
+    errorMsg: '', // Add this line to define the errorMsg property
+  };
+},
+
   methods: {
     login() {
-      try{
-      // login user
-      if(this.email=="" || this.password=="")
-        {
-        alert("Please fill out the fields");
-        return
-        }
-      signInWithEmailAndPassword(getAuth(),this.email,this.password)
-      .then(() => {
-        console.log("Successfully signed in!");
-        this.router.push('/feed')
-        this.$emit('loggedIn')
-      })
-      .catch((error) => {
-    console.log(error.code);
-    switch(error.code) {
-        case "auth/invalid-email":
-            this.errMsg.value = "The Email that was provided either doesnt exist or is wrong"
-            break;
-        case "auth/user-not-found":
-            this.errMsg.value = "No account with that email was found";
-            break;
-        case "auth/wrong-password":
-            this.errMsg.value = "The password you provided is not correct"
-            break;
-        default:
-            this.errMsg.value = "Email or password was incorrect";
-            break;
+  try {
+    // login user
+    if (this.username === "" || this.password === "") {
+      alert("Please fill out the fields");
+      return;
     }
+    signInWithEmailAndPassword(getAuth(), this.username, this.password) // Use this.username instead of this.email
+    .then(() => {
+      console.log("Successfully signed in!");
+      this.$router.push('/feed'); // Use this.$router.push instead of this.router.push
+      this.$emit('loggedIn');
+    })
+    .catch((error) => {
+  console.log(error.code);
+  switch (error.code) {
+    case "auth/invalid-email":
+      this.errorMsg = "The Email that was provided either doesn't exist or is wrong";
+      break;
+    case "auth/user-not-found":
+      this.errorMsg = "No account with that email was found";
+      break;
+    case "auth/wrong-password":
+      this.errorMsg = "The password you provided is not correct";
+      break;
+    default:
+      this.errorMsg = "Email or password was incorrect";
+      break;
+  }
 })
-      }catch(error){
-        console.error(error);
-      }
-    },
+  } catch (error) {
+    console.error(error);
+  }
+},
+
   }
 };
 </script>

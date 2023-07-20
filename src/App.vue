@@ -1,23 +1,9 @@
-
 <template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link> |
-    <router-link to="/login">login</router-link> |
-    <router-link to="/register">Register</router-link>
-  </nav>
-
-  <router-view/>
-
-<navbar class="navbar-fixed"/>
-
-
+  <div>
+    <router-view/>
+    <navbar class="navbar-fixed"/>
+  </div>
 </template>
-
-
-
-
-
 
 <script>
 import Navbar from './components/navbar_unten.vue'
@@ -29,25 +15,58 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss">
+@import url('https://fonts.googleapis.com/css2?family=Avenir:wght@400;700&display=swap');
+
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+  position: relative; /* Positionierung des App-Bereichs */
+  min-height: 100vh; /* Mindesthöhe des App-Bereichs */
 }
-
-
-
-
 
 .navbar-fixed {
-  position: fixed;
-  bottom: 0.5cm;  /* 1 cm Abstand vom unteren Rand */
-  right: 0;  /* Abstand von rechts auf 0 setzen */
-  width: 100%;  /* volle Breite */
-  z-index: 999; /* Damit die Navbar über anderen Elementen liegt */
+  position:fixed; /* Positionierung der Navbar */
+  bottom: 0; /* Am unteren Rand platzieren */
+  left: 0; /* Am linken Rand platzieren */
+  width: 100%;
+  z-index: 999;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
 }
 
+.navbar-fixed a {
+  color: #333333;
+  text-decoration: none;
+  margin-right: 1rem;
+}
+
+.navbar-fixed a:hover {
+  color: #ff0000;
+}
+
+.navbar-fixed .logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.navbar-fixed .menu {
+  display: flex;
+}
+
+.navbar-fixed .menu li {
+  list-style: none;
+  margin-right: 1rem;
+}
+
+.navbar-fixed .menu li:last-child {
+  margin-right: 0;
+}
 </style>

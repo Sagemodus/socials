@@ -43,8 +43,8 @@ export default {
       this.currentTab = path;
       this.performFiltering();
     },
-   // performSearch(searchText) {
-      // Führen Sie Ihre Suchlogik durch und aktualisieren Sie die ungefilterten searchResults basierend auf searchText
+   performSearch(searchText) {
+      //Führen Sie Ihre Suchlogik durch und aktualisieren Sie die ungefilterten searchResults basierend auf searchText
       // Beispiel:
       // Rufen Sie Ihre API auf und aktualisieren Sie searchResults mit den Suchergebnissen
     //  this.searchResults = ['result1', 'result2', 'result3']; // Beispielhaftes Update der ungefilterten Suchergebnisse
@@ -52,7 +52,7 @@ export default {
       // Aktualisieren Sie den aktuellen Tab und rufen Sie performFiltering auf, um die gefilterten Ergebnisse anzuzeigen
       //this.currentTab = '/popular'; // Setzen Sie den Tab auf "Popular" am Anfang
       //this.performFiltering();
-  //  },
+  },
     performFiltering() {
       // Führen Sie die Filterlogik basierend auf dem aktuellen Tab und den ungefilterten searchResults durch
       // Beispiel: Filtern oder sortieren Sie die searchResults basierend auf dem aktuellen Tab

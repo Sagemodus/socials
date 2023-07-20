@@ -44,7 +44,7 @@ export default {
       this.performFiltering();
     },
 
-   /* performSearch(searchText) {
+    performSearch(searchText) {
       // Führen Sie Ihre Suchlogik durch und aktualisieren Sie die ungefilterten searchResults basierend auf searchText
 
       // Beispiel:
@@ -55,11 +55,12 @@ export default {
 
       //this.currentTab = '/popular'; // Setzen Sie den Tab auf "Popular" am Anfang
       //this.performFiltering();
-  },
+  
 
       this.currentTab = '/popular'; // Setzen Sie den Tab auf "Popular" am Anfang
       this.performFiltering();
-    },*/
+    },
+    
 
     performFiltering() {
       // Führen Sie die Filterlogik basierend auf dem aktuellen Tab und den ungefilterten searchResults durch

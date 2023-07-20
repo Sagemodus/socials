@@ -1,18 +1,12 @@
 <template>
-  <div class="app">
-    <TopicBox
-      v-for="topic in topics"
-      :key="topic.id"
-      :image="topic.image"
-      :title="topic.title"
-      :text="topic.text"
-      :likes="topic.likes"
-    />
+  <div class="public-component">
+    <TopicBox v-for="topic in topics" :key="topic.id" :image="topic.image" :title="topic.title" :text="topic.text" :likes="topic.likes" />
   </div>
 </template>
 
 <script>
 import TopicBox from '../components/TopicBox.vue';
+import { fetchDataFromDatabase } from '../firebase/dataFetcher';
 
 export default {
   components: {
@@ -20,48 +14,28 @@ export default {
   },
   data() {
     return {
-      topics: [
-        {
-          id: 1,
-          image: '/pfad/zum/bild1.jpg',
-          title: 'Titel 1',
-          text: 'Text 1',
-          likes: {
-            '-4': 1, // Sehr linke Gruppe
-            '-3': 1, // Linke Gruppe
-            '-2': 1, // Leicht linke Gruppe
-            '-1': 1, // Zentrum-Links Gruppe
-            '1': 1,   // Zentrum-Rechts Gruppe
-            '2': 1,  // Leicht rechte Gruppe
-            '3': 1,  // Rechte Gruppe
-            '4': 1   // Sehr rechte Gruppe
-          }
-        },
-        {
-          id: 2,
-          image: '/pfad/zum/bild2.jpg',
-          title: 'Titel 2',
-          text: 'Text 2',
-          likes: {
-            '-4': 20, // Sehr linke Gruppe
-            '-3': 10, // Linke Gruppe
-            '-2': 15, // Leicht linke Gruppe
-            '-1': 30, // Zentrum-Links Gruppe
-            '1': 25,  // Zentrum-Rechts Gruppe
-            '2': 20,  // Leicht rechte Gruppe
-            '3': 10,  // Rechte Gruppe
-            '4': 5   // Sehr rechte Gruppe
-          }
-        },
-        // Fügen Sie weitere Themen hinzu, wenn gewünscht
-      ]
+      topics: []
     };
+  },
+  created() {
+    this.fetchTopics();
+  },
+  methods: {
+    fetchTopics() {
+      fetchDataFromDatabase()
+        .then(data => {
+          this.topics = data;
+        })
+        .catch(error => {
+          console.error('Fehler beim Abrufen der Daten:', error);
+        });
+    }
   }
 }
 </script>
 
 <style scoped>
-.app {
-  /* Stilisierung der App */
+.public-component {
+  /* Stilisierung der PublicComponent */
 }
 </style>

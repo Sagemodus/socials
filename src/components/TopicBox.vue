@@ -15,6 +15,8 @@
 </template>
 
 <script>
+import { reactive, computed } from 'vue';
+
 export default {
   props: {
     image: {
@@ -34,19 +36,9 @@ export default {
       required: true
     }
   },
-  computed: {
-    totalLikes() {
-      return Object.values(this.likes).reduce((sum, value) => sum + value, 0);
-    },
-    groupWidths() {
-      let widths = {};
-      for (let group in this.likes) {
-        widths[group] = ((this.likes[group] / this.totalLikes) * 100).toFixed(1);
-      }
-      return widths;
-    },
-    groupColors() {
-      return {
+  setup(props) {
+    const state = reactive({
+      groupColors: {
         '-4': 'dodgerblue',
         '-3': 'cornflowerblue',
         '-2': 'deepskyblue',
@@ -55,56 +47,38 @@ export default {
         '2': 'goldenrod',
         '3': 'orange',
         '4': 'red'
-      };
-    },
-    sortedGroups() {
-      return ['-4', '-3', '-2', '-1', '1', '2', '3', '4'];
-    }
-  },
-  methods: {
-    like() {
-      // Hier die entsprechende Logik zum Aktualisieren der Likes hinzufügen
-    }
+      }
+    });
+
+    const totalLikes = computed(() =>
+      Object.values(props.likes).reduce((sum, value) => sum + value, 0)
+    );
+
+    const groupWidths = computed(() => {
+      const widths = {};
+      for (const group in props.likes) {
+        widths[group] = ((props.likes[group] / totalLikes.value) * 100).toFixed(1);
+      }
+      return widths;
+    });
+
+    const sortedGroups = ['-4', '-3', '-2', '-1', '1', '2', '3', '4'];
+
+    const like = () => {
+      // Update likes logic here
+    };
+
+    return {
+      ...state,
+      totalLikes,
+      groupWidths,
+      sortedGroups,
+      like
+    };
   }
 }
 </script>
 
 <style scoped>
-.topic-box {
-  /* Stilisierung der Topic-Box */
-}
-
-.topic-image {
-  border-radius: 50%;
-  /* Weitere Stilisierung des Bildes */
-}
-
-.topic-title {
-  /* Stilisierung des Titels */
-}
-
-.topic-text {
-  /* Stilisierung des Textes */
-}
-
-.like-bar {
-  display: flex;
-  height: 20px;
-  align-items: flex-end;
-}
-
-.section {
-  height: 100%;
-  position: relative;
-}
-
-.section::after {
-  content: attr(data-percentage);
-  position: absolute;
-  bottom: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 12px;
-  color: #000;
-}
+  /* Styles here */
 </style>

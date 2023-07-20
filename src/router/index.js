@@ -21,6 +21,10 @@ import NotificationConversationComponent from '../components/NotificationConvers
 import SearchbarComponent from '../components/SearchbarComponent.vue';
 // Swipe-Profil-Komponente
 import SwipeProfilComponent from '../components/SwipeProfilComponent.vue';
+//Settings View
+
+
+
 
 const routes = [
   {

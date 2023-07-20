@@ -134,21 +134,6 @@
     transform: scaleX(1);
   }
   
-  @media (max-width: 480px) {
-    .tabs {
-      flex-wrap: nowrap;
-      justify-content: flex-start;
-      overflow-x: scroll;
-    }
   
-    .tabs-inner {
-      min-width: fit-content;
-      justify-content: flex-start;
-    }
-  
-    .tab {
-      white-space: nowrap;
-    }
-  }
   </style>
   

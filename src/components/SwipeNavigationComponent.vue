@@ -9,59 +9,62 @@
     </div>
   </div>
 </template>
-  
-  <script>
-  import { ref, reactive } from 'vue';
-  import Hammer from 'hammerjs';
-  import { iconColor } from './farben'
-  
-  export default {
-    name: 'SwipeNavigation',
-    props: ['onTabSwitch'],
-    setup(props) {
-      const tabs = reactive([
-        { name: 'Public', path: '/public' },
-        { name: 'F&F', path: '/fandf' },
-        { name: 'Community', path: '/community' },
-      ]);
-  
-      const activeTab = ref(tabs[0].path);
-  
-      const tabIndexes = tabs.reduce((acc, tab, i) => ({ ...acc, [tab.path]: i }), {});
-  
-      const switchTab = (path) => {
-        activeTab.value = path;
-        props.onTabSwitch(path);
-      };
-  
-      const switchToTabByIndex = (index) => {
-        if (index < 0 || index >= tabs.length) return;
-        switchTab(tabs[index].path);
-      };
-  
-      const nextTab = () => {
-        const currentIndex = tabIndexes[activeTab.value];
-        switchToTabByIndex(currentIndex + 1);
-      };
-  
-      const previousTab = () => {
-        const currentIndex = tabIndexes[activeTab.value];
-        switchToTabByIndex(currentIndex - 1);
-      };
-  
-      return { activeTab, nextTab, previousTab, switchTab, tabs, iconColor };
-    },
-    mounted() {
-  const el = document;
-  const hammer = new Hammer(el);
-  hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
-  hammer.on('swiperight', this.previousTab);
-  hammer.on('swipeleft', this.nextTab);
-  document.documentElement.style.setProperty('--iconColor', this.iconColor);
-}
-,
-  };
-  </script>
+
+<script>
+import {  reactive, onMounted } from 'vue';
+import Hammer from 'hammerjs';
+import { iconColor } from './farben';
+import { shallowRef } from 'vue';
+
+export default {
+  name: 'SwipeNavigation',
+  props: ['onTabSwitch'],
+  setup(props) {
+    const tabs = reactive([
+      { name: 'Public', path: '/public' },
+      { name: 'F&F', path: '/fandf' },
+      { name: 'Community', path: '/community' },
+    ]);
+
+    const activeTab = shallowRef(tabs[0].path);
+
+    const tabIndexes = tabs.reduce((acc, tab, i) => ({ ...acc, [tab.path]: i }), {});
+
+    const switchTab = (path) => {
+      activeTab.value = path;
+      props.onTabSwitch(path);
+    };
+
+    const switchToTabByIndex = (index) => {
+      if (index < 0 || index >= tabs.length) return;
+      switchTab(tabs[index].path);
+    };
+
+    const nextTab = () => {
+      const currentIndex = tabIndexes[activeTab.value];
+      switchToTabByIndex(currentIndex + 1);
+    };
+
+    const previousTab = () => {
+      const currentIndex = tabIndexes[activeTab.value];
+      switchToTabByIndex(currentIndex - 1);
+    };
+
+    onMounted(() => {
+      const el = document;
+      const hammer = new Hammer(el);
+      hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
+      hammer.on('swiperight', previousTab);
+      hammer.on('swipeleft', nextTab);
+      document.documentElement.style.setProperty('--iconColor', iconColor);
+    });
+
+    return { activeTab, nextTab, previousTab, switchTab, tabs };
+  },
+};
+</script>
+
+ 
 
 <style scoped>
 .tabs {

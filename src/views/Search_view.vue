@@ -2,11 +2,9 @@
   <div class="container">
     <SearchbarComponent @search="performSearch" />
     <SwipeNavigationComponentSuche :onTabSwitch="switchTab" />
-   
-    <div v-for="result in filteredResults" :key="result.id">
-      <!-- Display your filtered search results here -->
-    </div>
-    <!-- ... Rest des Templates ... -->
+
+    <component :is="currentComponent" :searchResults="filteredResults" />
+    <!-- Rest des Templates -->
   </div>
 </template>
 
@@ -16,7 +14,7 @@ import SearchbarComponent from '../components/SearchbarComponent.vue';
 import PopularComponent from '../components/PopularComponent.vue';
 import RecentComponent from '../components/RecentComponent.vue';
 import PeopleComponent from '../components/PeopleComponent.vue';
-import ConversationComponent from '../components/ConversationComponent.vue';
+import ConversationComponent from '../components/NotificationConversationComponent.vue';
 
 export default {
   name: 'SearchView',

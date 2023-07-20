@@ -9,15 +9,22 @@ import Profile_view from '../views/Profile_view.vue';
 import Public from '../components/PublicComponent.vue';
 import FAndF from '../components/FAndFComponent.vue';
 import Community from '../components/CommunityComponent.vue';
-//Components für
+//Components für Search
 import PopularComponent from '../components/PopularComponent.vue';
 import RecentComponent from '../components/RecentComponent.vue';
 import PeopleComponent from '../components/PeopleComponent.vue';
 import ConversationComponent from '../components/ConversationComponent.vue';
+//Components für Benachrichtigung
 import AllComponent from '../components/AllComponent.vue';
 import MentionsComponent from '../components/MentionsComponent.vue';
 import NotificationConversationComponent from '../components/NotificationConversationComponent.vue';
 import SearchbarComponent from '../components/SearchbarComponent.vue';
+// Swipe-Profil-Komponente
+import SwipeProfilComponent from '../components/SwipeProfilComponent.vue';
+//Settings View
+
+
+
 
 const routes = [
   {
@@ -106,6 +113,12 @@ const routes = [
     name: 'Searchbar',
     component: SearchbarComponent
   },
+  // Swipe-Profil-Komponente
+  {
+    path: '/swipe-profil-component',
+    name: 'SwipeProfilComponent',
+    component: SwipeProfilComponent
+  }
 ];
 
 const router = createRouter({

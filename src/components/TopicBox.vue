@@ -6,9 +6,12 @@
     <div class="like-bar">
       <div class="section" v-for="group in sortedGroups"
            :key="group"
-           :style="{ width: groupWidths[group] + '%', backgroundColor: groupColors[group] }">
-           <span class="percentage" v-if="groupWidths[group] > 10">{{ groupWidths[group] }}%</span>
-</div>
+           :style="{ width: groupWidths[group] + '%', backgroundColor: groupColors[group] }"
+           @click="showPopup(group)">
+        <div v-if="popupGroup === group" class="popup">
+          {{ groupWidths[group] }}%
+        </div>
+      </div>
     </div>
     <button @click="like">Like</button>
   </div>
@@ -33,6 +36,11 @@ export default {
       type: Object,
       required: true
     }
+  },
+  data() {
+    return {
+      popupGroup: null
+    };
   },
   computed: {
     totalLikes() {
@@ -64,6 +72,9 @@ export default {
   methods: {
     like() {
       // Hier die entsprechende Logik zum Aktualisieren der Likes hinzufügen
+    },
+    showPopup(group) {
+      this.popupGroup = group;
     }
   }
 }
@@ -117,12 +128,14 @@ export default {
         height: 100%;
         position: relative;
 
-        &::after {
-          content: attr(data-percentage);
+        .popup {
           position: absolute;
-          bottom: -20px;
+          top: -30px;
           left: 50%;
           transform: translateX(-50%);
+          background-color: #fff;
+          padding: 5px 10px;
+          border-radius: 5px;
           font-size: 12px;
           color: #000;
         }

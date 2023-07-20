@@ -68,13 +68,14 @@ export default {
   }
 }
 </script>
+
 <style scoped>
 .topic-box {
   /* Stilisierung der Topic-Box */
 }
 
 .topic-image {
-  border-radius: 50%; /* macht das Bild rund */
+  border-radius: 50%;
   /* Weitere Stilisierung des Bildes */
 }
 
@@ -88,22 +89,22 @@ export default {
 
 .like-bar {
   display: flex;
-  height: 20px; /* Erhöhe die Höhe, um Platz für die Zahlen zu schaffen */
-  align-items: flex-end; /* Ausrichtung am unteren Rand */
+  height: 20px;
+  align-items: flex-end;
 }
 
 .section {
   height: 100%;
-  position: relative; /* Positionierung für die Zahlen */
+  position: relative;
 }
 
 .section::after {
-  content: attr(data-percentage) ; /* Anzeige des Prozentsatzes */
+  content: attr(data-percentage);
   position: absolute;
-  bottom: -20px; /* Platzierung unterhalb des Reglers */
-  left: 50%; /* Ausrichtung in der Mitte des Abschnitts */
-  transform: translateX(-50%); /* Zentrierung der Zahl */
-  font-size: 12px; /* Schriftgröße anpassen */
-  color: #000; /* Schriftfarbe anpassen */
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #000;
 }
 </style>

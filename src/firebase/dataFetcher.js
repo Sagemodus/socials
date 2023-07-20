@@ -1,4 +1,4 @@
-import { getDatabase, ref, onValue } from 'firebase/database';
+/*import { getDatabase, ref, onValue } from 'firebase/database';
 import { initializeApp } from 'firebase/app';
 
 // Your web app's Firebase configuration
@@ -28,3 +28,4 @@ export const fetchDataFromDatabase = async () => {
     });
   });
 };
+*/

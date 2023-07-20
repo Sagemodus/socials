@@ -27,14 +27,14 @@ export default {
           title: 'Titel 1',
           text: 'Text 1',
           likes: {
-            '-4': 5, // Sehr linke Gruppe
-            '-3': 30, // Linke Gruppe
-            '-2': 20, // Leicht linke Gruppe
-            '-1': 10, // Zentrum-Links Gruppe
-            '1': 5,   // Zentrum-Rechts Gruppe
-            '2': 15,  // Leicht rechte Gruppe
-            '3': 25,  // Rechte Gruppe
-            '4': 400   // Sehr rechte Gruppe
+            '-4': 1, // Sehr linke Gruppe
+            '-3': 1, // Linke Gruppe
+            '-2': 1, // Leicht linke Gruppe
+            '-1': 1, // Zentrum-Links Gruppe
+            '1': 1,   // Zentrum-Rechts Gruppe
+            '2': 1,  // Leicht rechte Gruppe
+            '3': 1,  // Rechte Gruppe
+            '4': 1   // Sehr rechte Gruppe
           }
         },
         {
@@ -43,7 +43,7 @@ export default {
           title: 'Titel 2',
           text: 'Text 2',
           likes: {
-            '-4': 2000, // Sehr linke Gruppe
+            '-4': 20, // Sehr linke Gruppe
             '-3': 10, // Linke Gruppe
             '-2': 15, // Leicht linke Gruppe
             '-1': 30, // Zentrum-Links Gruppe

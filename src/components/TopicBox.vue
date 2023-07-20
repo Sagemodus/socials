@@ -1,106 +1,109 @@
 <template>
-    <div class="topic-box">
-      <img :src="image" alt="Topic image" class="topic-image" />
-      <h2 class="topic-title">{{ title }}</h2>
-      <p class="topic-text">{{ text }}</p>
-      <div class="like-bar">
-        <div class="left-section" :style="{ width: sectionWidth.leftWidth }"></div>
-        <div class="right-section" :style="{ width: sectionWidth.rightWidth }"></div>
+  <div class="topic-box">
+    <img :src="image" alt="Topic image" class="topic-image" />
+    <h2 class="topic-title">{{ title }}</h2>
+    <p class="topic-text">{{ text }}</p>
+    <div class="like-bar">
+      <div class="section" v-for="group in sortedGroups"
+           :key="group"
+           :style="{ width: groupWidths[group] + '%', backgroundColor: groupColors[group] }">
+           {{ groupWidths[group] }}%
       </div>
-      <button @click="like">Like</button>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    props: {
-      image: {
-        type: String,
-        required: true
-      },
-      title: {
-        type: String,
-        required: true
-      },
-      text: {
-        type: String,
-        required: true
-      },
-      likes: {
-        type: Object,
-        required: true
-      }
+    <button @click="like">Like</button>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    image: {
+      type: String,
+      required: true
     },
-    computed: {
-      totalLikes() {
-        return Object.values(this.likes).reduce((sum, value) => sum + value, 0);
-      },
-      sectionWidth() {
-        const leftLikes = this.likes['-4'] + this.likes['-3'] + this.likes['-2'] + this.likes['-1'];
-        const rightLikes = this.likes['1'] + this.likes['2'] + this.likes['3'] + this.likes['4'];
-        const totalLikes = leftLikes + rightLikes;
-  
-        if (totalLikes === 0) {
-          return {
-            leftWidth: '0%',
-            rightWidth: '0%'
-          };
-        } else {
-          const leftWidth = ((leftLikes / totalLikes) * 100).toFixed(2) + '%';
-          const rightWidth = ((rightLikes / totalLikes) * 100).toFixed(2) + '%';
-  
-          return {
-            leftWidth,
-            rightWidth
-          };
-        }
-      }
+    title: {
+      type: String,
+      required: true
     },
-    methods: {
-      like() {
-        // Fügen Sie hier die entsprechende Logik zum Aktualisieren der Likes hinzu
+    text: {
+      type: String,
+      required: true
+    },
+    likes: {
+      type: Object,
+      required: true
+    }
+  },
+  computed: {
+    totalLikes() {
+      return Object.values(this.likes).reduce((sum, value) => sum + value, 0);
+    },
+    groupWidths() {
+      let widths = {};
+      for (let group in this.likes) {
+        widths[group] = ((this.likes[group] / this.totalLikes) * 100).toFixed(1);
       }
+      return widths;
+    },
+    groupColors() {
+      return {
+        '-4': 'dodgerblue',
+        '-3': 'cornflowerblue',
+        '-2': 'deepskyblue',
+        '-1': 'skyblue',
+        '1': 'gold',
+        '2': 'goldenrod',
+        '3': 'orange',
+        '4': 'red'
+      };
+    },
+    sortedGroups() {
+      return ['-4', '-3', '-2', '-1', '1', '2', '3', '4'];
+    }
+  },
+  methods: {
+    like() {
+      // Hier die entsprechende Logik zum Aktualisieren der Likes hinzufügen
     }
   }
-  </script>
-  
-  <style scoped>
-  .topic-box {
-    /* Stilisierung der Topic-Box */
-  }
-  
-  .topic-image {
-    border-radius: 50%; /* macht das Bild rund */
-    /* Weitere Stilisierung des Bildes */
-  }
-  
-  .topic-title {
-    /* Stilisierung des Titels */
-  }
-  
-  .topic-text {
-    /* Stilisierung des Textes */
-  }
-  
-  .like-bar {
-    position: relative;
-    height: 10px;
-    background: linear-gradient(to right, red, orange, yellow, lime, aqua, blue, indigo, violet);
-  }
-  
-  .left-section,
-  .right-section {
-    position: absolute;
-    top: 0;
-    height: 100%;
-  }
-  
-  .left-section {
-    left: 0;
-  }
-  
-  .right-section {
-    left: 50%;
-  }
-  </style>
-  
+}
+</script>
+<style scoped>
+.topic-box {
+  /* Stilisierung der Topic-Box */
+}
+
+.topic-image {
+  border-radius: 50%; /* macht das Bild rund */
+  /* Weitere Stilisierung des Bildes */
+}
+
+.topic-title {
+  /* Stilisierung des Titels */
+}
+
+.topic-text {
+  /* Stilisierung des Textes */
+}
+
+.like-bar {
+  display: flex;
+  height: 20px; /* Erhöhe die Höhe, um Platz für die Zahlen zu schaffen */
+  align-items: flex-end; /* Ausrichtung am unteren Rand */
+}
+
+.section {
+  height: 100%;
+  position: relative; /* Positionierung für die Zahlen */
+}
+
+.section::after {
+  content: attr(data-percentage) ; /* Anzeige des Prozentsatzes */
+  position: absolute;
+  bottom: -20px; /* Platzierung unterhalb des Reglers */
+  left: 50%; /* Ausrichtung in der Mitte des Abschnitts */
+  transform: translateX(-50%); /* Zentrierung der Zahl */
+  font-size: 12px; /* Schriftgröße anpassen */
+  color: #000; /* Schriftfarbe anpassen */
+}
+</style>

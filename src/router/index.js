@@ -9,7 +9,7 @@ import Profile_view from '../views/Profile_view.vue';
 import Public from '../components/PublicComponent.vue';
 import FAndF from '../components/FAndFComponent.vue';
 import Community from '../components/CommunityComponent.vue';
-import topic from '../components/TopicComponentsGanzeSeite.vue';
+import TopicComponentGanzeSeite from '../components/TopicComponentsGanzeSeite.vue';
 //Components für Search
 import PopularComponent from '../components/PopularComponent.vue';
 import RecentComponent from '../components/RecentComponent.vue';
@@ -120,11 +120,7 @@ const routes = [
     name: 'SwipeProfilComponent',
     component: SwipeProfilComponent
   },
-  {
-    path: '/topic',
-    name: 'topic',
-    component : 'topic'
-  }
+  { path: '/topic/:id', component: TopicComponentGanzeSeite },
 ];
 
 const router = createRouter({

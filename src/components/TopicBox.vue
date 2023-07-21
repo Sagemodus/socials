@@ -1,11 +1,12 @@
 //TopicBox.vue
 
 <template>
-
-<div v-if="topic" class="topic-box" @click="goToTopic">
-    <img :src="topic.image" alt="Topic image" class="topic-image" />
-    <h2 class="topic-title">{{ topic.title }}</h2>
-    <p class="topic-text">{{ topic.text }}</p>
+  <div v-if="topic" class="topic-box">
+    <div class="topic-content" @click="goToTopic">
+      <img :src="topic.image" alt="Topic image" class="topic-image" />
+      <h2 class="topic-title">{{ topic.title }}</h2>
+      <p class="topic-text">{{ topic.text }}</p>
+    </div>
     <div class="like-bar">
       <div
         class="section"
@@ -28,8 +29,6 @@
 </template>
 
 <script>
-
-
 import { mapGetters, mapMutations } from 'vuex';
 
 export default {
@@ -40,26 +39,26 @@ export default {
     },
   },
   computed: {
-  ...mapGetters(['getTopicById']),
-  topic() {
-    return this.getTopicById(this.id);
-  },
-  totalLikes() {
-    // Überprüfen Sie, ob das "topic" Objekt definiert ist, bevor Sie auf "topic.likes" zugreifen
-    if (!this.topic) return 0;
+    ...mapGetters(['getTopicById']),
+    topic() {
+      return this.getTopicById(this.id);
+    },
+    totalLikes() {
+      // Überprüfen Sie, ob das "topic" Objekt definiert ist, bevor Sie auf "topic.likes" zugreifen
+      if (!this.topic) return 0;
 
-    return Object.values(this.topic.likes).reduce((sum, value) => sum + value, 0);
-  },
-  groupWidths() {
-    // Überprüfen Sie, ob das "topic" Objekt definiert ist, bevor Sie auf "topic.likes" zugreifen
-    if (!this.topic) return {};
+      return Object.values(this.topic.likes).reduce((sum, value) => sum + value, 0);
+    },
+    groupWidths() {
+      // Überprüfen Sie, ob das "topic" Objekt definiert ist, bevor Sie auf "topic.likes" zugreifen
+      if (!this.topic) return {};
 
-    let widths = {};
-    for (let group in this.topic.likes) {
-      widths[group] = ((this.topic.likes[group] / this.totalLikes) * 100).toFixed(1);
-    }
-    return widths;
-  },
+      let widths = {};
+      for (let group in this.topic.likes) {
+        widths[group] = ((this.topic.likes[group] / this.totalLikes) * 100).toFixed(1);
+      }
+      return widths;
+    },
     groupColors() {
       return {
         '-4': 'dodgerblue',
@@ -76,10 +75,26 @@ export default {
       return ['-4', '-3', '-2', '-1', '1', '2', '3', '4'];
     },
   },
+  data() {
+    return {
+      popupGroup: null,
+    };
+  },
   methods: {
-    goToTopic() {
-      this.$router.push(`/topic/${this.id}`);
+    goToTopic(event) {
+      const targetElement = event.target;
+
+      // Überprüfen, ob auf das Bild oder die Box geklickt wurde
+      if (
+        targetElement.classList.contains('topic-image') ||
+        targetElement.classList.contains('topic-content')||
+        targetElement.classList.contains('topic-title')||
+           targetElement.classList.contains('topic-content')
+      ) {
+        this.$router.push(`/topic/${this.id}`);
+      }
     },
+    
     // Vuex-Mutation zum Aktualisieren der Likes aufrufen
     like() {
       // Annahme: Du möchtest die Likes um 1 erhöhen
@@ -98,6 +113,29 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+
+.like-button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  background-color: #3498db;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #2980b9;
+  }
+}
+
+.topic-info {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #888;
+}
 .topic-box {
   display: flex;
   flex-direction: column;

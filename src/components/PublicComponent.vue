@@ -15,6 +15,7 @@
 import { ref, onMounted } from 'vue';
 import TopicBox from '../components/TopicBox.vue';
 import { fetchDataFromDatabase } from '../firebase/dataFetcher';
+import { getFirestore } from 'firebase/firestore'; // Import getFirestore to directly access Firestore instance
 
 export default {
   components: {
@@ -25,7 +26,11 @@ export default {
 
     const fetchTopics = async () => {
       try {
-        topics.value = await fetchDataFromDatabase();
+        // Access the Firestore instance directly
+        const firestore = getFirestore();
+
+        // Use fetchDataFromDatabase and pass the Firestore instance
+        topics.value = await fetchDataFromDatabase(firestore);
       } catch (error) {
         console.error('Error fetching data:', error);
       }

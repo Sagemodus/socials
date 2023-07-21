@@ -1,36 +1,33 @@
 <template>
-  <div class="public-component">
+  <div>
+    <!-- Schleife über die Daten und erzeuge die TopicBox-Komponenten für jedes Thema -->
     <TopicBox
       v-for="topic in topics"
       :key="topic.id"
-      :image="topic.image"
-      :title="topic.title"
-      :text="topic.text"
-      :likes="topic.likes"
+      :id="topic.id"
     />
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
-import TopicBox from '../components/TopicBox.vue';
-import { fetchDataFromDatabase } from '../firebase/dataFetcher';
-import { getFirestore } from 'firebase/firestore'; // Import getFirestore to directly access Firestore instance
+import TopicBox from './TopicBox'; // Passe den Pfad entsprechend an
+import { mapState } from 'vuex';
 
 export default {
   components: {
-    TopicBox
+    TopicBox,
+  },
+  computed: {
+    ...mapState({
+      topics: state => state.topics // Dies bringt den topics-State aus dem Store in Ihre Komponente
+    })
   },
   setup() {
     const topics = ref([]);
 
     const fetchTopics = async () => {
       try {
-        // Access the Firestore instance directly
-        const firestore = getFirestore();
-
-        // Use fetchDataFromDatabase and pass the Firestore instance
-        topics.value = await fetchDataFromDatabase(firestore);
+        topics.value = await fetchDataFromDatabase();
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -44,7 +41,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-  /* Styles here */
-</style>

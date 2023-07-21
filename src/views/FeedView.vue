@@ -23,8 +23,14 @@ export default {
     FAndFComponent,
     CommunityComponent,
   },
+  methods: {
+    goToTopic() {
+      this.$router.push('/topic'); // Passe den Pfad entsprechend an
+    }
+  },
 
   setup() {
+  
     const tabs = [
       { path: '/public', component: PublicComponent },
       { path: '/fandf', component: FAndFComponent },

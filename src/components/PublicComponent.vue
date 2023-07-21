@@ -1,45 +1,26 @@
 <template>
-  <div class="public-component">
+  <div>
+    <!-- Schleife über die Daten und erzeuge die TopicBox-Komponenten für jedes Thema -->
     <TopicBox
       v-for="topic in topics"
       :key="topic.id"
-      :image="topic.image"
-      :title="topic.title"
-      :text="topic.text"
-      :likes="topic.likes"
+      :id="topic.id"
     />
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
-import TopicBox from '../components/TopicBox.vue';
-import { fetchDataFromDatabase } from '../firebase/dataFetcher';
+import TopicBox from './TopicBox'; // Passe den Pfad entsprechend an
+import { mapState } from 'vuex';
 
 export default {
   components: {
-    TopicBox
+    TopicBox,
   },
-  setup() {
-    const topics = ref([]);
-
-    const fetchTopics = async () => {
-      try {
-        topics.value = await fetchDataFromDatabase();
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    onMounted(fetchTopics);
-
-    return {
-      topics
-    };
-  }
-}
+  computed: {
+    ...mapState({
+      topics: state => state.topics // Dies bringt den topics-State aus dem Store in Ihre Komponente
+    })
+  },
+};
 </script>
-
-<style scoped>
-  /* Styles here */
-</style>

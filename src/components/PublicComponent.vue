@@ -10,8 +10,11 @@
 </template>
 
 <script>
+import { ref, onMounted } from 'vue';
 import TopicBox from './TopicBox'; // Passe den Pfad entsprechend an
 import { mapState } from 'vuex';
+import { fetchDataFromDatabase } from '../firebase/dataFetcher';
+
 
 export default {
   components: {

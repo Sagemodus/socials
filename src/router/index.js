@@ -22,7 +22,8 @@ import NotificationConversationComponent from '../components/NotificationConvers
 import SearchbarComponent from '../components/SearchbarComponent.vue';
 // Swipe-Profil-Komponente
 import SwipeProfilComponent from '../components/SwipeProfilComponent.vue';
-//Settings View
+//CommentPage
+import CommentPage from '../components/SingleCommentPage.vue';
 
 
 
@@ -120,7 +121,12 @@ const routes = [
     name: 'SwipeProfilComponent',
     component: SwipeProfilComponent
   },
+  //Comemnt und Topic weiterleitung
   { path: '/topic/:id', component: TopicComponentGanzeSeite },
+  {
+    path: '/comment/:commentId',
+    component: CommentPage,
+  },
 ];
 
 const router = createRouter({

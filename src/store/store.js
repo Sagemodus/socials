@@ -1,6 +1,24 @@
+//store.js
+
 // Import der notwendigen Funktionen
 import { createStore } from 'vuex';
 import { v4 as uuidv4 } from 'uuid';
+
+
+// Funktion zum Generieren von Antworten (Test-Query)
+function generateReplies(count) {
+  const replies = [];
+  for (let i = 0; i < count; i++) {
+    const id = uuidv4();
+    const newReply = {
+      id,
+      text: `Test Antwort ${i + 1}`,
+      author: { id: 1, name: 'Jane Doe' },
+    };
+    replies.push(newReply);
+  }
+  return replies;
+}
 
 // Funktion zum Generieren von Kommentaren (Test-Query)
 function generateComments(count) {
@@ -11,6 +29,7 @@ function generateComments(count) {
       id,
       text: `Test Kommentar ${i + 1}`,
       author: { id: 1, name: 'John Doe' },
+      replies: generateReplies(3), // 3 Antworten für jeden Kommentar hinzufügen (Test-Query)
     };
     comments.push(newComment);
   }
@@ -65,18 +84,48 @@ export default createStore({
       }
     },
     // Mutation zum Hinzufügen einer Antwort zu einem Kommentar
-    ADD_REPLY_TO_COMMENT(state, { commentId, reply }) {
-      for (const topic of state.topics) {
-        const comment = topic.comments.find((comment) => comment.id === commentId);
-        if (comment) {
-          if (!comment.replies) {
-            comment.replies = [];
+// Mutation zum Hinzufügen einer Antwort zu einem Kommentar
+ADD_REPLY_TO_COMMENT(state, { commentId, reply }) {
+  // Rekursive Hilfsfunktion zum Durchsuchen von Antworten
+  function searchReplies(replies) {
+    for (const reply of replies) {
+      if (reply.id === commentId) {
+        return reply;
+      }
+      if (reply.replies) {
+        const foundReply = searchReplies(reply.replies);
+        if (foundReply) {
+          return foundReply;
+        }
+      }
+    }
+    return null;
+  }
+
+  // Durchsuchen Sie die Themen und Kommentare
+  for (const topic of state.topics) {
+    for (const comment of topic.comments) {
+      if (comment.id === commentId) {
+        if (!comment.replies) {
+          comment.replies = [];
+        }
+        comment.replies.push(reply);
+        return;
+      }
+      if (comment.replies) {
+        const foundComment = searchReplies(comment.replies);
+        if (foundComment) {
+          if (!foundComment.replies) {
+            foundComment.replies = [];
           }
-          comment.replies.push(reply);
+          foundComment.replies.push(reply);
           return;
         }
       }
-    },
+    }
+  }
+},
+  
     // Neue Mutation zum Hinzufügen von Kommentaren zu einem Thema
     ADD_COMMENTS_TO_TOPIC(state, { topicId, comments }) {
       const topic = state.topics.find((topic) => topic.id === topicId);
@@ -93,7 +142,6 @@ export default createStore({
     },
     // Aktion zum Hinzufügen einer Antwort zu einem Kommentar
     addReplyToComment({ commit }, { commentId, reply }) {
-      reply.id = uuidv4();
       commit('ADD_REPLY_TO_COMMENT', { commentId, reply });
     },
     // Neue Aktion zum Abrufen oder Generieren von Kommentaren für Themen
@@ -124,13 +172,48 @@ export default createStore({
     },
     // Getter zum Abrufen eines Kommentars anhand der ID
     getCommentById: (state) => (commentId) => {
+      // Rekursive Hilfsfunktion zum Durchsuchen von Antworten
+      function searchReplies(replies) {
+        for (const reply of replies) {
+          if (reply.id === commentId) {
+            return reply;
+          }
+          if (reply.replies) {
+            const foundReply = searchReplies(reply.replies);
+            if (foundReply) {
+              return foundReply;
+            }
+          }
+        }
+        return null;
+      }
+    
+      // Durchsuchen Sie die Themen und Kommentare
       for (const topic of state.topics) {
-        const comment = topic.comments.find((comment) => comment.id === commentId);
-        if (comment) {
-          return comment;
+        for (const comment of topic.comments) {
+          if (comment.id === commentId) {
+            return comment;
+          }
+          if (comment.replies) {
+            const foundComment = searchReplies(comment.replies);
+            if (foundComment) {
+              return foundComment;
+            }
+          }
         }
       }
+    
+      console.log("getCommentById: Comment not found!");
       return null;
+    },
+
+    getAllComments: (state) => {
+      // Erstellt ein Array, das alle Kommentare aus allen Themen enthält
+      let allComments = [];
+      for (let topic of state.topics) {
+        allComments = allComments.concat(topic.comments);
+      }
+      return allComments;
     },
   },
 });

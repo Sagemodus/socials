@@ -95,9 +95,7 @@ export default {
       this.showReplyForm = false;
 
       // Wenn die dritte Antwort oder mehr hinzugefügt wird, leite den Benutzer zur gewünschten Seite weiter
-      if (this.comment.replies.length >= 3) {
-        this.$emit('reply-clicked', this.comment.id);
-      }
+   
     },
 
     // Funktion zum Abbrechen der Antwort

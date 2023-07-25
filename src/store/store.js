@@ -13,15 +13,16 @@ function generateFakeUser(id, name) {
 function generateFakeProfileImage(name) {
   return `https://fakeimg.pl/50x50/?text=${name[0]}&font=lobster`;
 }
-
+//Test Antwdsdfffffffzzzzzzzzzzzzzzzzzzzzzzzzzfffffffffffffffffffffffffsssssssssssssssssssssssssssssssssssssssssssssssort
 function generateReplies(count, userId, userName) {
   const replies = [];
   for (let i = 0; i < count; i++) {
     const id = uuidv4();
     const newReply = {
       id,
-      text: `Test Antwort ${i + 1}`,
+      text: `hallo ${i + 1}`,
       author: generateFakeUser(userId, userName),
+      votes: {}, // Hinzufügen von Votes
     };
     replies.push(newReply);
   }
@@ -32,15 +33,16 @@ function generateComments(count, users) {
   const comments = [];
   for (let i = 0; i < count; i++) {
     const id = uuidv4();
-    const authorId = 2; // Replace with the actual user ID
+    const authorId = 2; // Ersetzen Sie dies durch die tatsächliche Benutzer-ID
     const newComment = {
       id,
       text: `Test Kommentar ${i + 1}`,
       author: {
         ...users.find((user) => user.id === authorId),
-        profileImage: generateFakeProfileImage('Dejan Pantos')
+        profileImage: generateFakeProfileImage(users[1].name)
       },
       replies: generateReplies(3, 1, 'John Doe'),
+      votes: {}, // Hinzufügen von Votes
     };
     comments.push(newComment);
   }
@@ -79,13 +81,13 @@ export default createStore({
       {
         id: 1,
         name: 'Dejan Pantos',
-        profileImage: '../pictures/lhTBAX9.png',
+        profileImage: generateFakeProfileImage('Dejan Pantos'),
   
       },
       {
         id: 2,
         name: 'Lionel Messi',
-        profileImage: '../pictures/lhTBAX9.png',
+        profileImage: generateFakeProfileImage('Lionel Messi'),
   
       },
     ];
@@ -93,9 +95,29 @@ export default createStore({
     return {
       topics: generateTopics(10, users),
       users,
+      currentUser: users[0],
     };
   },
   mutations: {
+    UPVOTE_COMMENT(state, { comment, userId }) {
+      if (!comment.votes) {
+        comment.votes = {};
+      }
+      comment.votes[userId] = 1; // 1 steht für upvote
+    },
+    DOWNVOTE_COMMENT(state, { comment, userId }) {
+      if (!comment.votes) {
+        comment.votes = {};
+      }
+      comment.votes[userId] = -1; // -1 steht für downvote
+    },
+
+
+
+
+
+
+
     ADD_COMMENT_TO_TOPIC(state, { topicId, comment }) {
       const topic = state.topics.find((topic) => topic.id === topicId);
       if (topic) {
@@ -148,6 +170,18 @@ export default createStore({
     },
   },
   actions: {
+
+    upvoteComment(context, { commentId }) {
+      const userId = context.state.currentUser.id; // Erhalten Sie die Benutzer-ID von currentUser im Zustand
+      const comment = context.getters.getCommentById(commentId);
+      context.commit('UPVOTE_COMMENT', { comment, userId });
+    },
+    downvoteComment(context, { commentId }) {
+      const userId = context.state.currentUser.id; // Erhalten Sie die Benutzer-ID von currentUser im Zustand
+      const comment = context.getters.getCommentById(commentId);
+      context.commit('DOWNVOTE_COMMENT', { comment, userId });
+    },
+
     addCommentToTopic({ commit }, { topicId, comment }) {
       comment.id = uuidv4();
       commit('ADD_COMMENT_TO_TOPIC', { topicId, comment });
@@ -175,38 +209,47 @@ export default createStore({
     getUserProfile: (state) => {
       return state.users[0];
     },
-    getCommentById: (state) => (commentId) => {
-      function searchReplies(replies) {
-        for (const reply of replies) {
-          if (reply.id === commentId) {
-            return reply;
-          }
-          if (reply.replies) {
-            const foundReply = searchReplies(reply.replies);
-            if (foundReply) {
-              return foundReply;
+  
+      getCommentById: (state) => (commentId) => {
+        // Zuerst in den Kommentaren suchen
+        for (const topic of state.topics) {
+          for (const comment of topic.comments) {
+            if (comment.id === commentId) {
+              return comment;
             }
           }
         }
+    
+        // Wenn nicht in den Kommentaren gefunden, in den Antworten suchen
+        function searchReplies(replies) {
+          for (const reply of replies) {
+            if (reply.id === commentId) {
+              return reply;
+            }
+            if (reply.replies) {
+              const foundReply = searchReplies(reply.replies);
+              if (foundReply) {
+                return foundReply;
+              }
+            }
+          }
+          return null;
+        }
+    
+        for (const topic of state.topics) {
+          for (const comment of topic.comments) {
+            if (comment.replies) {
+              const foundComment = searchReplies(comment.replies);
+              if (foundComment) {
+                return foundComment;
+              }
+            }
+          }
+        }
+    
+        console.log("getCommentById: Comment not found!");
         return null;
-      }
-
-      for (const topic of state.topics) {
-        for (const comment of topic.comments) {
-          if (comment.id === commentId) {
-            return comment;
-          }
-          if (comment.replies) {
-            const foundComment = searchReplies(comment.replies);
-            if (foundComment) {
-              return foundComment;
-            }
-          }
-        }
-      }
-
-      console.log("getCommentById: Comment not found!");
-      return null;
+      
     },
     getAllComments: (state) => {
       let allComments = [];

@@ -28,7 +28,7 @@ body {
 .navbar-fixed {
   position: fixed;
   bottom: 0;
-  left: 0;
+  
   width: 100%;
   z-index: 999;
   background-color: #ffffff;
@@ -36,7 +36,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding-bottom: 5px;
 }
 
 #app {
@@ -48,6 +48,13 @@ body {
   margin-bottom: 60px; /* Platz für die Navbar reservieren */
 }
 
+#app .antwort-text {
+  text-align: left;
+  padding-left: 40px;
+  padding-bottom: 0px;
+  margin-bottom: 16px;
+  margin-top: 0px;
+} 
 /* Restlicher CSS-Code bleibt unverändert */
 /* ... */
 </style>

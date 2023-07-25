@@ -1,54 +1,37 @@
 <template>
   <div class="comment-box">
-    <div class="comment-content ">
+    <div class="comment-content">
       <img :src="comment?.author?.profileImage" alt="Profilbild" class="profile-image" />
       <div class="comment-text-area">
         <p class="username">{{ comment?.author?.name }}</p>
         <p class="comment-text">{{ comment?.text }}</p>
-        
       </div>
     </div>
-    <div v-if="showReplyForm" class="reply-form">
+
+<!-- Antwort-Button und Expand-Button Container -->
+<div class="actions">
+  <!-- Antwort-Button -->
+  <button v-if="!showReplyForm" @click="showReplyForm = true" class="reply-button action-button">
+    <font-awesome-icon :icon="['fas', 'reply']" class="icon" />
+   
+  </button>
+
+  
+
+      <!-- Antwort-Formular -->
+      <div v-if="showReplyForm" class="reply-form">
         <textarea v-model="newReply" placeholder="Schreibe eine Antwort..." class="reply-textarea"></textarea>
         <div class="reply-actions">
           <button @click="cancelReply" class="cancel-reply-button">Abbrechen</button>
           <button @click="submitReply" class="submit-reply-button">Antworten</button>
         </div>
       </div>
-<!-- Antwort-Button und Expand-Button Container -->
-<div class="actions">
-  <!-- Antwort-Button -->
-  <button v-if="!showReplyForm" @click="showReplyForm = true" class="reply-button action-button">
-    <font-awesome-icon :icon="['fas', 'commenting']" class="icon" />
-   
+
+  <!-- Aufklapp-Button für Antworten -->
+  <button v-if="!showReplyForm && comment.replies && comment.replies.length > 0" @click="expandReplies = !expandReplies" class="expand-button action-button">
+    <font-awesome-icon v-if="!expandReplies" :icon="['fas', 'plus']" />
+    <font-awesome-icon v-else :icon="['fas', 'minus']" />
   </button>
-
-<!-- Upvote Button -->
-<button @click="upvoteComment" class="action-button">
-  <font-awesome-icon :icon="['fas', 'thumbs-up']" class="icon" />
-  <p>{{ upvotesCount }}</p>
-</button>
-
-<!-- Downvote Button -->
-<button @click="downvoteComment" class="action-button">
-  <font-awesome-icon :icon="['fas', 'thumbs-down']" class="icon" />
-  <p>{{ downvotesCount }}</p>
-</button>
-
-
-  
-
-      <!-- Antwort-Formular -->
-
-
-<!-- Aufklapp-Button für Antworten -->
-<button v-if="!showReplyForm && comment.replies && comment.replies.length > 0" @click="expandReplies = !expandReplies" class="action-button">
-  <font-awesome-icon v-if="!expandReplies" :icon="['fas', 'angle-down']" />
-  <font-awesome-icon v-else :icon="['fas', 'angle-up']" />
-  <span v-if="replyCount > 0">{{ replyCount+ ' Antworten'}}</span> <!-- Anzahl der Antworten anzeigen -->
-</button>
-
- 
 </div>
     <!-- Anzeige der Antworten -->
     <div v-if="expandReplies" class="replies-section">
@@ -97,31 +80,8 @@ export default {
       // Return the first 'maxDisplayedReplies' number of replies to display
       return this.comment.replies ? this.comment.replies.slice(0, this.maxDisplayedReplies) : [];
     },
-    upvotesCount() {
-    return this.comment.votes ? Object.values(this.comment.votes).filter(vote => vote === 1).length : 0;
-  },
-  downvotesCount() {
-    return this.comment.votes ? Object.values(this.comment.votes).filter(vote => vote === -1).length : 0;
-  },
-  replyCount() {
-    return this.comment.replies ? this.comment.replies.length : 0;
-  },
-
-
-
   },
   methods: {
-
- 
-    upvoteComment() {
-    this.$store.dispatch('upvoteComment', { commentId: this.comment.id });
-  },
-  downvoteComment() {
-    this.$store.dispatch('downvoteComment', { commentId: this.comment.id });
-  },
-
-
-
     ...mapActions(['addReplyToComment']),
 
     // Funktion zum Einreichen einer Antwort
@@ -243,7 +203,6 @@ export default {
         font-size: 14px;
         font-weight: bold;
         color: #333;
-            margin-bottom: 0px;
       }
 
       .comment-text {
@@ -288,15 +247,9 @@ export default {
 }
 
   
-.expand-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 10px;  /* Die Breite des Buttons festlegen */
-  height: 10px; /* Die Höhe des Buttons festlegen */
-  font-size: 1.5rem;
-}
-
+  .expand-button {
+    font-size: 1.5rem;
+  }
 
   .reply-form {
     margin-top: 10px;

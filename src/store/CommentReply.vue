@@ -1,65 +1,40 @@
 
 // CommentReply.vue
 <template>
-
-  
   <div class="comment-reply">
     <!-- Antwort-Informationen anzeigen -->
     <div class="profile-info">
       <img :src="reply?.author?.profileImage" alt="Profilbild" class="profile-image" />
       <span class="profile-name">{{ reply?.author?.name }}</span>
-      
-<!-- Aufklapp-Button für Antworten -->
+      <p class="comment-text">{{ reply?.text }}</p>
+    </div>
 
-
-</div>
-<p class="antwort-text">{{ reply?.text }}</p>
     <!-- Antwort-Formular anzeigen, wenn auf diese Antwort geantwortet werden soll -->
-   
-
-
-
+    <div v-if="showReplyForm" class="reply-form">
+      <textarea v-model="newReply" placeholder="Schreibe eine Antwort..." class="reply-textarea"></textarea>
+      <div class="reply-actions">
+        <button @click="cancelReply" class="cancel-reply-button">Abbrechen</button>
+        <button @click="submitReply" class="submit-reply-button">Antworten</button>
+      </div>
+    </div>
 
     <div class="buttons-container">
-
-      
       <!-- "Mehr anzeigen" Link anzeigen, wenn die Verschachtelungstiefe genau 3 ist -->
-
+      <router-link v-if="reply && depth === 3" :to="`/comment/${reply.id}`" class="more-link">
+        Antworten({{ replyCount }} Antworten)
+      </router-link>
 
       <!-- Antwort-Button anzeigen, um auf diese Antwort zu antworten -->
       <button v-if="!showReplyForm && depth < 3" @click="showReplyForm = true" class="reply-button">
-        <font-awesome-icon :icon="['fas', 'commenting']" />
+        <font-awesome-icon :icon="['fas', 'reply']" />
       </button>
 
-<!-- Upvote Button -->
-<button @click="upvoteComment" class="action-button">
-  <font-awesome-icon :icon="['fas', 'thumbs-up']" class="icon" />
-  <p>{{ upvotesCount }}</p>
-</button>
-
-<!-- Downvote Button -->
-<button @click="downvoteComment" class="action-button">
-  <font-awesome-icon :icon="['fas', 'thumbs-down']" class="icon" />
-  <p>{{ downvotesCount }}</p>
-</button>
-
-<!-- {{ replyCount+ ' Antworten' }} -->
-
-<button v-if="!showReplyForm && reply.replies && reply.replies.length > 0" @click="expandReplies = !expandReplies" :class="[ 'action-button', depth >= 3 ? 'disabled' : '']">
-  <font-awesome-icon v-if="!expandReplies" :icon="['fas', 'angle-down']" />
-  <font-awesome-icon v-else :icon="['fas', 'angle-up']" />
-  {{ replyCount+ ' Antworten' }}
-  <!-- Hier wird die Anzahl der Antworten angezeigt -->
-</button>
-
-<!--Aufklapp Button-->
-<router-link v-if="reply && depth === 3" :to="`/comment/${reply.id}`" class="more-link">
-        Mehr Anzeigen..
-      </router-link>
-</div>
-
-
-
+      <!-- Aufklapp-Button für Antworten -->
+      <button v-if="!showReplyForm && reply.replies && reply.replies.length > 0" @click="expandReplies = !expandReplies" class="expand-button">
+        <font-awesome-icon v-if="!expandReplies" :icon="['fas', 'plus']" />
+        <font-awesome-icon v-else :icon="['fas', 'minus']" />
+      </button>
+    </div>
 
     <!-- Anzeige der Antworten auf diese Antwort -->
     <div v-if="expandReplies && reply.replies && reply.replies.length > 0" class="replies-section">
@@ -71,14 +46,6 @@
         @reply-clicked="$emit('reply-clicked', $event)"
       ></comment-reply>
     </div>
-    <div v-if="showReplyForm" class="reply-form">
-      <textarea v-model="newReply" placeholder="Schreibe eine Antwort..." class="reply-textarea"></textarea>
-      <div class="reply-actions">
-        <button @click="cancelReply" class="cancel-reply-button">Abbrechen</button>
-        <button @click="submitReply" class="submit-reply-button">Antworten</button>
-      </div>
-    </div>
-
   </div>
 </template>
  
@@ -109,28 +76,9 @@ export default {
     ...mapGetters(['getCommentById']),
     replyCount() {
     return this.reply.replies ? this.reply.replies.length : 0;
-
-    },
-    upvotesCount() {
-    return this.reply.votes ? Object.values(this.reply.votes).filter(vote => vote === 1).length : 0;
   },
-  downvotesCount() {
-    return this.reply.votes ? Object.values(this.reply.votes).filter(vote => vote === -1).length : 0;
-  },
-
-
-
   },
   methods: {
-
-
-    upvoteComment() {
-    this.$store.dispatch('upvoteComment', { commentId: this.reply.id });
-  },
-  downvoteComment() {
-    this.$store.dispatch('downvoteComment', { commentId: this.reply.id });
-  },
-
     ...mapActions(['addReplyToComment']),
     // Funktion zum Einreichen einer Antwort auf diese Antwort
   submitReply() {
@@ -168,14 +116,14 @@ export default {
 
 <style lang="scss" scoped>
 .comment-reply {
-
+  margin-top: 10px;
   border-left: 1px solid #ccc;
   padding-left: 10px;
 
   .profile-info {
     display: flex;
     align-items: flex-start;
-   
+    margin-bottom: 10px;
 
     .profile-image {
       width: 30px;
@@ -186,17 +134,15 @@ export default {
     }
 
     .profile-name {
-      color: #000000;
+      color: #0079d3;
       font-size: 14px;
       margin-bottom: 2px;
     }
 
     .comment-text {
-  color: #1c1c1c;
-  font-size: 14px;
-  text-align: left; 
-/* Fügt linksbündigen Text hinzu */
-}
+      color: #1c1c1c;
+      font-size: 14px;
+    }
   }
   .more-link {
     display: inline-block;
@@ -213,7 +159,7 @@ export default {
 
   .reply-button {
     display: flex;
-    margin-top: 15px;
+    margin-top: 10px;
     color: #787878;
     background: none;
     border: none;
@@ -271,45 +217,17 @@ export default {
   }
 
   .expand-button {
-   
+    display: flex;
     border: none;
     background: none;
     cursor: pointer;
-    
+    justify-content: flex-end;
   
   }
   .buttons-container {
   display: flex;
-  gap: 18px;
-  
+  justify-content: space-between;
 }
-.action-button {
-  background: none;
-  border: none;
-  color: #787878;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
- 
-}
-
-.action-button:hover {
-  color: #0079d3;
-}
-
-.icon {
-  font-size: 1em;
-}
-
-.right-aligned-button {
-  margin-left: auto;
-}
-.disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
 
 }
 </style>

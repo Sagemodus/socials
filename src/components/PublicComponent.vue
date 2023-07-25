@@ -18,8 +18,11 @@
 
 
 <script>
+import { ref, onMounted } from 'vue';
 import TopicBox from './TopicBox'; // Passe den Pfad entsprechend an
 import { mapState } from 'vuex';
+import { fetchDataFromDatabase } from '../firebase/dataFetcher';
+
 
 export default {
   components: {
@@ -30,6 +33,7 @@ export default {
       topics: state => state.topics // Dies bringt den topics-State aus dem Store in Ihre Komponente
     })
   },
+
   methods: {
     handleTopicClick(topicId) {
       // Hier wird die ID des angeklickten Themas erhalten.
@@ -38,4 +42,23 @@ export default {
     }
   }
 };
+
+  setup() {
+    const topics = ref([]);
+
+    const fetchTopics = async () => {
+      try {
+        topics.value = await fetchDataFromDatabase();
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    onMounted(fetchTopics);
+
+    return {
+      topics
+    };
+  }
+}
 </script>

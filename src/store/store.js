@@ -32,7 +32,7 @@ function generateComments(count, users) {
   const comments = [];
   for (let i = 0; i < count; i++) {
     const id = uuidv4();
-    const authorId = 1; // Replace with the actual user ID
+    const authorId = 2; // Replace with the actual user ID
     const newComment = {
       id,
       text: `Test Kommentar ${i + 1}`,
@@ -79,6 +79,12 @@ export default createStore({
       {
         id: 1,
         name: 'Dejan Pantos',
+        profileImage: '../pictures/lhTBAX9.png',
+  
+      },
+      {
+        id: 2,
+        name: 'Lionel Messi',
         profileImage: '../pictures/lhTBAX9.png',
   
       },

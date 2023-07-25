@@ -26,8 +26,8 @@
           <!-- Aufklapp-Button für Antworten -->
           <button v-if="!showReplyForm && reply.replies && reply.replies.length > 0" @click="expandReplies = !expandReplies" class="expand-button">
 
-      <img v-if="!expandReplies" src="/pfad/zum/plus-icon.svg" alt="Plus Icon">
-      <img v-else src="/pfad/zum/minus-icon.svg" alt="Minus Icon">
+            <font-awesome-icon v-if="!expandReplies" :icon="['fas', 'plus']" />
+    <font-awesome-icon v-else :icon="['fas', 'minus']" />
     </button>
 
     <!-- Anzeige der Antworten auf diese Antwort -->
@@ -43,7 +43,7 @@
 
     <!-- "Mehr anzeigen" Link anzeigen, wenn die Verschachtelungstiefe genau 3 ist -->
     <router-link v-if="reply && depth === 3" :to="`/comment/${reply.id}`" class="more-link">
-      Hier Antworten ({{ replyCount }} Antworten)
+    Antworten({{ replyCount }} Antworten)
     </router-link>
   </div>
 </template>
@@ -117,74 +117,108 @@ export default {
 
 <style lang="scss" scoped>
 .comment-reply {
-  margin-left: 20px; /* Einrückung für Antworten */
-  border-left: 2px solid #ccc; /* Linie zur Unterscheidung der Antworten */
-  padding-left: 10px; /* Einen kleinen Abstand zwischen Linie und Text */
-  margin-bottom: 10px; /* Abstand zwischen Antworten */
-}
+  margin-top: 10px;
+  border-left: 1px solid #ccc;
+  padding-left: 10px;
 
-/* Antwort-Button-Stile */
-.reply-button {
-  margin-top: 5px; /* Ein kleiner Abstand über dem Button */
-}
+  .profile-info {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 10px;
 
-/* Antwort-Formular-Stile */
-.reply-form {
-  margin-top: 10px; /* Ein Abstand über dem Formular */
-}
+    .profile-image {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 10px;
+    }
 
-/* Antworten auf Antworten */
-.nested-reply {
-  margin-left: 20px; /* Einrückung für Antworten auf Antworten */
-}
+    .profile-name {
+      color: #0079d3;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
 
-/* Profilbild, Profilname und Kommentartext */
-.profile-info {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 5px;
-}
+    .comment-text {
+      color: #1c1c1c;
+      font-size: 14px;
+    }
+  }
+  .more-link {
+    display: inline-block;
+    margin-top: 10px;
+    color: #0079d3;
+    font-size: 12px; /* Reduzieren Sie die Schriftgröße */
+    font-weight: 400; /* Setzen Sie die Schriftstärke auf Normal */
+    text-decoration: none; /* Entfernen Sie die Unterstreichung */
+    cursor: pointer;
+    padding: 2px 5px; /* Fügen Sie ein wenig Polster hinzu */
+    background-color: #f6f7f8; /* Fügen Sie einen Hintergrund hinzu */
+    border-radius: 5px; /* Runden Sie die Ecken ein wenig ab */
+  }
 
-.profile-image {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  margin-right: 10px;
-}
+  .reply-button {
+    margin-top: 10px;
+    color: #787878;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
 
-.profile-name {
-  font-size: 12px;
-  font-weight: bold;
-}
+  .reply-form {
+    margin-top: 10px;
 
-.comment-text {
-  font-size: 14px;
-  margin-top: 5px;
-}
+    .reply-textarea {
+      width: 100%;
+      min-height: 50px;
+      resize: vertical;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
 
-/* Antwort-Formular-Textarea */
-.reply-textarea {
-  width: 100%;
-  height: 60px;
-  resize: none;
-  border: 1px solid #d7dadc;
-  border-radius: 5px;
-  padding: 5px;
-  font-size: 14px;
-}
+    .reply-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
 
-/* Antwort-Formular-Aktionen */
-.reply-actions {
-  margin-top: 5px;
-}
+      .cancel-reply-button,
+      .submit-reply-button {
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        border: 1px solid #ccc;
+      }
 
-/* Antworten auf Antworten - "Mehr anzeigen" Link */
-.more-link {
-  color: #0079d3;
-  font-size: 12px;
-  text-decoration: underline;
-  cursor: pointer;
-  display: inline-block;
-  margin-top: 5px;
+      .cancel-reply-button {
+        background: #fff;
+      }
+
+      .submit-reply-button {
+        background: #0079d3;
+        color: #fff;
+        border-color: #0079d3;
+      }
+    }
+  }
+
+  .replies-section {
+    margin-top: 10px;
+  }
+
+  .more-link {
+    display: inline-block;
+    margin-top: 10px;
+    color: #0079d3;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .expand-button {
+    border: none;
+    background: none;
+    cursor: pointer;
+  }
 }
 </style>

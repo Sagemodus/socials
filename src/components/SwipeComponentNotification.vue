@@ -11,19 +11,20 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import Hammer from 'hammerjs';
+import { useStore } from 'vuex'; // Importiere das useStore-Hook
 import { iconColor } from '../components/farben';
 
 export default {
   name: 'SwipeComponentNotification',
   props: ['onTabSwitch'],
-  data() {
-    return {
-      iconColor
-    };
-  },
   setup(props) {
+    const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
+
+    // Definiere eine computed-Funktion, um den currentUser aus dem Vuex-Store zu erhalten
+    const currentUser = computed(() => store.state.currentUser);
+
     const tabs = reactive([
       { name: 'All', path: '/all' },
       { name: 'Mentions', path: '/mentions' },
@@ -59,7 +60,11 @@ export default {
       hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
       hammer.on('swiperight', previousTab);
       hammer.on('swipeleft', nextTab);
-      document.documentElement.style.setProperty('--iconColor', iconColor);
+
+      // Setze die Farbe basierend auf dem currentUser
+      const userParty = currentUser.value.party;
+      const color = userParty ? iconColor(userParty) : 'gray';
+      document.documentElement.style.setProperty('--iconColor', color);
     });
 
     return { activeTab, nextTab, previousTab, switchTab, tabs };

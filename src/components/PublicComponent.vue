@@ -40,22 +40,9 @@ export default {
     }
   },
 
-  setup() {
-    const topics = ref([]);
 
-    const fetchTopics = async () => {
-      try {
-        topics.value = await fetchDataFromDatabase();
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
 
-    onMounted(fetchTopics);
-
-    return {
-      topics
-    };
-  }
+  
 };
+
 </script>

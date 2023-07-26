@@ -57,7 +57,7 @@ function generateTopics(count, users) {
       id,
       image: `https://fakeimg.pl/250x100/?text=Thema${id}&font=lobster`,
       title: `Fakes Thema ${id}`,
-      text: `Dies ist eine Beschreibung für das Fake Thema ${id}.`,
+      text: `Dies ist eine Beschreibung für das Fake Thema ${id}.Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.`,
       comments: generateComments(3, users),
       likes: {
         '-4': Math.floor(Math.random() * 100),
@@ -82,12 +82,20 @@ export default createStore({
         id: 1,
         name: 'Dejan Pantos',
         profileImage: generateFakeProfileImage('Dejan Pantos'),
+<<<<<<< HEAD
+        party: '4',
+=======
+>>>>>>> c125bd11585e1f66d2cb13e45a2525cc42746d1f
   
       },
       {
         id: 2,
         name: 'Lionel Messi',
         profileImage: generateFakeProfileImage('Lionel Messi'),
+<<<<<<< HEAD
+        party: '-2',
+=======
+>>>>>>> c125bd11585e1f66d2cb13e45a2525cc42746d1f
   
       },
     ];
@@ -258,5 +266,10 @@ export default createStore({
       }
       return allComments;
     },
+
+    getUserParty(state) {
+      return state.currentUser.party;
+    },
+
   },
 });

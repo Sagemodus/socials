@@ -18,10 +18,10 @@
 
 
 <script>
-import { ref, onMounted } from 'vue';
+
 import TopicBox from './TopicBox'; // Passe den Pfad entsprechend an
 import { mapState } from 'vuex';
-import { fetchDataFromDatabase } from '../firebase/dataFetcher';
+
 
 
 export default {
@@ -40,25 +40,11 @@ export default {
       // Navigiere nun zur TopicComponentGanzeSeite.vue und übergebe die ID als Parameter in der Route.
       this.$router.push({ name: 'TopicDetails', params: { id: topicId } });
     }
-  }
+  },
+
+
+  
 };
 
-  setup() {
-    const topics = ref([]);
 
-    const fetchTopics = async () => {
-      try {
-        topics.value = await fetchDataFromDatabase();
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    onMounted(fetchTopics);
-
-    return {
-      topics
-    };
-  }
-}
 </script>

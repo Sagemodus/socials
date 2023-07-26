@@ -207,7 +207,7 @@ export default {
     text-decoration: none; /* Entfernen Sie die Unterstreichung */
     cursor: pointer;
     padding: 2px 5px; /* Fügen Sie ein wenig Polster hinzu */
-    background-color: #f6f7f8; /* Fügen Sie einen Hintergrund hinzu */
+    background-color: #ffffff; /* Fügen Sie einen Hintergrund hinzu */
     border-radius: 5px; /* Runden Sie die Ecken ein wenig ab */
   }
 

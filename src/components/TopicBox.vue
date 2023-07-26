@@ -20,7 +20,7 @@
         </div>
       </div>
     </div>
-    <button @click="like">Like</button>
+    <button @click="like(1)" :style="{ backgroundColor: getPartyColor(currentUser.party) }">Like</button>
   </div>
   <div v-else>
     <!-- Placeholder content while topic is loading, or error message if topic couldn't be loaded -->
@@ -30,6 +30,8 @@
 
 <script>
 import { mapGetters, mapMutations } from 'vuex';
+import { iconColor } from './farben';
+
 
 export default {
   props: {
@@ -40,6 +42,12 @@ export default {
   },
   computed: {
     ...mapGetters(['getTopicById']),
+
+
+    currentUser() {
+      return this.$store.getters.getUserProfile;
+    },
+
     topic() {
       return this.getTopicById(this.id);
     },
@@ -81,6 +89,16 @@ export default {
     };
   },
   methods: {
+
+
+  
+    like(group) {
+    const userParty = this.currentUser.party;
+    this.toggleLike({ topicId: this.id, group });
+  },
+    getPartyColor(party) {
+      return iconColor(party);
+    },
     goToTopic(event) {
       const targetElement = event.target;
 
@@ -96,14 +114,7 @@ export default {
     },
     
     // Vuex-Mutation zum Aktualisieren der Likes aufrufen
-    like() {
-      // Annahme: Du möchtest die Likes um 1 erhöhen
-      const updatedLikes = { ...this.topic.likes };
-      updatedLikes['1'] += 1;
 
-      // Aufruf der Vuex-Mutation "UPDATE_LIKES" mit der aktualisierten Like-Daten
-      this.UPDATE_LIKES({ id: this.id, likes: updatedLikes });
-    },
     showPopup(group) {
       this.popupGroup = group;
     },
@@ -134,7 +145,7 @@ export default {
   display: flex;
   justify-content: space-between;
   font-size: 14px;
-  color: #888;
+  color: #a39b9b;
 }
 .topic-box {
   display: flex;
@@ -142,7 +153,7 @@ export default {
   align-items: center;
   padding: 20px;
   margin: 20px auto;
-  background-color: #f0f0f0;
+  background-color: #ffffff;
   border-radius: 10px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
   max-width: 400px;
@@ -153,8 +164,7 @@ export default {
   }
 
   .topic-image {
-    border-radius: 50%;
-    width: 100px;
+    
     height: 100px;
     object-fit: cover;
   }

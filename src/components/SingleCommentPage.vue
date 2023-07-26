@@ -4,9 +4,9 @@
 
   <!-- Use selectedComment.commentID -->
     <div v-if="selectedComment">
-      <div class="single-comment">
-        <CommentBox :comment="selectedComment" />
-      </div>
+      <div v-if="selectedComment" class="single-comment top-comment">
+  <CommentBox :comment="selectedComment" />
+</div>
 
     </div>
     </div>
@@ -65,5 +65,16 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-/* Styles für SingleCommentPage.vue */
+.top-comment {
+  /* Hier können Sie den speziellen Stil für das oberste Kommentar definieren. 
+     Sie können die gleichen Stile wie für die Themen verwenden. */
+  
+  width: 80%; /* Zum Beispiel, Sie können die Breite anpassen. */
+  margin: 0 auto; /* Zentriert das Element horizontal */
+  background-color: #f0f0f0; /* Sie können auch die Hintergrundfarbe ändern. */
+  border-radius: 10px; /* Runden Sie die Ecken ab, um ein moderneres Aussehen zu erzeugen. */
+  padding: 20px; /* Fügen Sie Innenabstand hinzu, um den Text vom Rand des Elements zu trennen. */
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1); /* Fügen Sie einen Schatten hinzu, um Tiefe zu erzeugen. */
+}
+
 </style>

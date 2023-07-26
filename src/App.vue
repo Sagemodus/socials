@@ -9,17 +9,21 @@
 
 <script>
 import Navbar from './components/navbar_unten.vue'
+import iconColor from '../src/components/farben';
 
 export default {
   components: {
-    Navbar
+    Navbar,
+    iconColor,
   }
 }
 </script>
 
 <style lang="scss">
 @import url('https://fonts.googleapis.com/css2?family=Avenir:wght@400;700&display=swap');
-
+.nav-bar .nav-link {
+  color: iconColor; /* Farbe für die anderen Buttons */
+}
 body {
   margin: 0;
   padding: 0;

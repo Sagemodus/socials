@@ -1,12 +1,14 @@
 <template>
-    <div class="container">
+  <div>
+    <div class="sticky-tab-bar" :class="{ 'sticky': isTabBarSticky, 'scrolled': isScrolled }">
       <SwipeComponentNotification :onTabSwitch="switchTab" />
-      <component :is="currentComponent.component" />
-      <!-- ... Rest des Templates ... -->
     </div>
+    <component :is="currentComponent.component" />
+  </div>
 </template>
-  
+
 <script>
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import SwipeComponentNotification from '../components/SwipeComponentNotification.vue';
 import AllComponent from '../components/AllComponent.vue';
 import MentionComponent from '../components/MentionsComponent.vue';
@@ -20,27 +22,63 @@ export default {
     MentionComponent,
     ConversationComponent,
   },
-  data() {
-    return {
-      tabs: [
-        { path: '/all', component: AllComponent },
-        { path: '/mentions', component: MentionComponent }, // geändert auf /mentions
-        { path: '/notification-conversation', component: ConversationComponent }, // bleibt unverändert
-      ],
-      currentTab: '/all',
-      currentComponent: null,
+  setup() {
+    const tabs = [
+      { path: '/all', component: AllComponent },
+      { path: '/mentions', component: MentionComponent },
+      { path: '/notification-conversation', component: ConversationComponent },
+    ];
+    const currentTab = ref('/all');
+    const currentComponent = ref(tabs.find((tab) => tab.path === currentTab.value));
+    const lastScrollPosition = ref(0);
+    const isTabBarSticky = ref(false);
+    const isScrolled = ref(false);
+
+    const switchTab = (path) => {
+      currentTab.value = path;
+      currentComponent.value = tabs.find((tab) => tab.path === path);
     };
-    },
-    created() {
-      this.switchTab(this.currentTab);
-    },
-    methods: {
-      switchTab(path) {
-        this.currentTab = path;
-        this.currentComponent = this.tabs.find((tab) => tab.path === path);
-      },
-    },
-  };
-  </script>
-  
-  <!-- ... Restliche Stile ... -->
+
+    const handleScroll = () => {
+      const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+      isTabBarSticky.value = scrollPosition < lastScrollPosition.value;
+      lastScrollPosition.value = scrollPosition;
+      isScrolled.value = scrollPosition > 0;
+    };
+
+    onMounted(() => {
+      window.addEventListener('scroll', handleScroll);
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('scroll', handleScroll);
+    });
+
+    return {
+      currentTab,
+      currentComponent,
+      isTabBarSticky,
+      isScrolled,
+      switchTab,
+    };
+  },
+};
+</script>
+
+<style lang="scss">
+.sticky-tab-bar {
+  position: relative;
+  z-index: 999;
+  transition: transform 0.3s ease-in-out;
+
+  &.scrolled {
+    transform: translateY(-100%);
+  }
+
+  &.sticky {
+    position: sticky;
+    top: 0;
+    transform: translateY(0);
+  }
+}
+</style>

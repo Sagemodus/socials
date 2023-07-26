@@ -41,6 +41,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding-bottom: 5px;
+  height: 50px;
 }
 
 #app {

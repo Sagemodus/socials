@@ -6,7 +6,7 @@ import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import App from './App.vue'
 import router from './router'
-import './firebase/init.js';
+import './firebase/init'; // Import and initialize Firebase before creating the app
 import store from './store/store'
 
 library.add(fas)

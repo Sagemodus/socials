@@ -18,9 +18,10 @@
 
 
 <script>
-
 import TopicBox from './TopicBox'; // Passe den Pfad entsprechend an
 import { mapState } from 'vuex';
+import { fetchDataFromDatabase } from '../firebase/dataFetcher';
+
 
 
 
@@ -45,6 +46,5 @@ export default {
 
   
 };
-
 
 </script>

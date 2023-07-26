@@ -82,14 +82,20 @@ export default createStore({
         id: 1,
         name: 'Dejan Pantos',
         profileImage: generateFakeProfileImage('Dejan Pantos'),
+<<<<<<< HEAD
         party: '4',
+=======
+>>>>>>> c125bd11585e1f66d2cb13e45a2525cc42746d1f
   
       },
       {
         id: 2,
         name: 'Lionel Messi',
         profileImage: generateFakeProfileImage('Lionel Messi'),
+<<<<<<< HEAD
         party: '-2',
+=======
+>>>>>>> c125bd11585e1f66d2cb13e45a2525cc42746d1f
   
       },
     ];

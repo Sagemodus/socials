@@ -18,12 +18,16 @@
 
 
 <script>
+import { ref, onMounted } from 'vue';
 import TopicBox from './TopicBox'; // Passe den Pfad entsprechend an
 import { mapState } from 'vuex';
 import { fetchDataFromDatabase } from '../firebase/dataFetcher';
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> c125bd11585e1f66d2cb13e45a2525cc42746d1f
 
 export default {
   components: {

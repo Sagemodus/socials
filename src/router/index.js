@@ -9,7 +9,9 @@ import Profile_view from '../views/Profile_view.vue';
 import Public from '../components/PublicComponent.vue';
 import FAndF from '../components/FAndFComponent.vue';
 import Community from '../components/CommunityComponent.vue';
-import topic from '../components/TopicComponentsGanzeSeite.vue';
+
+import TopicComponentGanzeSeite from '../components/TopicComponentsGanzeSeite.vue';
+
 //Components für Search
 import PopularComponent from '../components/PopularComponent.vue';
 import RecentComponent from '../components/RecentComponent.vue';
@@ -22,7 +24,8 @@ import NotificationConversationComponent from '../components/NotificationConvers
 import SearchbarComponent from '../components/SearchbarComponent.vue';
 // Swipe-Profil-Komponente
 import SwipeProfilComponent from '../components/SwipeProfilComponent.vue';
-//Settings View
+//CommentPage
+import CommentPage from '../components/SingleCommentPage.vue';
 
 
 
@@ -120,11 +123,12 @@ const routes = [
     name: 'SwipeProfilComponent',
     component: SwipeProfilComponent
   },
+  //Comemnt und Topic weiterleitung
+  { path: '/topic/:id', component: TopicComponentGanzeSeite },
   {
-    path: '/topic',
-    name: 'topic',
-    component : 'topic'
-  }
+    path: '/comment/:commentId',
+    component: CommentPage,
+  },
 ];
 
 const router = createRouter({

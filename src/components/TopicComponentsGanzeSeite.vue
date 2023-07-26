@@ -1,40 +1,98 @@
+// TopicComponentGanzeSeite.vue
 <template>
-    <div class="topic-page">
-      <h1>{{ topic.title }}</h1>
-      <div class="topic-details">
-        <img :src="topic.image" alt="Topic image" class="topic-image" />
-        <p class="topic-text">{{ topic.text }}</p>
+  <div>
+    <!-- Laden und Anzeigen von Themen -->
+    <div v-if="topic" class="topic-details">
+      <img :src="topic.image" alt="Topic image" class="topic-image" />
+      <h2 class="topic-title">{{ topic.title }}</h2>
+      <p class="topic-text">{{ topic.text }}</p>
+
+      <!-- Hinzufügen von Kommentaren -->
+      <AddComment @add-comment="addComment" />
+
+      <!-- Anzeige von Kommentaren -->
+      <div v-if="topic.comments.length > 0">
+        <CommentBox
+          v-for="comment in topic.comments"
+          :key="comment.id"
+          :comment="comment"
+          @reply-clicked="goToCommentPage"
+        />
       </div>
-      <div class="topic-likes">
-        <h2>Likes</h2>
-        <div class="like-group" v-for="(count, group) in topic.likes" :key="group">
-          <div class="like-group-title">Group {{ group }}</div>
-          <div class="like-count">{{ count }}</div>
-        </div>
+
+      <!-- Anzeige, wenn keine Kommentare vorhanden sind -->
+      <div v-else>
+        <p>Noch keine Kommentare vorhanden.</p>
       </div>
     </div>
-  </template>
-  
-  <script>
 
-  
-  export default {
-    props: {
-      id: {
-        type: String,
-        required: true,
-      },
+    <!-- Anzeige, wenn das Thema geladen wird -->
+    <div v-else>
+      <p>Loading topic...</p>
+    </div>
+  </div>
+</template>
+
+<script>
+import { mapGetters, mapActions } from 'vuex';
+import CommentBox from './CommentBox';
+import AddComment from '../components/addComment.vue';
+import { v4 as uuidv4 } from 'uuid';
+
+export default {
+  components: {
+    CommentBox,
+    AddComment,
+  },
+  computed: {
+    ...mapGetters(['getTopicById', 'getAllComments']),
+    topic() {
+      const topicId = parseInt(this.$route.params.id);
+      return this.getTopicById(topicId); 
     },
-    data() {
-      return {
-        topic: null,
+    comments() {
+      return this.getAllComments;
+    },
+    user() {
+      return this.$store.state.user; 
+    },
+  },
+  methods: {
+    ...mapActions(['fetchComments', 'addCommentToTopic', 'addReplyToComment']),
+    addComment(commentText) {
+      const newComment = {
+        id: uuidv4(),
+        text: commentText,
+        author: this.user,
       };
+      this.$store.dispatch('addCommentToTopic', { topicId: this.topic.id, comment: newComment });
     },
-   
-  };
-  </script>
-  
-  <style scoped>
-  /* Styles hier */
-  </style>
-  
+    goToCommentPage(commentId) {
+      const comment = this.$store.getters.getCommentById(commentId);
+      // Führt Sie zur Kommentarseite, wenn es ausreichend Antworten gibt
+      if (comment && comment.replies && comment.replies.length >= 3) {
+        this.$router.push(`/comment/${commentId}`);
+      } else {
+        const replies = comment.replies;
+        if (replies && replies.length > 0) {
+          for (const reply of replies) {
+            if (reply.replies && reply.replies.length >= 3) {
+              this.$router.push({
+                path: `/comment/${commentId}`,
+                query: { maxDisplayedReplies: this.maxDisplayedReplies },
+              });
+              return;
+            }
+          }
+        }
+      }
+    },
+  },
+  created() {
+    this.fetchComments();
+  },
+};
+</script>
+
+<!-- Rest des Codes bleibt unverändert -->
+

@@ -1,5 +1,3 @@
-
-//PublicComponent.vue
 <template>
   <div>
     <!-- Schleife über die Daten und erzeuge die TopicBox-Komponenten für jedes Thema -->

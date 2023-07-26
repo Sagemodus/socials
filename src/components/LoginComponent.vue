@@ -23,9 +23,6 @@
 
 <script>
 import { signInWithEmailAndPassword, getAuth } from 'firebase/auth';
-// eslint-disable-next-line no-unused-vars
-import firebase from '@/firebase/init.js';
-
 
 export default {
   data() {

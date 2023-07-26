@@ -15,7 +15,6 @@
 <script>
 import { mapGetters, mapActions} from 'vuex';
 import CommentBox from './CommentBox';
-import CommentReply from './CommentReply';
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -23,7 +22,7 @@ import { v4 as uuidv4 } from 'uuid';
 export default {
   components: {
     CommentBox,
-    CommentReply,
+
   },
   computed: {
     ...mapGetters(['getCommentById']),

@@ -10,6 +10,21 @@ function generateFakeUser(id, name) {
   };
 }
 
+
+
+function findComment(state, commentId) {
+  for (const topic of state.topics) {
+    const comment = topic.comments.find(comment => comment.id === commentId);
+    if (comment) {
+      return comment;
+    }
+  }
+  return null;
+}
+
+
+
+
 function generateFakeProfileImage(name) {
   return `https://fakeimg.pl/50x50/?text=${name[0]}&font=lobster`;
 }
@@ -20,29 +35,40 @@ function generateReplies(count, userId, userName) {
     const id = uuidv4();
     const newReply = {
       id,
-      text: `hallo ${i + 1}`,
+      text: `Hallo Antwort ${i + 1} von ${userName}...`,
       author: generateFakeUser(userId, userName),
-      votes: {}, // Hinzufügen von Votes
+      votes: {
+        upvotes: 5,
+        downvotes: 3,
+      },
+      replies: generateReplies(count - 1, userId, userName), // Generiere Antworten auf diese Antwort
     };
     replies.push(newReply);
   }
   return replies;
 }
 
+
+
 function generateComments(count, users) {
   const comments = [];
   for (let i = 0; i < count; i++) {
     const id = uuidv4();
-    const authorId = 2; // Ersetzen Sie dies durch die tatsächliche Benutzer-ID
+    const authorId = 2; 
     const newComment = {
       id,
-      text: `Test Kommentar ${i + 1}`,
+
+
+      text: `Test Kommentar ${i + 1} ...`,
       author: {
         ...users.find((user) => user.id === authorId),
         profileImage: generateFakeProfileImage(users[1].name)
       },
-      replies: generateReplies(3, 1, 'John Doe'),
-      votes: {}, // Hinzufügen von Votes
+      replies: generateReplies(4, 2, users[0].name, users),
+      votes: {
+        upvotes: 3, // Initialize upvotes with 0
+        downvotes: 0, // Initialize downvotes with 0
+      },
     };
     comments.push(newComment);
   }
@@ -52,12 +78,12 @@ function generateComments(count, users) {
 function generateTopics(count, users) {
   const topics = [];
   for (let i = 0; i < count; i++) {
-    const id = i + 1;
+    const id = uuidv4();
     const newTopic = {
       id,
       image: `https://fakeimg.pl/250x100/?text=Thema${id}&font=lobster`,
       title: `Fakes Thema ${id}`,
-      text: `Dies ist eine Beschreibung für das Fake Thema ${id}.Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.`,
+      text: `Dies ist eine Beschreibung...`,
       comments: generateComments(3, users),
       likes: {
         '-4': Math.floor(Math.random() * 100),
@@ -92,30 +118,79 @@ export default createStore({
         party: '-2',
   
       },
+      
     ];
 
     return {
       topics: generateTopics(10, users),
       users,
       currentUser: users[0],
+      userLikes: {},
+      likes: [], // Array to store likes
     };
+
   },
   mutations: {
-    UPVOTE_COMMENT(state, { comment, userId }) {
-      if (!comment.votes) {
-        comment.votes = {};
+    UPVOTE_COMMENT(state, { commentId }) {
+      const comment = findComment(state, commentId);
+      if (comment) {
+        if (comment.hasUpvoted) {
+          // Wenn bereits upgevotet, entferne den Upvote
+          comment.votes.upvotes -= 1;
+          comment.hasUpvoted = false;
+        } else {
+          // Wenn nicht upgevotet, füge den Upvote hinzu
+          if (comment.isDownvoted) {
+            // Wenn der Kommentar bereits downgevotet wurde, entferne den Downvote
+            comment.votes.downvotes -= 1;
+            comment.isDownvoted = false;
+          }
+          comment.votes.upvotes += 1;
+          comment.hasUpvoted = true;
+        }
       }
-      comment.votes[userId] = 1; // 1 steht für upvote
     },
-    DOWNVOTE_COMMENT(state, { comment, userId }) {
-      if (!comment.votes) {
-        comment.votes = {};
+    
+  
+    DOWNVOTE_COMMENT(state, { commentId }) {
+      const comment = findComment(state, commentId);
+      if (comment) {
+        if (comment.hasDownvoted) {
+          // Wenn bereits downgevotet, entferne den Downvote
+          comment.votes.downvotes -= 1;
+          comment.hasDownvoted = false;
+        } else {
+          // Wenn nicht downgevotet, füge den Downvote hinzu
+          if (comment.isUpvoted) {
+            // Wenn der Kommentar bereits upgevotet wurde, entferne den Upvote
+            comment.votes.upvotes -= 1;
+            comment.isUpvoted = false;
+          }
+          comment.votes.downvotes += 1;
+          comment.hasDownvoted = true;
+        }
       }
-      comment.votes[userId] = -1; // -1 steht für downvote
     },
-
-
-
+    
+    TOGGLE_LIKE(state, { topicId, group, userId }) {
+      const topic = state.topics.find(topic => topic.id === topicId);
+      if (topic) {
+        if (!state.userLikes[userId]) {
+          state.userLikes[userId] = {};
+        }
+  
+        // Überprüfen, ob der Benutzer bereits für diesen Beitrag in dieser Gruppe gestimmt hat
+        if (state.userLikes[userId][topicId] === group) {
+          // Wenn ja, entfernen Sie die Stimmabgabe
+          topic.likes[group] = topic.likes[group] > 0 ? topic.likes[group] - 1 : 0;
+          delete state.userLikes[userId][topicId];
+        } else {
+          // Wenn nicht, fügen Sie die Stimmabgabe hinzu
+          topic.likes[group] = topic.likes[group] ? topic.likes[group] + 1 : 1;
+          state.userLikes[userId][topicId] = group;
+        }
+      }
+    },
 
 
 
@@ -172,18 +247,15 @@ export default createStore({
     },
   },
   actions: {
+  
 
-    upvoteComment(context, { commentId }) {
-      const userId = context.state.currentUser.id; // Erhalten Sie die Benutzer-ID von currentUser im Zustand
-      const comment = context.getters.getCommentById(commentId);
-      context.commit('UPVOTE_COMMENT', { comment, userId });
+    upvoteComment({ commit }, { commentId }) {
+      commit('UPVOTE_COMMENT', { commentId });
     },
-    downvoteComment(context, { commentId }) {
-      const userId = context.state.currentUser.id; // Erhalten Sie die Benutzer-ID von currentUser im Zustand
-      const comment = context.getters.getCommentById(commentId);
-      context.commit('DOWNVOTE_COMMENT', { comment, userId });
+  
+    downvoteComment({ commit }, { commentId }) {
+      commit('DOWNVOTE_COMMENT', { commentId });
     },
-
     addCommentToTopic({ commit }, { topicId, comment }) {
       comment.id = uuidv4();
       commit('ADD_COMMENT_TO_TOPIC', { topicId, comment });
@@ -205,6 +277,18 @@ export default createStore({
     },
   },
   getters: {
+
+ // Check if a user has liked a comment
+ getAllComments(state) {
+  let allComments = [];
+  for (let topic of state.topics) {
+    allComments = allComments.concat(topic.comments);
+  }
+  return allComments;
+},
+
+
+
     getTopicById: (state) => (id) => {
       return state.topics.find((topic) => topic.id === id);
     },
@@ -253,14 +337,7 @@ export default createStore({
         return null;
       
     },
-    getAllComments: (state) => {
-      let allComments = [];
-      for (let topic of state.topics) {
-        allComments = allComments.concat(topic.comments);
-      }
-      return allComments;
-    },
-
+   
     getUserParty(state) {
       return state.currentUser.party;
     },

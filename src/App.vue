@@ -9,12 +9,12 @@
 
 <script>
 import Navbar from './components/navbar_unten.vue'
-import iconColor from '../src/components/farben';
+
 
 export default {
   components: {
     Navbar,
-    iconColor,
+   
   }
 }
 </script>
@@ -53,13 +53,35 @@ body {
   margin-bottom: 60px; /* Platz für die Navbar reservieren */
 }
 
-#app .antwort-text {
+#app .topic-text{
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+#app .comment-text{
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  margin-bottom: 0px;
+  padding-left: 15%;
+  padding-right: 5%;
+  margin-top: 0%;
   text-align: left;
-  padding-left: 40px;
-  padding-bottom: 0px;
-  margin-bottom: 16px;
-  margin-top: 0px;
-} 
+}
+#app .antwort-text{
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  margin-top: 5px;
+    margin-top: 0px;
+    padding-left: 15%;
+    padding-right: 5%;
+    padding-bottom: 0px;
+  margin-bottom: 0px;
+  text-align: left;
+}
+
+
+#app .conversation-prompt {
+  max-height: 1%;
+}
 /* Restlicher CSS-Code bleibt unverändert */
 /* ... */
 </style>

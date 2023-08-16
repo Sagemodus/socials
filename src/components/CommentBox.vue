@@ -14,14 +14,14 @@
       <button v-if="!showReplyForm" @click="showReplyForm = true" class="reply-button action-button">
         <font-awesome-icon :icon="['fas', 'commenting']" class="icon" :style="{ color: iconColor(currentUser.party) }"/>
       </button>
-      <button  class="action-button">
+      <button  class="action-button" @click="upvoteComment(comment.id)">
 
         <!--Vote Buttons-->
-  <font-awesome-icon @click="upvoteComment(comment.id)" :icon="['far', 'thumbs-up']" class="icon" :style="{ color: iconColor(currentUser.party) }"/>
+  <font-awesome-icon  :icon="['far', 'thumbs-up']" class="icon" :style="{ color: iconColor(currentUser.party) }"/>
   <p :style="{ color: iconColor(currentUser.party) }">{{ comment?.votes?.upvotes }}</p>
 </button>
-<button class="action-button">
-  <font-awesome-icon @click="downvoteComment(comment.id)" :icon="['far', 'thumbs-down']" class="icon" :style="{ color: iconColor(currentUser.party) }"/>
+<button class="action-button"  @click="downvoteComment(comment.id)">
+  <font-awesome-icon  :icon="['far', 'thumbs-down']" class="icon" :style="{ color: iconColor(currentUser.party) }"/>
   <p :style="{ color: iconColor(currentUser.party) }">{{ comment?.votes?.downvotes }}</p>
 </button>
 

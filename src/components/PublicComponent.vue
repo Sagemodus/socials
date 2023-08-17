@@ -22,6 +22,8 @@ import { mapState } from 'vuex';
 import { fetchDataFromDatabase } from '../firebase/dataFetcher';
 
 
+
+
 export default {
   components: {
     TopicBox,

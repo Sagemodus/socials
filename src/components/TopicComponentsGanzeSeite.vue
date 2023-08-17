@@ -45,16 +45,17 @@ export default {
     AddComment,
   },
   computed: {
-    ...mapGetters(['getTopicById', 'getAllComments']),
+    ...mapGetters(['getTopicById', 'getAllComments','getUserProfile']),
+   
     topic() {
-      const topicId = parseInt(this.$route.params.id);
+      const topicId = this.$route.params.id;
       return this.getTopicById(topicId); 
     },
     comments() {
       return this.getAllComments;
     },
     user() {
-      return this.$store.state.user; 
+      return this.$store.state.currentUser; 
     },
   },
   methods: {
@@ -63,7 +64,7 @@ export default {
       const newComment = {
         id: uuidv4(),
         text: commentText,
-        author: this.user,
+        author: this.getUserProfile,
       };
       this.$store.dispatch('addCommentToTopic', { topicId: this.topic.id, comment: newComment });
     },
@@ -94,5 +95,19 @@ export default {
 };
 </script>
 
-<!-- Rest des Codes bleibt unverändert -->
 
+<style scoped>
+.topic-details {
+  text-align: center; /* Zentriert den gesamten Inhalt in der Mitte */
+}
+img.topic-image {
+    min-width: 83%;
+}
+
+.topic-text {
+  text-align: justify;
+max-width: 83%;
+  margin: 0 auto; /* Zentriert den Text horizontal */
+  margin-bottom: 1.5em;
+}
+</style>

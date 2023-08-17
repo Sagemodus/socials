@@ -1,12 +1,13 @@
 //TopicBox.vue
 
 <template>
+
   <div v-if="topic" class="topic-box">
     <div class="topic-content" @click="goToTopic">
-      <img :src="topic.image" alt="Topic image" class="topic-image" />
-      <h2 class="topic-title">{{ topic.title }}</h2>
-      <p class="topic-text">{{ topic.text }}</p>
-    </div>
+  <img :src="topic.image" alt="Topic image" class="topic-image" />
+  <h2 class="topic-title">{{ topic.title }}</h2>
+  <p class="topic-text">{{ topic.text }}</p>
+</div>
     <div class="like-bar">
       <div
         class="section"
@@ -20,7 +21,26 @@
         </div>
       </div>
     </div>
-    <button @click="like(1)" :style="{ backgroundColor: getPartyColor(currentUser.party) }">Like</button>
+
+    <!--Like Button-->
+    <div class="interaction-bar">
+      <button 
+        ref="likeButton"
+        @click="like(1)" 
+        :style="{ color:iconColor(currentUser.party) }" 
+        class="like-button" 
+        :class="{ liked: userHasLiked }">
+        <font-awesome-icon :key="userHasLiked" :icon="[userHasLiked ? 'fas' : 'far', 'thumbs-up']" class="icon" />
+      </button>
+      <!--Konversation Button-->
+    <div class="conversation-prompt">
+     <button @click="goToTopic"  :style="{ color: iconColor(currentUser.party)}" class="join-button"><span>Join the Conversation now!
+       <font-awesome-icon :icon="['far', 'comments']" class="icon" @click="goToTopic"/>  </span>
+      </button>
+     
+    </div>
+
+  </div>
   </div>
   <div v-else>
     <!-- Placeholder content while topic is loading, or error message if topic couldn't be loaded -->
@@ -31,22 +51,42 @@
 <script>
 import { mapGetters, mapMutations } from 'vuex';
 import { iconColor } from './farben';
+import { useStore } from 'vuex'; // Importiere das useStore-Hook
+import { computed } from 'vue'; /// Importiere das computed-Hook
+
 
 
 export default {
+
+  setup() {
+    const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
+
+    // Zugriff auf den currentUser aus dem Vuex-Store
+    const currentUser = computed(() => store.state.currentUser);
+
+
+
+    
+    return {
+      iconColor,
+      currentUser, // Mache den currentUser verfügbar
+    };
+  },
+
   props: {
     id: {
-      type: Number,
+      type: String,
       required: true,
     },
   },
   computed: {
     ...mapGetters(['getTopicById']),
 
-
-    currentUser() {
-      return this.$store.getters.getUserProfile;
-    },
+    userHasLiked() {
+    return this.$store.state.userLikes[this.currentUser.id] &&
+      this.$store.state.userLikes[this.currentUser.id][this.id] === this.currentUser.party;
+  },
+  
 
     topic() {
       return this.getTopicById(this.id);
@@ -89,29 +129,44 @@ export default {
     };
   },
   methods: {
+  ...mapMutations(['TOGGLE_LIKE']),
 
+  like() {
+  const userParty = this.currentUser.party;
+  const userId = this.currentUser.id;
+  this.TOGGLE_LIKE({ topicId: this.id, group: userParty, userId });
 
-  
-    like(group) {
-    const userParty = this.currentUser.party;
-    this.toggleLike({ topicId: this.id, group });
-  },
+  // Animation
+  const likeButton = this.$refs.likeButton;
+  likeButton.animate([
+    // keyframes
+    { transform: 'scale(1)' },
+    { transform: 'scale(1.3)' },
+    { transform: 'scale(1)' }
+  ], {
+    // timing options
+    duration: 400,
+    easing: 'ease-in-out'
+  });
+},
     getPartyColor(party) {
       return iconColor(party);
     },
     goToTopic(event) {
-      const targetElement = event.target;
+  const targetElement = event.target;
 
-      // Überprüfen, ob auf das Bild oder die Box geklickt wurde
-      if (
-        targetElement.classList.contains('topic-image') ||
-        targetElement.classList.contains('topic-content')||
-        targetElement.classList.contains('topic-title')||
-           targetElement.classList.contains('topic-content')
-      ) {
-        this.$router.push(`/topic/${this.id}`);
-      }
-    },
+  // Überprüfen, ob auf das Bild oder die Box geklickt wurde
+  if (
+    targetElement.closest('.topic-image') ||
+    targetElement.closest('.topic-content') ||
+    targetElement.closest('.topic-title') ||
+    targetElement.closest('.topic-text') ||
+    targetElement.closest('.join-button') || 
+    targetElement.closest('.interaction-bar')
+  ) {
+    this.$router.push(`/topic/${this.id}`);
+  }
+},
     
     // Vuex-Mutation zum Aktualisieren der Likes aufrufen
 
@@ -123,21 +178,15 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss" >
 
-.like-button {
-  padding: 10px 20px;
-  border-radius: 5px;
-  border: none;
-  background-color: #3498db;
-  color: #fff;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+.conversation-prompt{
+  background-color: #ffffff;
+}
 
-  &:hover {
-    background-color: #2980b9;
-  }
+
+button.like-button{
+  background: white;
 }
 
 .topic-info {
@@ -156,7 +205,7 @@ export default {
   background-color: #ffffff;
   border-radius: 10px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  max-width: 400px;
+  max-width: 75%;
   transition: transform 0.3s ease-in-out;
 
   &:hover {
@@ -164,8 +213,8 @@ export default {
   }
 
   .topic-image {
-    
-    height: 100px;
+    min-width: 80%;
+   
     object-fit: cover;
   }
 
@@ -180,13 +229,14 @@ export default {
     margin: 10px 0;
     text-align: justify;
     color: #333;
+    
   }
 
   .like-bar {
     display: flex;
     width: 100%;
     height: 20px;
-    margin: 20px 0;
+    margin: 10px 0;
     align-items: flex-end;
 
     .section {
@@ -207,19 +257,22 @@ export default {
     }
   }
 
+  .join-button{
+    background-color: #fff;
+    max-height: 20%;
+  }
+
   button {
-    padding: 10px 20px;
+   
     border-radius: 5px;
     border: none;
-    background-color: #3498db;
-    color: #fff;
-    font-size: 16px;
+
+
+    font-size: 20px;
     cursor: pointer;
     transition: background-color 0.3s ease;
 
-    &:hover {
-      background-color: #2980b9;
-    }
+
   }
 }
 </style>

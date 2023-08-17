@@ -73,7 +73,15 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+h2.topic-title{
+  text-align: center;
+}
+ 
+.topic-text{
+padding-left: 1em;
+}
+
 .sticky-tab-bar {
   position: relative;
   z-index: 999;

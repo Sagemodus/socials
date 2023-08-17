@@ -2,7 +2,7 @@
   <div class="container">
    
     <div class="sticky-tab-bar" :class="{ 'sticky': isTabBarSticky, 'scrolled': isScrolled }">
-      <SearchbarComponent @search="performSearch" />
+       <SearchbarComponent @search="performSearch" />
       <SwipeNavigationComponentSuche :onTabSwitch="switchTab" />
     </div>
     <component :is="currentComponent" :searchResults="filteredResults" />
@@ -41,12 +41,13 @@ export default {
     const lastScrollPosition = ref(0);
     const isTabBarSticky = ref(false);
     const isScrolled = ref(false);
+    
 
     const switchTab = (path) => {
-      currentTab.value = path;
-      performFiltering();
-    };
-
+  currentTab.value = path;
+  currentComponent.value = tabs.find((tab) => tab.path === path).component;
+  performFiltering();
+};
     const handleScroll = () => {
       const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
       isTabBarSticky.value = scrollPosition < lastScrollPosition.value;
@@ -59,13 +60,7 @@ export default {
     }
     const currentComponent = ref(tabs.find((tab) => tab.path === currentTab.value).component);
 
-    onMounted(() => {
-      window.addEventListener('scroll', handleScroll);
-    });
 
-    onBeforeUnmount(() => {
-      window.removeEventListener('scroll', handleScroll);
-    });
 
     onMounted(() => {
       window.addEventListener('scroll', handleScroll);
@@ -74,6 +69,7 @@ export default {
     onBeforeUnmount(() => {
       window.removeEventListener('scroll', handleScroll);
     });
+
 
     return {
       currentTab,
@@ -84,56 +80,6 @@ export default {
       currentComponent,  // Hinzufügen der currentComponent Eigenschaft
     };
   },
-  methods: {
-    switchTab(path) {
-      this.currentTab = path;
-      this.performFiltering();
-    },
-
-/*    performSearch(searchText) {
-      // Führen Sie Ihre Suchlogik durch und aktualisieren Sie die ungefilterten searchResults basierend auf searchText
-
-      // Beispiel:
-      // Rufen Sie Ihre API auf und aktualisieren Sie searchResults mit den Suchergebnissen
-    //  this.searchResults = ['result1', 'result2', 'result3']; // Beispielhaftes Update der ungefilterten Suchergebnisse
-
-      // Aktualisieren Sie den aktuellen Tab und rufen Sie performFiltering auf, um die gefilterten Ergebnisse anzuzeigen
-
-      //this.currentTab = '/popular'; // Setzen Sie den Tab auf "Popular" am Anfang
-      //this.performFiltering();
-  
-
-      this.currentTab = '/popular'; // Setzen Sie den Tab auf "Popular" am Anfang
-      this.performFiltering();
-    },
-    */
-
-    performFiltering() {
-      // Führen Sie die Filterlogik basierend auf dem aktuellen Tab und den ungefilterten searchResults durch
-      // Beispiel: Filtern oder sortieren Sie die searchResults basierend auf dem aktuellen Tab
-      if (this.currentTab === '/popular') {
-        // Filterlogik für den Tab "Popular"
-        this.filteredResults = this.searchResults.filter(result => result.category === 'Popular');
-      } else if (this.currentTab === '/recent') {
-        // Filterlogik für den Tab "Recent"
-        this.filteredResults = this.searchResults.filter(result => result.category === 'Recent');
-      } else if (this.currentTab === '/people') {
-        // Filterlogik für den Tab "People"
-        this.filteredResults = this.searchResults.filter(result => result.category === 'People');
-      } else if (this.currentTab === '/conversation') {
-        // Filterlogik für den Tab "Conversation"
-        this.filteredResults = this.searchResults.filter(result => result.category === 'Conversation');
-      }
-    }
-  },
-  computed: {
-    currentComponent() {
-      return this.tabs.find((tab) => tab.path === this.currentTab)?.component;
-    }
-  },
-  created() {
-    this.performSearch();
-  }
 };
 </script>
 

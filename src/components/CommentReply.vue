@@ -1,19 +1,13 @@
-
 // CommentReply.vue
 <template>
 
   
-  <div class="comment-reply">
-    <!-- Antwort-Informationen anzeigen -->
+<div class="comment-reply" v-if="reply">
     <div class="profile-info">
       <img :src="reply?.author?.profileImage" alt="Profilbild" class="profile-image" />
-      <span class="profile-name">{{ reply?.author?.name }}</span>
-      
-<!-- Aufklapp-Button für Antworten -->
-
-
-</div>
-<p class="antwort-text">{{ reply?.text }}</p>
+      <h5 class="profile-name">{{ reply?.author?.name }}</h5>
+    </div>
+    <p class="antwort-text">{{ reply?.text }}</p>
     <!-- Antwort-Formular anzeigen, wenn auf diese Antwort geantwortet werden soll -->
    
 
@@ -27,111 +21,182 @@
 
 
       <!-- Antwort-Button anzeigen, um auf diese Antwort zu antworten -->
-      <button v-if="!showReplyForm && depth < 3" @click="showReplyForm = true" class="reply-button">
-        <font-awesome-icon :icon="['fas', 'commenting']" />
+      <button  v-if="!showReplyForm && depth < 5" @click="showReplyForm = true" class=" action-button">
+        <font-awesome-icon :style="{ color: iconColor(currentUser.party) }" :icon="['fas', 'commenting']" class="icon"/>
       </button>
 
-<!-- Upvote Button -->
-<button @click="upvoteComment" class="action-button">
-  <font-awesome-icon :icon="['fas', 'thumbs-up']" class="icon" />
-  <p>{{ upvotesCount }}</p>
-</button>
+    <!-- Upvote Button -->
+    <button @click="upvoteReplyAction(reply.id)" class="action-button" ref="upvoteButton">
+    <font-awesome-icon
+    :icon="reply.hasUpvoted ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']"
+      class="icon"
+      :style="{ color: iconColor(currentUser.party) }"
+    />
+    <p :style="{ color: iconColor(currentUser.party) }">{{ reply?.votes?.upvotes }}</p>
+  </button>
 
-<!-- Downvote Button -->
-<button @click="downvoteComment" class="action-button">
-  <font-awesome-icon :icon="['fas', 'thumbs-down']" class="icon" />
-  <p>{{ downvotesCount }}</p>
-</button>
-
+    <!-- Downvote Button -->
+    <button @click="downvoteReplyAction(reply.id)" class="action-button" ref="downvoteButton">
+      <font-awesome-icon
+      :icon="reply.hasDownvoted ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" 
+        class="icon"
+        :style="{ color: iconColor(currentUser.party) }"
+      />
+      <p :style="{ color: iconColor(currentUser.party) }">{{ reply?.votes?.downvotes }}</p>
+    </button>
 <!-- {{ replyCount+ ' Antworten' }} -->
 
-<button v-if="!showReplyForm && reply.replies && reply.replies.length > 0" @click="expandReplies = !expandReplies" :class="[ 'action-button', depth >= 3 ? 'disabled' : '']">
-  <font-awesome-icon v-if="!expandReplies" :icon="['fas', 'angle-down']" />
-  <font-awesome-icon v-else :icon="['fas', 'angle-up']" />
-  {{ replyCount+ ' Antworten' }}
-  <!-- Hier wird die Anzahl der Antworten angezeigt -->
+<button
+  v-if="reply && !showReplyForm && reply.replies && reply.replies.length > 0"
+  @click="expandReplies = !expandReplies"
+  :class="[ 'action-button', depth >= 5 ? 'disabled' : '']"
+>
+  <font-awesome-icon
+    :style="{ color: iconColor(currentUser.party) }"
+    v-if="!expandReplies"
+    :icon="['fas', 'angle-down']"
+  />
+  <font-awesome-icon
+    :style="{ color: iconColor(currentUser.party) }"
+    v-else
+    :icon="['fas', 'angle-up']"
+  />
+  <p :style="{ color: iconColor(currentUser.party) }">{{ replyCount + ' Replies' }}</p>
 </button>
 
 <!--Aufklapp Button-->
-<router-link v-if="reply && depth === 3" :to="`/comment/${reply.id}`" class="more-link">
-        Mehr Anzeigen..
-      </router-link>
+<router-link  :style="{ color: iconColor(currentUser.party) }" v-if="reply && depth === 5 && reply.id" :to="`/reply/${reply.id}`" class="more-link">
+  Show more..
+</router-link>
 </div>
 
 
 
 
     <!-- Anzeige der Antworten auf diese Antwort -->
-    <div v-if="expandReplies && reply.replies && reply.replies.length > 0" class="replies-section">
-      <comment-reply
-        v-for="nestedReply in reply.replies"
-        :key="nestedReply.id"
-        :reply="nestedReply"
-        :depth="depth + 1"
-        @reply-clicked="$emit('reply-clicked', $event)"
-      ></comment-reply>
-    </div>
-    <div v-if="showReplyForm" class="reply-form">
-      <textarea v-model="newReply" placeholder="Schreibe eine Antwort..." class="reply-textarea"></textarea>
+    <div v-if="expandReplies && reply && reply.replies && reply.replies.length > 0" class="replies-section">
+  <comment-reply
+    v-for="nestedReply in reply.replies"
+    :key="nestedReply.id"
+    :reply="nestedReply"
+    :depth="depth + 1"
+    @reply-clicked="$emit('reply-clicked', $event)"
+  ></comment-reply>
+</div>
+<div v-if="showReplyForm" class="reply-form">
+      <textarea v-model="newReply" placeholder="Write your answer..." class="reply-textarea"></textarea>
       <div class="reply-actions">
-        <button @click="cancelReply" class="cancel-reply-button">Abbrechen</button>
-        <button @click="submitReply" class="submit-reply-button">Antworten</button>
+        <button @click="cancelReply" class="cancel-reply-button">Cancel</button>
+        <button @click="submitReply" :style="{ backgroundColor: iconColor(currentUser.party)}" class="submit-reply-button">Reply</button>
       </div>
     </div>
+    <!--Antwortbox-->
+
 
   </div>
 </template>
  
-<script>
+<script >
 import { v4 as uuidv4 } from 'uuid';
 import { mapGetters, mapActions } from 'vuex';
+import { iconColor } from './farben';
+import { useStore } from 'vuex';
+import { computed, ref } from 'vue';
 
 export default {
-  props: {
-    reply: {
+props:{
+depth: {
+  type: Number,
+  default: 1,
+},
+reply: { // Füge das 'reply'-Prop hinzu
       type: Object,
       required: true,
     },
-    depth: {
-      type: Number,
-      default: 1,
-    },
+},
+
+
+  setup(props) {
+
+    const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
+
+    // Zugriff auf den currentUser aus dem Vuex-Store
+    const currentUser = computed(() => store.state.currentUser);
+
+ 
+
+ 
+    return {
+      iconColor,
+
+      currentUser,
+   
+ // Mache den currentUser verfügbar
+    };
   },
+
+
   data() {
     return {
-      showReplyForm: false,
+    showReplyForm: false,
     newReply: "",
     expandReplies: false,
+
     };
   },
   computed: {
-    ...mapGetters(['getUserProfile']),
-    ...mapGetters(['getCommentById']),
+    ...mapGetters(['getUserProfile', 'getCommentById']),
+
     replyCount() {
     return this.reply.replies ? this.reply.replies.length : 0;
 
     },
-    upvotesCount() {
-    return this.reply.votes ? Object.values(this.reply.votes).filter(vote => vote === 1).length : 0;
-  },
-  downvotesCount() {
-    return this.reply.votes ? Object.values(this.reply.votes).filter(vote => vote === -1).length : 0;
+   
+
+
   },
 
 
 
-  },
   methods: {
 
+    ...mapActions(['upvoteComment', 'downvoteComment', 'removeUpvoteComment', 'removeDownvoteComment', 'addReplyToComment']),
+   
 
-    upvoteComment() {
-    this.$store.dispatch('upvoteComment', { commentId: this.reply.id });
-  },
-  downvoteComment() {
-    this.$store.dispatch('downvoteComment', { commentId: this.reply.id });
+
+    upvoteReplyAction(replyId) {
+    this.$store.dispatch('upvoteReply', { replyId });
+    this.$nextTick(() => {
+      this.animateButton(this.$refs.upvoteButton);
+    });
+   
+    
   },
 
-    ...mapActions(['addReplyToComment']),
+  downvoteReplyAction(replyId) {
+    this.$store.dispatch('downvoteReply', { replyId });
+    this.$nextTick(() => {
+      this.animateButton(this.$refs.downvoteButton);
+    });
+  },
+
+  animateButton(buttonRef) {
+    const button = buttonRef;
+    button.animate(
+      [
+        // keyframes
+        { transform: 'scale(1)' },
+        { transform: 'scale(1.3)' },
+        { transform: 'scale(1)' }
+      ],
+      {
+        // timing options
+        duration: 400,
+        easing: 'ease-in-out'
+      }
+    );
+    },
+  
     // Funktion zum Einreichen einer Antwort auf diese Antwort
   submitReply() {
   const newReply = {
@@ -152,7 +217,7 @@ export default {
       this.showReplyForm = false;
 
       // Wenn die Verschachtelungstiefe 3 erreicht, leite den Benutzer zur gewünschten Seite weiter
-      if (this.depth >= 3) {
+      if (this.depth >= 5) {
         this.$emit('reply-clicked', this.reply.id);
       }
     },
@@ -161,71 +226,70 @@ export default {
     cancelReply() {
       this.newReply = "";
       this.showReplyForm = false;
+
     },
   },
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .comment-reply {
-
   border-left: 1px solid #ccc;
-  padding-left: 10px;
+  padding-right: 10px;
 
   .profile-info {
     display: flex;
-    align-items: flex-start;
-   
-
-    .profile-image {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-right: 10px;
-    }
-
-    .profile-name {
-      color: #000000;
-      font-size: 14px;
-      margin-bottom: 2px;
-    }
-
-    .comment-text {
-  color: #1c1c1c;
-  font-size: 14px;
-  text-align: left; 
-/* Fügt linksbündigen Text hinzu */
-}
+    align-items: center;
+    padding-left: 0.3em;
   }
+
+  .profile-image {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+  }
+
+  .profile-name {
+    color: #000000;
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .comment-text {
+    color: #1c1c1c;
+  font-size: 14px;
+  text-align: left;
+
+  }
+
   .more-link {
     display: inline-block;
     margin-top: 10px;
     color: #0079d3;
-    font-size: 12px; /* Reduzieren Sie die Schriftgröße */
-    font-weight: 400; /* Setzen Sie die Schriftstärke auf Normal */
-    text-decoration: none; /* Entfernen Sie die Unterstreichung */
+    font-size: 12px;
+    font-weight: 400;
+    text-decoration: none;
     cursor: pointer;
-    padding: 2px 5px; /* Fügen Sie ein wenig Polster hinzu */
-    background-color: #f6f7f8; /* Fügen Sie einen Hintergrund hinzu */
-    border-radius: 5px; /* Runden Sie die Ecken ein wenig ab */
+    padding: 2px 5px;
+    border-radius: 5px;
   }
 
   .reply-button {
     display: flex;
     margin-top: 15px;
-    color: #787878;
+    color: #878a8c;
     background: none;
     border: none;
     cursor: pointer;
-    
   }
 
   .reply-form {
     margin-top: 10px;
 
     .reply-textarea {
-      width: 100%;
+      width: 95%;
       min-height: 50px;
       resize: vertical;
       padding: 5px;
@@ -237,6 +301,7 @@ export default {
       display: flex;
       justify-content: space-between;
       margin-top: 10px;
+      margin-bottom: 10px;
 
       .cancel-reply-button,
       .submit-reply-button {
@@ -251,65 +316,55 @@ export default {
       }
 
       .submit-reply-button {
-        background: #0079d3;
         color: #fff;
-        border-color: #0079d3;
       }
     }
   }
 
   .replies-section {
     margin-top: 10px;
-  }
-
-  .more-link {
-    display: inline-block;
-    margin-top: 10px;
-    color: #0079d3;
-    text-decoration: none;
-    cursor: pointer;
+    padding-left: 3%; /* Adjusted padding for nested replies */
   }
 
   .expand-button {
-   
     border: none;
     background: none;
     cursor: pointer;
-    
-  
   }
+
   .buttons-container {
-  display: flex;
-  gap: 18px;
-  
-}
-.action-button {
-  background: none;
-  border: none;
-  color: #787878;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
- 
-}
+    display: flex;
+    gap: 18px;
+    padding-left:30px;
+    padding-right: 1px;
+   
+  }
 
-.action-button:hover {
-  color: #0079d3;
-}
+  .action-button {
+    background: none;
+    border: none;
+    color: #878a8c;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
 
-.icon {
-  font-size: 1em;
-}
+  .action-button:hover {
+    color: #0079d3;
+  }
 
-.right-aligned-button {
-  margin-left: auto;
-}
-.disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
+  .icon {
+    font-size: 1.3em;
+  }
 
+  .right-aligned-button {
+    margin-left: auto;
+  }
 
+  .disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
 }
 </style>

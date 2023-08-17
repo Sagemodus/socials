@@ -1,6 +1,7 @@
 // store.js
 import { createStore } from 'vuex';
 import { v4 as uuidv4 } from 'uuid';
+import Swal from 'sweetalert2';
 
 function generateFakeUser(id, name) {
   return {
@@ -9,6 +10,20 @@ function generateFakeUser(id, name) {
     profileImage: generateFakeProfileImage(name),
   };
 }
+
+
+
+function findComment(state, commentId) {
+  for (const topic of state.topics) {
+    const comment = topic.comments.find(comment => comment.id === commentId);
+    if (comment) {
+      return comment;
+    }
+  }
+  return null;
+}
+
+
 
 function generateFakeProfileImage(name) {
   return `https://fakeimg.pl/50x50/?text=${name[0]}&font=lobster`;
@@ -20,29 +35,53 @@ function generateReplies(count, userId, userName) {
     const id = uuidv4();
     const newReply = {
       id,
-      text: `hallo ${i + 1}`,
+      text: `Lorem ipsum dolor sit amet, ad sea mazim constituto, ius unum persius et. Eu per consul ocurreret referrentur. In malorum ocurreret eam, everti virtute duo ut. Cibo nominati ius te. Impedit facilis ex vim, pro te ceteros ullamcorper reprehendunt. Has cu graece nostrud civibus, eum quot ubique nostrum eu, per an placerat recteque.
+
+      Ne est modus cetero aperiri. Ne
+      c facer graeco insolens ut, ne summo bonorum mea, reque liber quaerendum pro et. Pro cu diam malis melius, cu vel etiam liber quaeque. Ea facete impedit vix. No usu omnis tollit.
+      
+      Nusquam omittam usu ex, pro ill
+
+
+       ud hendrerit ex, no his nostrum repudiare voluptatum. Vidisse volumus eum an, possit nostrud persecuti eum ut. Debitis offendit definitiones ne sed. Nominavi scribentur voluptatibus has an. Pro noster elaboraret ex. Eum ei paulo oratio.
+      
+      Postea dissen
+      
+      tiet id mei, dolore efficiantur an usu
+      , qui ex odio tempor offendit. In nec ludus exerci hendrerit. Aliquid legimus epicuri his ea, soluta menandri cum ex, eos te omnes vocent. Ponderum evertitur ne duo, harum labitur necessitatibus pri te, id exerci singulis interesset est. Dicat molestie in sed, pri eleifend recteque eu. Mei malis dicta ex. ${i + 1} von ${userName}...`,
       author: generateFakeUser(userId, userName),
-      votes: {}, // Hinzufügen von Votes
+      votes: {
+        upvotes: 5,
+        downvotes: 3,
+      },
+      replies: generateReplies(count - 1, userId, userName), // Generiere Antworten auf diese Antwort
     };
     replies.push(newReply);
   }
   return replies;
 }
 
+
+
 function generateComments(count, users) {
   const comments = [];
   for (let i = 0; i < count; i++) {
     const id = uuidv4();
-    const authorId = 2; // Ersetzen Sie dies durch die tatsächliche Benutzer-ID
+    const authorId = 2; 
     const newComment = {
       id,
-      text: `Test Kommentar ${i + 1}`,
+
+
+      text: `Test Kommentar ${i + 1} ...`,
       author: {
         ...users.find((user) => user.id === authorId),
         profileImage: generateFakeProfileImage(users[1].name)
       },
-      replies: generateReplies(3, 1, 'John Doe'),
-      votes: {}, // Hinzufügen von Votes
+      replies: generateReplies(4, 2, users[0].name, users),
+      votes: {
+        upvotes: 3, // Initialize upvotes with 0
+        downvotes: 0, // Initialize downvotes with 0
+      },
     };
     comments.push(newComment);
   }
@@ -52,12 +91,18 @@ function generateComments(count, users) {
 function generateTopics(count, users) {
   const topics = [];
   for (let i = 0; i < count; i++) {
-    const id = i + 1;
+    const id = uuidv4();
     const newTopic = {
       id,
       image: `https://fakeimg.pl/250x100/?text=Thema${id}&font=lobster`,
       title: `Fakes Thema ${id}`,
-      text: `Dies ist eine Beschreibung für das Fake Thema ${id}.Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.`,
+      text: `Lorem ipsum dolor sit amet, ad sea mazim constituto, ius unum persius et. Eu per consul ocurreret referrentur. In malorum ocurreret eam, everti virtute duo ut. Cibo nominati ius te. Impedit facilis ex vim, pro te ceteros ullamcorper reprehendunt. Has cu graece nostrud civibus, eum quot ubique nostrum eu, per an placerat recteque.
+
+      Ne est modus cetero aperiri. Nec facer graeco insolens ut, ne summo bonorum mea, reque liber quaerendum pro et. Pro cu diam malis melius, cu vel etiam liber quaeque. Ea facete impedit vix. No usu omnis tollit.
+      
+      Nusquam omittam usu ex, pro illud hendrerit ex, no his nostrum repudiare voluptatum. Vidisse volumus eum an, possit nostrud persecuti eum ut. Debitis offendit definitiones ne sed. Nominavi scribentur voluptatibus has an. Pro noster elaboraret ex. Eum ei paulo oratio.
+      
+      Postea dissentiet id mei, dolore efficiantur an usu, qui ex odio tempor offendit. In nec ludus exerci hendrerit. Aliquid legimus epicuri his ea, soluta menandri cum ex, eos te omnes vocent. Ponderum evertitur ne duo, harum labitur necessitatibus pri te, id exerci singulis interesset est. Dicat molestie in sed, pri eleifend recteque eu. Mei malis dicta ex.`,
       comments: generateComments(3, users),
       likes: {
         '-4': Math.floor(Math.random() * 100),
@@ -82,46 +127,148 @@ export default createStore({
         id: 1,
         name: 'Dejan Pantos',
         profileImage: generateFakeProfileImage('Dejan Pantos'),
-<<<<<<< HEAD
         party: '4',
-=======
->>>>>>> c125bd11585e1f66d2cb13e45a2525cc42746d1f
   
       },
       {
         id: 2,
         name: 'Lionel Messi',
         profileImage: generateFakeProfileImage('Lionel Messi'),
-<<<<<<< HEAD
         party: '-2',
-=======
->>>>>>> c125bd11585e1f66d2cb13e45a2525cc42746d1f
   
       },
+      
     ];
 
     return {
       topics: generateTopics(10, users),
       users,
       currentUser: users[0],
+      userLikes: {},
+      likes: [], // Array to store likes
     };
+
   },
   mutations: {
-    UPVOTE_COMMENT(state, { comment, userId }) {
-      if (!comment.votes) {
-        comment.votes = {};
+    UPVOTE_COMMENT(state, { commentId }) {
+      const comment = findComment(state, commentId);
+      if (comment) {
+        if (comment.hasUpvoted) {
+          // Wenn bereits upgevotet, entferne den Upvote
+          comment.votes.upvotes -= 1;
+          comment.hasUpvoted = false;
+        } else {
+          // Wenn nicht upgevotet, füge den Upvote hinzu
+          if (comment.isDownvoted) {
+            // Wenn der Kommentar bereits downgevotet wurde, entferne den Downvote
+            comment.votes.downvotes -= 1;
+            comment.isDownvoted = false;
+          } else {
+            // Wenn weder upgevotet noch downgevotet wurde, initialisiere die Vote-Eigenschaften
+            if (!comment.votes) {
+              comment.votes = { upvotes: 0, downvotes: 0 };
+            }
+            comment.votes.upvotes += 1;
+            comment.hasUpvoted = true;
+          }
+        }
       }
-      comment.votes[userId] = 1; // 1 steht für upvote
     },
-    DOWNVOTE_COMMENT(state, { comment, userId }) {
-      if (!comment.votes) {
-        comment.votes = {};
+    
+  
+    DOWNVOTE_COMMENT(state, { commentId }) {
+      const comment = findComment(state, commentId);
+      if (comment) {
+        if (comment.hasDownvoted) {
+          // Wenn bereits downgevotet, entferne den Downvote
+          comment.votes.downvotes -= 1;
+          comment.hasDownvoted = false;
+        } else {
+          // Wenn nicht downgevotet, füge den Downvote hinzu
+          if (comment.hasUpvoted) {
+            // Wenn der Kommentar bereits upgevotet wurde, entferne den Upvote
+            comment.votes.upvotes -= 1;
+            comment.hasUpvoted = false;
+          }
+          // Initialisiere die Vote-Eigenschaften, wenn es noch keine gibt
+          if (!comment.votes) {
+            comment.votes = { upvotes: 0, downvotes: 0 };
+          }
+          comment.votes.downvotes += 1;
+          comment.hasDownvoted = true;
+        }
       }
-      comment.votes[userId] = -1; // -1 steht für downvote
     },
+  // Mutation für das Downvoten einer Antwort (reply)
+  DOWNVOTE_REPLY(state, { replyId }) {
+    const reply = this.getters.getCommentById(replyId); // Nutze die Getter-Funktion
+    if (reply) {
+      if (reply.hasDownvoted) {
+        // Wenn bereits downgevotet, entferne den Downvote
+        reply.votes.downvotes -= 1;
+        reply.hasDownvoted = false;
+      } else {
+        // Wenn nicht downgevotet, füge den Downvote hinzu
+        if (reply.hasUpvoted) {
+          // Wenn die Antwort bereits upgevotet wurde, entferne den Upvote
+          reply.votes.upvotes -= 1;
+          reply.hasUpvoted = false;
+        }
+        // Initialisiere die Vote-Eigenschaften, wenn es noch keine gibt
+        if (!reply.votes) {
+          reply.votes = { upvotes: 0, downvotes: 0 };
+        }
+        reply.votes.downvotes += 1;
+        reply.hasDownvoted = true;
+      }
+    }
+  },
+
+  // Mutation für das Upvoten einer Antwort (reply)
+  UPVOTE_REPLY(state, { replyId }) {
+    const reply = this.getters.getCommentById(replyId); // Nutze die Getter-Funktion
+    if (reply) {
+      if (reply.hasUpvoted) {
+        // Wenn bereits upgevotet, entferne den Upvote
+        reply.votes.upvotes -= 1;
+        reply.hasUpvoted = false;
+      } else {
+        // Wenn nicht upgevotet, füge den Upvote hinzu
+        if (reply.hasDownvoted) {
+          // Wenn die Antwort bereits downgevotet wurde, entferne den Downvote
+          reply.votes.downvotes -= 1;
+          reply.hasDownvoted = false;
+        }
+        // Initialisiere die Vote-Eigenschaften, wenn es noch keine gibt
+        if (!reply.votes) {
+          reply.votes = { upvotes: 0, downvotes: 0 };
+        }
+        reply.votes.upvotes += 1;
+        reply.hasUpvoted = true;
+      }
+    }
+  },
 
 
-
+    TOGGLE_LIKE(state, { topicId, group, userId }) {
+      const topic = state.topics.find(topic => topic.id === topicId);
+      if (topic) {
+        if (!state.userLikes[userId]) {
+          state.userLikes[userId] = {};
+        }
+  
+        // Überprüfen, ob der Benutzer bereits für diesen Beitrag in dieser Gruppe gestimmt hat
+        if (state.userLikes[userId][topicId] === group) {
+          // Wenn ja, entfernen Sie die Stimmabgabe
+          topic.likes[group] = topic.likes[group] > 0 ? topic.likes[group] - 1 : 0;
+          delete state.userLikes[userId][topicId];
+        } else {
+          // Wenn nicht, fügen Sie die Stimmabgabe hinzu
+          topic.likes[group] = topic.likes[group] ? topic.likes[group] + 1 : 1;
+          state.userLikes[userId][topicId] = group;
+        }
+      }
+    },
 
 
 
@@ -129,67 +276,44 @@ export default createStore({
     ADD_COMMENT_TO_TOPIC(state, { topicId, comment }) {
       const topic = state.topics.find((topic) => topic.id === topicId);
       if (topic) {
-        topic.comments.push(comment);
+        if (comment.text.trim() !== "") {
+          // Initialisiere die Vote-Eigenschaften für den neuen Kommentar
+          comment.votes = { upvotes: 0, downvotes: 0 };
+          topic.comments.push(comment);
+        } else {
+          // Zeige eine SweetAlert-Meldung, wenn der Kommentar leer ist
+          Swal.fire({
+            icon: 'error',
+            title: 'Fehler',
+            text: 'Der Kommentar darf nicht leer sein.',
+            confirmButtonText: 'OK',
+          });
+        }
       }
     },
-    ADD_REPLY_TO_COMMENT(state, { commentId, reply }) {
-      function searchReplies(replies) {
-        for (const reply of replies) {
-          if (reply.id === commentId) {
-            return reply;
-          }
-          if (reply.replies) {
-            const foundReply = searchReplies(reply.replies);
-            if (foundReply) {
-              return foundReply;
-            }
-          }
-        }
-        return null;
-      }
+   
+    
+    
+  
 
-      for (const topic of state.topics) {
-        for (const comment of topic.comments) {
-          if (comment.id === commentId) {
-            if (!comment.replies) {
-              comment.replies = [];
-            }
-            comment.replies.push(reply);
-            return;
-          }
-          if (comment.replies) {
-            const foundComment = searchReplies(comment.replies);
-            if (foundComment) {
-              if (!foundComment.replies) {
-                foundComment.replies = [];
-              }
-              foundComment.replies.push(reply);
-              return;
-            }
-          }
-        }
-      }
-    },
-    ADD_COMMENTS_TO_TOPIC(state, { topicId, comments }) {
-      const topic = state.topics.find((topic) => topic.id === topicId);
-      if (topic) {
-        topic.comments.push(...comments);
-      }
-    },
   },
   actions: {
 
-    upvoteComment(context, { commentId }) {
-      const userId = context.state.currentUser.id; // Erhalten Sie die Benutzer-ID von currentUser im Zustand
-      const comment = context.getters.getCommentById(commentId);
-      context.commit('UPVOTE_COMMENT', { comment, userId });
+    upvoteComment({ commit }, { commentId }) {
+      commit('UPVOTE_COMMENT', { commentId });
     },
-    downvoteComment(context, { commentId }) {
-      const userId = context.state.currentUser.id; // Erhalten Sie die Benutzer-ID von currentUser im Zustand
-      const comment = context.getters.getCommentById(commentId);
-      context.commit('DOWNVOTE_COMMENT', { comment, userId });
+  
+    downvoteComment({ commit }, { commentId }) {
+      commit('DOWNVOTE_COMMENT', { commentId });
     },
+  
 
+    upvoteReply({ commit }, { replyId }) {
+      commit('UPVOTE_REPLY', { replyId });
+    },
+    downvoteReply({ commit }, { replyId }) {
+      commit('DOWNVOTE_REPLY', { replyId });
+    }, 
     addCommentToTopic({ commit }, { topicId, comment }) {
       comment.id = uuidv4();
       commit('ADD_COMMENT_TO_TOPIC', { topicId, comment });
@@ -211,6 +335,18 @@ export default createStore({
     },
   },
   getters: {
+
+ // Check if a user has liked a comment
+ getAllComments(state) {
+  let allComments = [];
+  for (let topic of state.topics) {
+    allComments = allComments.concat(topic.comments);
+  }
+  return allComments;
+},
+
+
+
     getTopicById: (state) => (id) => {
       return state.topics.find((topic) => topic.id === id);
     },
@@ -259,14 +395,7 @@ export default createStore({
         return null;
       
     },
-    getAllComments: (state) => {
-      let allComments = [];
-      for (let topic of state.topics) {
-        allComments = allComments.concat(topic.comments);
-      }
-      return allComments;
-    },
-
+   
     getUserParty(state) {
       return state.currentUser.party;
     },

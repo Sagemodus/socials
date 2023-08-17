@@ -25,7 +25,7 @@ import SearchbarComponent from '../components/SearchbarComponent.vue';
 // Swipe-Profil-Komponente
 import SwipeProfilComponent from '../components/SwipeProfilComponent.vue';
 //CommentPage
-import CommentPage from '../components/SingleCommentPage.vue';
+import ReplyPage from '../components/SingleReplyPage.vue';
 
 
 
@@ -126,8 +126,8 @@ const routes = [
   //Comemnt und Topic weiterleitung
   { path: '/topic/:id', component: TopicComponentGanzeSeite },
   {
-    path: '/comment/:commentId',
-    component: CommentPage,
+    path: '/reply/:commentId',
+    component: ReplyPage,
   },
 ];
 

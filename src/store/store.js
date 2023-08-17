@@ -1,6 +1,7 @@
 // store.js
 import { createStore } from 'vuex';
 import { v4 as uuidv4 } from 'uuid';
+import Swal from 'sweetalert2';
 
 function generateFakeUser(id, name) {
   return {
@@ -24,7 +25,6 @@ function findComment(state, commentId) {
 
 
 
-
 function generateFakeProfileImage(name) {
   return `https://fakeimg.pl/50x50/?text=${name[0]}&font=lobster`;
 }
@@ -35,7 +35,20 @@ function generateReplies(count, userId, userName) {
     const id = uuidv4();
     const newReply = {
       id,
-      text: `Hallo Antwort ${i + 1} von ${userName}...`,
+      text: `Lorem ipsum dolor sit amet, ad sea mazim constituto, ius unum persius et. Eu per consul ocurreret referrentur. In malorum ocurreret eam, everti virtute duo ut. Cibo nominati ius te. Impedit facilis ex vim, pro te ceteros ullamcorper reprehendunt. Has cu graece nostrud civibus, eum quot ubique nostrum eu, per an placerat recteque.
+
+      Ne est modus cetero aperiri. Ne
+      c facer graeco insolens ut, ne summo bonorum mea, reque liber quaerendum pro et. Pro cu diam malis melius, cu vel etiam liber quaeque. Ea facete impedit vix. No usu omnis tollit.
+      
+      Nusquam omittam usu ex, pro ill
+
+
+       ud hendrerit ex, no his nostrum repudiare voluptatum. Vidisse volumus eum an, possit nostrud persecuti eum ut. Debitis offendit definitiones ne sed. Nominavi scribentur voluptatibus has an. Pro noster elaboraret ex. Eum ei paulo oratio.
+      
+      Postea dissen
+      
+      tiet id mei, dolore efficiantur an usu
+      , qui ex odio tempor offendit. In nec ludus exerci hendrerit. Aliquid legimus epicuri his ea, soluta menandri cum ex, eos te omnes vocent. Ponderum evertitur ne duo, harum labitur necessitatibus pri te, id exerci singulis interesset est. Dicat molestie in sed, pri eleifend recteque eu. Mei malis dicta ex. ${i + 1} von ${userName}...`,
       author: generateFakeUser(userId, userName),
       votes: {
         upvotes: 5,
@@ -83,7 +96,13 @@ function generateTopics(count, users) {
       id,
       image: `https://fakeimg.pl/250x100/?text=Thema${id}&font=lobster`,
       title: `Fakes Thema ${id}`,
-      text: `Dies ist eine Beschreibung...`,
+      text: `Lorem ipsum dolor sit amet, ad sea mazim constituto, ius unum persius et. Eu per consul ocurreret referrentur. In malorum ocurreret eam, everti virtute duo ut. Cibo nominati ius te. Impedit facilis ex vim, pro te ceteros ullamcorper reprehendunt. Has cu graece nostrud civibus, eum quot ubique nostrum eu, per an placerat recteque.
+
+      Ne est modus cetero aperiri. Nec facer graeco insolens ut, ne summo bonorum mea, reque liber quaerendum pro et. Pro cu diam malis melius, cu vel etiam liber quaeque. Ea facete impedit vix. No usu omnis tollit.
+      
+      Nusquam omittam usu ex, pro illud hendrerit ex, no his nostrum repudiare voluptatum. Vidisse volumus eum an, possit nostrud persecuti eum ut. Debitis offendit definitiones ne sed. Nominavi scribentur voluptatibus has an. Pro noster elaboraret ex. Eum ei paulo oratio.
+      
+      Postea dissentiet id mei, dolore efficiantur an usu, qui ex odio tempor offendit. In nec ludus exerci hendrerit. Aliquid legimus epicuri his ea, soluta menandri cum ex, eos te omnes vocent. Ponderum evertitur ne duo, harum labitur necessitatibus pri te, id exerci singulis interesset est. Dicat molestie in sed, pri eleifend recteque eu. Mei malis dicta ex.`,
       comments: generateComments(3, users),
       likes: {
         '-4': Math.floor(Math.random() * 100),
@@ -144,9 +163,14 @@ export default createStore({
             // Wenn der Kommentar bereits downgevotet wurde, entferne den Downvote
             comment.votes.downvotes -= 1;
             comment.isDownvoted = false;
+          } else {
+            // Wenn weder upgevotet noch downgevotet wurde, initialisiere die Vote-Eigenschaften
+            if (!comment.votes) {
+              comment.votes = { upvotes: 0, downvotes: 0 };
+            }
+            comment.votes.upvotes += 1;
+            comment.hasUpvoted = true;
           }
-          comment.votes.upvotes += 1;
-          comment.hasUpvoted = true;
         }
       }
     },
@@ -161,17 +185,71 @@ export default createStore({
           comment.hasDownvoted = false;
         } else {
           // Wenn nicht downgevotet, füge den Downvote hinzu
-          if (comment.isUpvoted) {
+          if (comment.hasUpvoted) {
             // Wenn der Kommentar bereits upgevotet wurde, entferne den Upvote
             comment.votes.upvotes -= 1;
-            comment.isUpvoted = false;
+            comment.hasUpvoted = false;
+          }
+          // Initialisiere die Vote-Eigenschaften, wenn es noch keine gibt
+          if (!comment.votes) {
+            comment.votes = { upvotes: 0, downvotes: 0 };
           }
           comment.votes.downvotes += 1;
           comment.hasDownvoted = true;
         }
       }
     },
-    
+  // Mutation für das Downvoten einer Antwort (reply)
+  DOWNVOTE_REPLY(state, { replyId }) {
+    const reply = this.getters.getCommentById(replyId); // Nutze die Getter-Funktion
+    if (reply) {
+      if (reply.hasDownvoted) {
+        // Wenn bereits downgevotet, entferne den Downvote
+        reply.votes.downvotes -= 1;
+        reply.hasDownvoted = false;
+      } else {
+        // Wenn nicht downgevotet, füge den Downvote hinzu
+        if (reply.hasUpvoted) {
+          // Wenn die Antwort bereits upgevotet wurde, entferne den Upvote
+          reply.votes.upvotes -= 1;
+          reply.hasUpvoted = false;
+        }
+        // Initialisiere die Vote-Eigenschaften, wenn es noch keine gibt
+        if (!reply.votes) {
+          reply.votes = { upvotes: 0, downvotes: 0 };
+        }
+        reply.votes.downvotes += 1;
+        reply.hasDownvoted = true;
+      }
+    }
+  },
+
+  // Mutation für das Upvoten einer Antwort (reply)
+  UPVOTE_REPLY(state, { replyId }) {
+    const reply = this.getters.getCommentById(replyId); // Nutze die Getter-Funktion
+    if (reply) {
+      if (reply.hasUpvoted) {
+        // Wenn bereits upgevotet, entferne den Upvote
+        reply.votes.upvotes -= 1;
+        reply.hasUpvoted = false;
+      } else {
+        // Wenn nicht upgevotet, füge den Upvote hinzu
+        if (reply.hasDownvoted) {
+          // Wenn die Antwort bereits downgevotet wurde, entferne den Downvote
+          reply.votes.downvotes -= 1;
+          reply.hasDownvoted = false;
+        }
+        // Initialisiere die Vote-Eigenschaften, wenn es noch keine gibt
+        if (!reply.votes) {
+          reply.votes = { upvotes: 0, downvotes: 0 };
+        }
+        reply.votes.upvotes += 1;
+        reply.hasUpvoted = true;
+      }
+    }
+  },
+
+
     TOGGLE_LIKE(state, { topicId, group, userId }) {
       const topic = state.topics.find(topic => topic.id === topicId);
       if (topic) {
@@ -198,56 +276,28 @@ export default createStore({
     ADD_COMMENT_TO_TOPIC(state, { topicId, comment }) {
       const topic = state.topics.find((topic) => topic.id === topicId);
       if (topic) {
-        topic.comments.push(comment);
+        if (comment.text.trim() !== "") {
+          // Initialisiere die Vote-Eigenschaften für den neuen Kommentar
+          comment.votes = { upvotes: 0, downvotes: 0 };
+          topic.comments.push(comment);
+        } else {
+          // Zeige eine SweetAlert-Meldung, wenn der Kommentar leer ist
+          Swal.fire({
+            icon: 'error',
+            title: 'Fehler',
+            text: 'Der Kommentar darf nicht leer sein.',
+            confirmButtonText: 'OK',
+          });
+        }
       }
     },
-    ADD_REPLY_TO_COMMENT(state, { commentId, reply }) {
-      function searchReplies(replies) {
-        for (const reply of replies) {
-          if (reply.id === commentId) {
-            return reply;
-          }
-          if (reply.replies) {
-            const foundReply = searchReplies(reply.replies);
-            if (foundReply) {
-              return foundReply;
-            }
-          }
-        }
-        return null;
-      }
+   
+    
+    
+  
 
-      for (const topic of state.topics) {
-        for (const comment of topic.comments) {
-          if (comment.id === commentId) {
-            if (!comment.replies) {
-              comment.replies = [];
-            }
-            comment.replies.push(reply);
-            return;
-          }
-          if (comment.replies) {
-            const foundComment = searchReplies(comment.replies);
-            if (foundComment) {
-              if (!foundComment.replies) {
-                foundComment.replies = [];
-              }
-              foundComment.replies.push(reply);
-              return;
-            }
-          }
-        }
-      }
-    },
-    ADD_COMMENTS_TO_TOPIC(state, { topicId, comments }) {
-      const topic = state.topics.find((topic) => topic.id === topicId);
-      if (topic) {
-        topic.comments.push(...comments);
-      }
-    },
   },
   actions: {
-  
 
     upvoteComment({ commit }, { commentId }) {
       commit('UPVOTE_COMMENT', { commentId });
@@ -256,6 +306,14 @@ export default createStore({
     downvoteComment({ commit }, { commentId }) {
       commit('DOWNVOTE_COMMENT', { commentId });
     },
+  
+
+    upvoteReply({ commit }, { replyId }) {
+      commit('UPVOTE_REPLY', { replyId });
+    },
+    downvoteReply({ commit }, { replyId }) {
+      commit('DOWNVOTE_REPLY', { replyId });
+    }, 
     addCommentToTopic({ commit }, { topicId, comment }) {
       comment.id = uuidv4();
       commit('ADD_COMMENT_TO_TOPIC', { topicId, comment });

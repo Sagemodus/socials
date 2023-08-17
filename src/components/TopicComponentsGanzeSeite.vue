@@ -96,4 +96,18 @@ export default {
 </script>
 
 
+<style scoped>
+.topic-details {
+  text-align: center; /* Zentriert den gesamten Inhalt in der Mitte */
+}
+img.topic-image {
+    min-width: 83%;
+}
 
+.topic-text {
+  text-align: justify;
+max-width: 83%;
+  margin: 0 auto; /* Zentriert den Text horizontal */
+  margin-bottom: 1.5em;
+}
+</style>

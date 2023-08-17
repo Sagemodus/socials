@@ -21,14 +21,14 @@
 
 
       <!-- Antwort-Button anzeigen, um auf diese Antwort zu antworten -->
-      <button  v-if="!showReplyForm && depth < 3" @click="showReplyForm = true" class=" action-button">
+      <button  v-if="!showReplyForm && depth < 5" @click="showReplyForm = true" class=" action-button">
         <font-awesome-icon :style="{ color: iconColor(currentUser.party) }" :icon="['fas', 'commenting']" class="icon"/>
       </button>
 
     <!-- Upvote Button -->
-    <button @click="upvoteReplyAction(reply)" class="action-button">
+    <button @click="upvoteReplyAction(reply.id)" class="action-button" ref="upvoteButton">
     <font-awesome-icon
-      :icon="[ 'far', 'thumbs-up']"
+    :icon="reply.hasUpvoted ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']"
       class="icon"
       :style="{ color: iconColor(currentUser.party) }"
     />
@@ -36,9 +36,9 @@
   </button>
 
     <!-- Downvote Button -->
-    <button @click="downvoteReplyAction(reply)" class="action-button">
+    <button @click="downvoteReplyAction(reply.id)" class="action-button" ref="downvoteButton">
       <font-awesome-icon
-        :icon="[ 'far', 'thumbs-down']"
+      :icon="reply.hasDownvoted ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" 
         class="icon"
         :style="{ color: iconColor(currentUser.party) }"
       />
@@ -49,7 +49,7 @@
 <button
   v-if="reply && !showReplyForm && reply.replies && reply.replies.length > 0"
   @click="expandReplies = !expandReplies"
-  :class="[ 'action-button', depth >= 3 ? 'disabled' : '']"
+  :class="[ 'action-button', depth >= 5 ? 'disabled' : '']"
 >
   <font-awesome-icon
     :style="{ color: iconColor(currentUser.party) }"
@@ -65,7 +65,7 @@
 </button>
 
 <!--Aufklapp Button-->
-<router-link  :style="{ color: iconColor(currentUser.party) }" v-if="reply && depth === 3 && reply.id" :to="`/comment/${reply.id}`" class="more-link">
+<router-link  :style="{ color: iconColor(currentUser.party) }" v-if="reply && depth === 5 && reply.id" :to="`/reply/${reply.id}`" class="more-link">
   Show more..
 </router-link>
 </div>
@@ -164,6 +164,38 @@ reply: { // Füge das 'reply'-Prop hinzu
    
 
 
+    upvoteReplyAction(replyId) {
+    this.$store.dispatch('upvoteReply', { replyId });
+    this.$nextTick(() => {
+      this.animateButton(this.$refs.upvoteButton);
+    });
+   
+    
+  },
+
+  downvoteReplyAction(replyId) {
+    this.$store.dispatch('downvoteReply', { replyId });
+    this.$nextTick(() => {
+      this.animateButton(this.$refs.downvoteButton);
+    });
+  },
+
+  animateButton(buttonRef) {
+    const button = buttonRef;
+    button.animate(
+      [
+        // keyframes
+        { transform: 'scale(1)' },
+        { transform: 'scale(1.3)' },
+        { transform: 'scale(1)' }
+      ],
+      {
+        // timing options
+        duration: 400,
+        easing: 'ease-in-out'
+      }
+    );
+    },
   
     // Funktion zum Einreichen einer Antwort auf diese Antwort
   submitReply() {
@@ -185,7 +217,7 @@ reply: { // Füge das 'reply'-Prop hinzu
       this.showReplyForm = false;
 
       // Wenn die Verschachtelungstiefe 3 erreicht, leite den Benutzer zur gewünschten Seite weiter
-      if (this.depth >= 3) {
+      if (this.depth >= 5) {
         this.$emit('reply-clicked', this.reply.id);
       }
     },
@@ -203,12 +235,12 @@ reply: { // Füge das 'reply'-Prop hinzu
 <style lang="scss">
 .comment-reply {
   border-left: 1px solid #ccc;
-  max-width: 99%;
+  padding-right: 10px;
 
   .profile-info {
     display: flex;
     align-items: center;
-    padding-left: 1%;
+    padding-left: 0.3em;
   }
 
   .profile-image {
@@ -303,8 +335,9 @@ reply: { // Füge das 'reply'-Prop hinzu
   .buttons-container {
     display: flex;
     gap: 18px;
-    padding-left: 15%;
+    padding-left:30px;
     padding-right: 1px;
+   
   }
 
   .action-button {

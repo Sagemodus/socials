@@ -1,5 +1,5 @@
 <template>
-  <div class="comment-box">
+<div class="comment-box">
     <div class="user-info">
       <div class="header-comment">
         <img :src="comment?.author?.profileImage" alt="Profilbild" class="profile-image" />
@@ -14,18 +14,24 @@
       <button v-if="!showReplyForm" @click="showReplyForm = true" class="reply-button action-button">
         <font-awesome-icon :icon="['fas', 'commenting']" class="icon" :style="{ color: iconColor(currentUser.party) }"/>
       </button>
-      <button  class="action-button" @click="upvoteComment(comment.id)">
-
-        <!--Vote Buttons-->
-  <font-awesome-icon  :icon="['far', 'thumbs-up']" class="icon" :style="{ color: iconColor(currentUser.party) }"/>
+      
+      <!--Vote Buttons-->
+      <button class="action-button"
+  @click="upvoteComment(comment.id)"
+  ref="upvoteButton">
+  <font-awesome-icon :icon="comment.hasUpvoted ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" class="icon" :style="{ color: iconColor(currentUser.party) }" />
   <p :style="{ color: iconColor(currentUser.party) }">{{ comment?.votes?.upvotes }}</p>
 </button>
-<button class="action-button"  @click="downvoteComment(comment.id)">
-  <font-awesome-icon  :icon="['far', 'thumbs-down']" class="icon" :style="{ color: iconColor(currentUser.party) }"/>
+
+<button class="action-button"
+  @click="downvoteComment(comment.id)"
+  ref="downvoteButton">
+  <font-awesome-icon :icon="comment.hasDownvoted ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" class="icon" :style="{ color: iconColor(currentUser.party) }" />
   <p :style="{ color: iconColor(currentUser.party) }">{{ comment?.votes?.downvotes }}</p>
 </button>
 
 
+      <!--Aufklapp Button-->
       <button v-if="!showReplyForm && comment.replies && comment.replies.length > 0" @click="expandReplies = !expandReplies" class="action-button">
         <font-awesome-icon :style="{ color: iconColor(currentUser.party) }" v-if="!expandReplies" :icon="['fas', 'angle-down']" />
         <font-awesome-icon :style="{ color: iconColor(currentUser.party) }" v-else :icon="['fas', 'angle-up']" />
@@ -117,12 +123,17 @@ methods: {
   
   upvoteComment(commentId) {
     this.$store.dispatch('upvoteComment', { commentId });
+    this.$nextTick(() => {
+      this.animateButton(this.$refs.upvoteButton);
+    });
   },
 
   downvoteComment(commentId) {
     this.$store.dispatch('downvoteComment', { commentId });
+    this.$nextTick(() => {
+      this.animateButton(this.$refs.downvoteButton);
+    });
   },
-
 
 
   ...mapActions(['addReplyToComment']),
@@ -161,6 +172,27 @@ methods: {
     // Wenn die Tiefe (depth) 3 oder weniger beträgt, leite den Benutzer zur Seite der einzelnen Antwort weiter
     this.$router.push(`/comment/${reply}`);
   },
+
+  animateButton(buttonRef) {
+    const button = buttonRef;
+    button.animate(
+      [
+        // keyframes
+        { transform: 'scale(1)' },
+        { transform: 'scale(1.3)' },
+        { transform: 'scale(1)' }
+      ],
+      {
+        // timing options
+        duration: 400,
+        easing: 'ease-in-out'
+      }
+    );
+    }
+
+
+
+
 },
 };
 </script>
@@ -215,7 +247,7 @@ methods: {
   padding-bottom: 10px;
   border-bottom: 1px solid #e1e4e8;
   font-family: Verdana, Geneva, sans-serif;
-  padding-left: 10px;
+  padding-left: 1vh;
   border-left: 2px solid #ccc;
 
   &:last-child {
@@ -265,7 +297,7 @@ display: flex;
 justify-content:flex-start;
 align-items: center;
 gap: 18px;
-padding-left: 15%;
+padding-left: 30px;
 
 }
 
@@ -278,7 +310,7 @@ gap: 5px;
 background: none;
 border: none;
 color: #878a8c;
-font-size: 12px;
+font-size: 13px;
 cursor: pointer;
 
 .icon {
@@ -368,9 +400,10 @@ button {
 
 .header-comment{
   display: flex;
-  gap: 2%;
-  padding-left: 1%;
+  gap: 1em;
+  
   align-items: center;
+  max-height: 50px;
   flex-wrap: wrap;
 }
 

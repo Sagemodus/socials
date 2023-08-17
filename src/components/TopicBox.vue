@@ -64,6 +64,9 @@ export default {
     // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
 
+
+
+    
     return {
       iconColor,
       currentUser, // Mache den currentUser verfügbar
@@ -129,24 +132,23 @@ export default {
   ...mapMutations(['TOGGLE_LIKE']),
 
   like() {
-    const userParty = this.currentUser.party;
-    const userId = this.currentUser.id;
-    this.TOGGLE_LIKE({ topicId: this.id, group: userParty, userId });
-     
+  const userParty = this.currentUser.party;
+  const userId = this.currentUser.id;
+  this.TOGGLE_LIKE({ topicId: this.id, group: userParty, userId });
 
-    // Animation
-    const likeButton = this.$refs.likeButton;
-    likeButton.animate([
-      // keyframes
-      { transform: 'scale(1)' },
-      { transform: 'scale(1.3)' },
-      { transform: 'scale(1)' }
-    ], {
-      // timing options
-      duration: 400,
-      easing: 'ease-in-out'
-    });
-  },
+  // Animation
+  const likeButton = this.$refs.likeButton;
+  likeButton.animate([
+    // keyframes
+    { transform: 'scale(1)' },
+    { transform: 'scale(1.3)' },
+    { transform: 'scale(1)' }
+  ], {
+    // timing options
+    duration: 400,
+    easing: 'ease-in-out'
+  });
+},
     getPartyColor(party) {
       return iconColor(party);
     },
@@ -176,42 +178,17 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss" >
 
 .conversation-prompt{
   background-color: #ffffff;
 }
 
 
-.like-button {
- 
-  border-radius: 5px;
-  border: none;
-  background-color: #ffffff;
-
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
- /* Animation */
- animation: pulse 0.4s ease-in-out;
- 
+button.like-button{
+  background: white;
 }
 
-.liked {
-  animation: pulse 0.4s ease-in-out;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
 .topic-info {
   margin-top: 10px;
   display: flex;
@@ -236,8 +213,8 @@ export default {
   }
 
   .topic-image {
-    
-    height: 100px;
+    min-width: 80%;
+   
     object-fit: cover;
   }
 
@@ -252,6 +229,7 @@ export default {
     margin: 10px 0;
     text-align: justify;
     color: #333;
+    
   }
 
   .like-bar {

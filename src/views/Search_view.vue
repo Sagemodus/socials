@@ -41,12 +41,13 @@ export default {
     const lastScrollPosition = ref(0);
     const isTabBarSticky = ref(false);
     const isScrolled = ref(false);
+    
 
     const switchTab = (path) => {
-      currentTab.value = path;
-      performFiltering();
-    };
-
+  currentTab.value = path;
+  currentComponent.value = tabs.find((tab) => tab.path === path).component;
+  performFiltering();
+};
     const handleScroll = () => {
       const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
       isTabBarSticky.value = scrollPosition < lastScrollPosition.value;
@@ -59,13 +60,7 @@ export default {
     }
     const currentComponent = ref(tabs.find((tab) => tab.path === currentTab.value).component);
 
-    onMounted(() => {
-      window.addEventListener('scroll', handleScroll);
-    });
 
-    onBeforeUnmount(() => {
-      window.removeEventListener('scroll', handleScroll);
-    });
 
     onMounted(() => {
       window.addEventListener('scroll', handleScroll);
@@ -74,6 +69,7 @@ export default {
     onBeforeUnmount(() => {
       window.removeEventListener('scroll', handleScroll);
     });
+
 
     return {
       currentTab,

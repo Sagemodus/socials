@@ -9,6 +9,7 @@ import App from './App.vue'
 import router from './router'
 import './firebase/init'; // Import and initialize Firebase before creating the app
 import store from './store/store'
+import Swal from 'sweetalert2';
 
 library.add(fas)
 library.add(far)
@@ -18,6 +19,7 @@ const app = createApp(App)
 app.use(router)
 app.component('font-awesome-icon', FontAwesomeIcon)
 app.use(store)
+app.config.globalProperties.$swal = Swal;
 app.mount('#app')
 
 

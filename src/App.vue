@@ -11,12 +11,13 @@
 import Navbar from './components/navbar_unten.vue'
 
 
+
 export default {
   components: {
     Navbar,
    
   }
-}
+} 
 </script>
 
 <style lang="scss">
@@ -56,13 +57,16 @@ body {
 #app .topic-text{
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   font-size: 14px;
+
+
+
 }
 #app .comment-text{
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   font-size: 12px;
   margin-bottom: 0px;
-  padding-left: 15%;
-  padding-right: 5%;
+  padding-left: 5.5em;
+  padding-right: 10px;
   margin-top: 0%;
   text-align: left;
 }
@@ -71,8 +75,8 @@ body {
   font-size: 12px;
   margin-top: 5px;
     margin-top: 0px;
-    padding-left: 15%;
-    padding-right: 5%;
+    padding-left: 3.8em;
+   
     padding-bottom: 0px;
   margin-bottom: 0px;
   text-align: left;

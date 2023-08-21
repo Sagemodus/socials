@@ -8,7 +8,6 @@ import Profile_view from '../views/Profile_view.vue';
 // Components für Feed
 import Public from '../components/PublicComponent.vue';
 import FAndF from '../components/FAndFComponent.vue';
-import Community from '../components/CommunityComponent.vue';
 
 import TopicComponentGanzeSeite from '../components/TopicComponentsGanzeSeite.vue';
 
@@ -16,11 +15,9 @@ import TopicComponentGanzeSeite from '../components/TopicComponentsGanzeSeite.vu
 import PopularComponent from '../components/PopularComponent.vue';
 import RecentComponent from '../components/RecentComponent.vue';
 import PeopleComponent from '../components/PeopleComponent.vue';
-import ConversationComponent from '../components/ConversationComponent.vue';
+
 //Components für Benachrichtigung
-import AllComponent from '../components/AllComponent.vue';
-import MentionsComponent from '../components/MentionsComponent.vue';
-import NotificationConversationComponent from '../components/NotificationConversationComponent.vue';
+
 import SearchbarComponent from '../components/SearchbarComponent.vue';
 // Swipe-Profil-Komponente
 import SwipeProfilComponent from '../components/SwipeProfilComponent.vue';
@@ -71,11 +68,7 @@ const routes = [
     name: 'fandf',
     component: FAndF
   },
-  {
-    path: '/communitycomponent',
-    name: 'community',
-    component: Community
-  },
+
   {
     path: '/popular',
     name: 'Popular',
@@ -91,26 +84,9 @@ const routes = [
     name: 'People',
     component: PeopleComponent,
   },
-  {
-    path: '/conversation',
-    name: 'Conversation',
-    component: ConversationComponent,
-  },
-  {
-    path: '/all',
-    name: 'All',
-    component: AllComponent,
-  },
-  {
-    path: '/mentions',
-    name: 'Mentions',
-    component: MentionsComponent,
-  },
-  {
-    path: '/notification-conversation',
-    name: 'NotificationConversation',
-    component: NotificationConversationComponent,
-  },
+ 
+
+
  
   {
     path: '/searchbar',

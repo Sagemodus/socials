@@ -2,12 +2,20 @@
 import { createStore } from 'vuex';
 import { v4 as uuidv4 } from 'uuid';
 import Swal from 'sweetalert2';
+import faker from 'faker';
 
-function generateFakeUser(id, name) {
+
+function updatePercentages(topic) {
+  const totalVotes = topic.likes.upvotes + topic.likes.downvotes;
+  topic.likes.upvotePercentage = ((topic.likes.upvotes / totalVotes) * 100).toFixed(2);
+  topic.likes.downvotePercentage = ((topic.likes.downvotes / totalVotes) * 100).toFixed(2);
+}
+
+function generateFakeUser(id) {
   return {
     id,
-    name,
-    profileImage: generateFakeProfileImage(name),
+    name: faker.name.findName(),
+    profileImage: `https://fakeimg.pl/50x50/?text=${faker.name.findName(id)}&font=lobster`,
   };
 }
 
@@ -29,32 +37,19 @@ function generateFakeProfileImage(name) {
   return `https://fakeimg.pl/50x50/?text=${name[0]}&font=lobster`;
 }
 //Test Antwdsdfffffffzzzzzzzzzzzzzzzzzzzzzzzzzfffffffffffffffffffffffffsssssssssssssssssssssssssssssssssssssssssssssssort
-function generateReplies(count, userId, userName) {
+function generateReplies(count, userId) {
   const replies = [];
   for (let i = 0; i < count; i++) {
-    const id = uuidv4();
+    const id = faker.datatype.uuid();
     const newReply = {
       id,
-      text: `Lorem ipsum dolor sit amet, ad sea mazim constituto, ius unum persius et. Eu per consul ocurreret referrentur. In malorum ocurreret eam, everti virtute duo ut. Cibo nominati ius te. Impedit facilis ex vim, pro te ceteros ullamcorper reprehendunt. Has cu graece nostrud civibus, eum quot ubique nostrum eu, per an placerat recteque.
-
-      Ne est modus cetero aperiri. Ne
-      c facer graeco insolens ut, ne summo bonorum mea, reque liber quaerendum pro et. Pro cu diam malis melius, cu vel etiam liber quaeque. Ea facete impedit vix. No usu omnis tollit.
-      
-      Nusquam omittam usu ex, pro ill
-
-
-       ud hendrerit ex, no his nostrum repudiare voluptatum. Vidisse volumus eum an, possit nostrud persecuti eum ut. Debitis offendit definitiones ne sed. Nominavi scribentur voluptatibus has an. Pro noster elaboraret ex. Eum ei paulo oratio.
-      
-      Postea dissen
-      
-      tiet id mei, dolore efficiantur an usu
-      , qui ex odio tempor offendit. In nec ludus exerci hendrerit. Aliquid legimus epicuri his ea, soluta menandri cum ex, eos te omnes vocent. Ponderum evertitur ne duo, harum labitur necessitatibus pri te, id exerci singulis interesset est. Dicat molestie in sed, pri eleifend recteque eu. Mei malis dicta ex. ${i + 1} von ${userName}...`,
-      author: generateFakeUser(userId, userName),
+      text: faker.lorem.paragraphs(),
+      author: generateFakeUser(userId),
       votes: {
-        upvotes: 5,
-        downvotes: 3,
+        upvotes: faker.datatype.number(),
+        downvotes: faker.datatype.number(),
       },
-      replies: generateReplies(count - 1, userId, userName), // Generiere Antworten auf diese Antwort
+      replies: generateReplies(count - 1, userId),
     };
     replies.push(newReply);
   }
@@ -66,55 +61,62 @@ function generateReplies(count, userId, userName) {
 function generateComments(count, users) {
   const comments = [];
   for (let i = 0; i < count; i++) {
-    const id = uuidv4();
-    const authorId = 2; 
+    const id = faker.datatype.uuid();
+    const authorId = faker.datatype.number({ min: 0, max: users.length - 1 });
     const newComment = {
       id,
-
-
-      text: `Test Kommentar ${i + 1} ...`,
-      author: {
-        ...users.find((user) => user.id === authorId),
-        profileImage: generateFakeProfileImage(users[1].name)
-      },
-      replies: generateReplies(4, 2, users[0].name, users),
+      text: faker.lorem.paragraph(),
+      author: generateFakeUser(users[authorId].id),
+      replies: generateReplies(4, users[authorId].id),
       votes: {
-        upvotes: 3, // Initialize upvotes with 0
-        downvotes: 0, // Initialize downvotes with 0
+        upvotes: faker.datatype.number(),
+        downvotes: faker.datatype.number(),
       },
+
     };
     comments.push(newComment);
   }
   return comments;
 }
 
+
+
+
 function generateTopics(count, users) {
+  const categories = [
+    { main: "Sport", sub: "Fussball" },
+    { main: "Technologie", sub: "Programmierung" },
+    { main: "Unterhaltung", sub: "Film" },
+    { main: "Technologie", sub: "Gaming" },
+    // Weitere Kategorien hinzufügen...
+  ];
+
   const topics = [];
   for (let i = 0; i < count; i++) {
-    const id = uuidv4();
+    const id = faker.datatype.uuid();
+    const category = faker.random.arrayElement(categories); // Zufällige Kategorie auswählen
+
     const newTopic = {
       id,
-      image: `https://fakeimg.pl/250x100/?text=Thema${id}&font=lobster`,
-      title: `Fakes Thema ${id}`,
-      text: `Lorem ipsum dolor sit amet, ad sea mazim constituto, ius unum persius et. Eu per consul ocurreret referrentur. In malorum ocurreret eam, everti virtute duo ut. Cibo nominati ius te. Impedit facilis ex vim, pro te ceteros ullamcorper reprehendunt. Has cu graece nostrud civibus, eum quot ubique nostrum eu, per an placerat recteque.
-
-      Ne est modus cetero aperiri. Nec facer graeco insolens ut, ne summo bonorum mea, reque liber quaerendum pro et. Pro cu diam malis melius, cu vel etiam liber quaeque. Ea facete impedit vix. No usu omnis tollit.
-      
-      Nusquam omittam usu ex, pro illud hendrerit ex, no his nostrum repudiare voluptatum. Vidisse volumus eum an, possit nostrud persecuti eum ut. Debitis offendit definitiones ne sed. Nominavi scribentur voluptatibus has an. Pro noster elaboraret ex. Eum ei paulo oratio.
-      
-      Postea dissentiet id mei, dolore efficiantur an usu, qui ex odio tempor offendit. In nec ludus exerci hendrerit. Aliquid legimus epicuri his ea, soluta menandri cum ex, eos te omnes vocent. Ponderum evertitur ne duo, harum labitur necessitatibus pri te, id exerci singulis interesset est. Dicat molestie in sed, pri eleifend recteque eu. Mei malis dicta ex.`,
+      text: faker.lorem.paragraph(),
       comments: generateComments(3, users),
+      createdBy: users[faker.datatype.number({ min: 0, max: users.length - 1 })],
+      createdAt: faker.date.past(),
       likes: {
-        '-4': Math.floor(Math.random() * 100),
-        '-3': Math.floor(Math.random() * 100),
-        '-2': Math.floor(Math.random() * 100),
-        '-1': Math.floor(Math.random() * 100),
-        '1': Math.floor(Math.random() * 100),
-        '2': Math.floor(Math.random() * 100),
-        '3': Math.floor(Math.random() * 100),
-        '4': Math.floor(Math.random() * 100),
+        upvotes: faker.datatype.number({ min: 0, max: 100 }),
+        downvotes: faker.datatype.number({ min: 0, max: 100 }),
       },
+      category: category, // Verwendet die zufällig ausgewählte Kategorie
     };
+
+    // Berechne Prozentwerte
+    const totalVotes = newTopic.likes.upvotes + newTopic.likes.downvotes;
+    const upvotePercentage = (newTopic.likes.upvotes / totalVotes) * 100;
+    const downvotePercentage = (newTopic.likes.downvotes / totalVotes) * 100;
+
+    newTopic.likes.upvotePercentage = upvotePercentage.toFixed(2);
+    newTopic.likes.downvotePercentage = downvotePercentage.toFixed(2);
+
     topics.push(newTopic);
   }
   return topics;
@@ -127,14 +129,14 @@ export default createStore({
         id: 1,
         name: 'Dejan Pantos',
         profileImage: generateFakeProfileImage('Dejan Pantos'),
-        party: '4',
+        farbe: '4',
   
       },
       {
         id: 2,
         name: 'Lionel Messi',
         profileImage: generateFakeProfileImage('Lionel Messi'),
-        party: '-2',
+        farbe: '-2',
   
       },
       
@@ -144,12 +146,24 @@ export default createStore({
       topics: generateTopics(10, users),
       users,
       currentUser: users[0],
-      userLikes: {},
-      likes: [], // Array to store likes
+ 
+  // Array to store likes
     };
 
   },
   mutations: {
+
+
+    UPDATE_TOPIC_PERCENTAGES(state, { topicId }) {
+      const topic = state.topics.find((topic) => topic.id === topicId);
+      if (topic) {
+        const totalVotes = topic.likes.upvotes + topic.likes.downvotes;
+        topic.likePercentage = totalVotes === 0 ? 0 : Math.round((topic.likes.upvotes / totalVotes) * 100);
+        topic.dislikePercentage = totalVotes === 0 ? 0 : Math.round((topic.likes.downvotes / totalVotes) * 100);
+      }
+    },
+  
+
     UPVOTE_COMMENT(state, { commentId }) {
       const comment = findComment(state, commentId);
       if (comment) {
@@ -199,6 +213,32 @@ export default createStore({
         }
       }
     },
+
+
+    UPVOTE_REPLY(state,{replyId}){
+const reply = this.getters.getCommentById(replyId);{
+  if (reply) {
+    if (reply.hasUpvoted) {
+      // Wenn bereits upgevotet, entferne den Upvote
+      reply.votes.upvotes -= 1;
+      reply.hasUpvoted = false;
+    } else {
+      // Wenn nicht upgevotet, füge den Upvote hinzu
+      if (reply.hasDownvoted) {
+        // Wenn die Antwort bereits downgevotet wurde, entferne den Downvote
+        reply.votes.downvotes -= 1;
+        reply.hasDownvoted = false;
+      }
+      // Initialisiere die Vote-Eigenschaften, wenn es noch keine gibt
+      if (!reply.votes) {
+        reply.votes = { upvotes: 0, downvotes: 0 };
+      }
+      reply.votes.upvotes += 1;
+      reply.hasUpvoted = true;
+    }
+  }
+}
+    },
   // Mutation für das Downvoten einer Antwort (reply)
   DOWNVOTE_REPLY(state, { replyId }) {
     const reply = this.getters.getCommentById(replyId); // Nutze die Getter-Funktion
@@ -225,54 +265,61 @@ export default createStore({
   },
 
   // Mutation für das Upvoten einer Antwort (reply)
-  UPVOTE_REPLY(state, { replyId }) {
-    const reply = this.getters.getCommentById(replyId); // Nutze die Getter-Funktion
-    if (reply) {
-      if (reply.hasUpvoted) {
-        // Wenn bereits upgevotet, entferne den Upvote
-        reply.votes.upvotes -= 1;
-        reply.hasUpvoted = false;
+  TOGGLE_LIKE(state, { topicId }) {
+    const topic = state.topics.find((topic) => topic.id === topicId);
+  
+    if (topic) {
+      if (topic.hasUpvoted) {
+        // If already upvoted, remove the upvote
+        topic.likes.upvotes -= 1;
+        topic.hasUpvoted = false;
       } else {
-        // Wenn nicht upgevotet, füge den Upvote hinzu
-        if (reply.hasDownvoted) {
-          // Wenn die Antwort bereits downgevotet wurde, entferne den Downvote
-          reply.votes.downvotes -= 1;
-          reply.hasDownvoted = false;
+        // If not upvoted, add the upvote
+        if (topic.hasDownvoted) {
+          // If topic was previously downvoted, remove the downvote
+          topic.likes.downvotes -= 1;
+          topic.hasDownvoted = false;
         }
-        // Initialisiere die Vote-Eigenschaften, wenn es noch keine gibt
-        if (!reply.votes) {
-          reply.votes = { upvotes: 0, downvotes: 0 };
+        if (!topic.likes) {
+          topic.likes = { upvotes: 0, downvotes: 0 };
         }
-        reply.votes.upvotes += 1;
-        reply.hasUpvoted = true;
+        topic.likes.upvotes += 1;
+        topic.hasUpvoted = true;
       }
+  
+      updatePercentages(topic); // Update percentages
     }
   },
-
-
-    TOGGLE_LIKE(state, { topicId, group, userId }) {
-      const topic = state.topics.find(topic => topic.id === topicId);
-      if (topic) {
-        if (!state.userLikes[userId]) {
-          state.userLikes[userId] = {};
-        }
   
-        // Überprüfen, ob der Benutzer bereits für diesen Beitrag in dieser Gruppe gestimmt hat
-        if (state.userLikes[userId][topicId] === group) {
-          // Wenn ja, entfernen Sie die Stimmabgabe
-          topic.likes[group] = topic.likes[group] > 0 ? topic.likes[group] - 1 : 0;
-          delete state.userLikes[userId][topicId];
-        } else {
-          // Wenn nicht, fügen Sie die Stimmabgabe hinzu
-          topic.likes[group] = topic.likes[group] ? topic.likes[group] + 1 : 1;
-          state.userLikes[userId][topicId] = group;
+  TOGGLE_DISLIKE(state, { topicId }) {
+    const topic = state.topics.find((topic) => topic.id === topicId);
+  
+    if (topic) {
+      if (topic.hasDownvoted) {
+        // If already downvoted, remove the downvote
+        topic.likes.downvotes -= 1;
+        topic.hasDownvoted = false;
+      } else {
+        // If not downvoted, add the downvote
+        if (topic.hasUpvoted) {
+          // If topic was previously upvoted, remove the upvote
+          topic.likes.upvotes -= 1;
+          topic.hasUpvoted = false;
         }
+        if (!topic.likes) {
+          topic.likes = { upvotes: 0, downvotes: 0 };
+        }
+        topic.likes.downvotes += 1;
+        topic.hasDownvoted = true;
       }
-    },
+  
+      updatePercentages(topic); // Update percentages
+    }
+  },
+// Topic Likes und dislikes
 
 
-
-
+    // Kommentare
     ADD_COMMENT_TO_TOPIC(state, { topicId, comment }) {
       const topic = state.topics.find((topic) => topic.id === topicId);
       if (topic) {
@@ -298,6 +345,10 @@ export default createStore({
 
   },
   actions: {
+
+    updateTopicPercentages({ commit }, { topicId }) {
+      commit('UPDATE_TOPIC_PERCENTAGES', { topicId });
+    },
 
     upvoteComment({ commit }, { commentId }) {
       commit('UPVOTE_COMMENT', { commentId });
@@ -396,8 +447,8 @@ export default createStore({
       
     },
    
-    getUserParty(state) {
-      return state.currentUser.party;
+    getUserfarbe(state) {
+      return state.currentUser.farbe;
     },
 
   },

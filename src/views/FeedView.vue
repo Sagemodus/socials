@@ -12,7 +12,6 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import PublicComponent from '../components/PublicComponent.vue';
 import FAndFComponent from '../components/FAndFComponent.vue';
-import CommunityComponent from '../components/CommunityComponent.vue';
 import SwipeNavigationComponent from '../components/SwipeNavigationComponent.vue';
 
 export default {
@@ -21,7 +20,7 @@ export default {
     SwipeNavigationComponent,
     PublicComponent,
     FAndFComponent,
-    CommunityComponent,
+  
   },
   methods: {
     goToTopic() {
@@ -34,7 +33,7 @@ export default {
     const tabs = [
       { path: '/public', component: PublicComponent },
       { path: '/fandf', component: FAndFComponent },
-      { path: '/community', component: CommunityComponent },
+     
     ];
     const currentTab = ref('/public');
     const currentComponent = ref(tabs.find((tab) => tab.path === currentTab.value));
@@ -74,9 +73,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-h2.topic-title{
-  text-align: center;
-}
+
  
 .topic-text{
 padding-left: 1em;

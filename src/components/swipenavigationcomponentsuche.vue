@@ -70,8 +70,8 @@ export default {
       hammer.on('swiperight', previousTab);
       hammer.on('swipeleft', nextTab);
   // Setze die Farbe basierend auf dem currentUser
-      const userParty = currentUser.value.party;
-      const color = userParty ? iconColor(userParty) : 'gray';
+      const userfarbe = currentUser.value.farbe;
+      const color = userfarbe ? iconColor(userfarbe) : 'gray';
       document.documentElement.style.setProperty('--iconColor', color);
     });
 

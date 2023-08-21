@@ -12,30 +12,30 @@
 
     <div class="actions">
       <button v-if="!showReplyForm" @click="showReplyForm = true" class="reply-button action-button">
-        <font-awesome-icon :icon="['fas', 'commenting']" class="icon" :style="{ color: iconColor(currentUser.party) }"/>
+        <font-awesome-icon :icon="['fas', 'commenting']" class="icon" :style="{ color: iconColor(currentUser.farbe) }"/>
       </button>
       
       <!--Vote Buttons-->
       <button class="action-button"
   @click="upvoteComment(comment.id)"
   ref="upvoteButton">
-  <font-awesome-icon :icon="comment.hasUpvoted ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" class="icon" :style="{ color: iconColor(currentUser.party) }" />
-  <p :style="{ color: iconColor(currentUser.party) }">{{ comment?.votes?.upvotes }}</p>
+  <font-awesome-icon :icon="comment.hasUpvoted ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" class="icon" :style="{ color: iconColor(currentUser.farbe) }" />
+  <p :style="{ color: iconColor(currentUser.farbe) }">{{ comment?.votes?.upvotes }}</p>
 </button>
 
 <button class="action-button"
   @click="downvoteComment(comment.id)"
   ref="downvoteButton">
-  <font-awesome-icon :icon="comment.hasDownvoted ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" class="icon" :style="{ color: iconColor(currentUser.party) }" />
-  <p :style="{ color: iconColor(currentUser.party) }">{{ comment?.votes?.downvotes }}</p>
+  <font-awesome-icon :icon="comment.hasDownvoted ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" class="icon" :style="{ color: iconColor(currentUser.farbe) }" />
+  <p :style="{ color: iconColor(currentUser.farbe) }">{{ comment?.votes?.downvotes }}</p>
 </button>
 
 
       <!--Aufklapp Button-->
       <button v-if="!showReplyForm && comment.replies && comment.replies.length > 0" @click="expandReplies = !expandReplies" class="action-button">
-        <font-awesome-icon :style="{ color: iconColor(currentUser.party) }" v-if="!expandReplies" :icon="['fas', 'angle-down']" />
-        <font-awesome-icon :style="{ color: iconColor(currentUser.party) }" v-else :icon="['fas', 'angle-up']" />
-        <span :style="{ color: iconColor(currentUser.party) }" v-if="replyCount > 0">{{ replyCount+ ' Replies'}}</span>
+        <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-if="!expandReplies" :icon="['fas', 'angle-down']" />
+        <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-else :icon="['fas', 'angle-up']" />
+        <span :style="{ color: iconColor(currentUser.farbe) }" v-if="replyCount > 0">{{ replyCount+ ' Replies'}}</span>
       </button>
     </div>
 
@@ -43,7 +43,7 @@
       <textarea v-model="newReply" placeholder="Write your Answer..." class="reply-textarea"></textarea>
       <div class="reply-actions">
         <button @click="cancelReply" class="cancel-reply-button">Cancel</button>
-        <button @click="submitReply" :style="{ backgroundColor: iconColor(currentUser.party) }" class="submit-reply-button">Reply</button>
+        <button @click="submitReply" :style="{ backgroundColor: iconColor(currentUser.farbe) }" class="submit-reply-button">Reply</button>
       </div>
     </div>
 
@@ -144,6 +144,7 @@ methods: {
       id: uuidv4(),
       text: this.newReply,
       author: this.getUserProfile,
+      votes: {upvotes:0 , downvotes:0}
     };
 
     // Fügt die Antwort zu den Kommentar-Replies hinzu

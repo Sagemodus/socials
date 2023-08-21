@@ -26,7 +26,7 @@ export default {
     const tabs = reactive([
       { name: 'Public', path: '/public' },
       { name: 'F&F', path: '/fandf' },
-      { name: 'Community', path: '/community' },
+ 
     ]);
 
     const activeTab = shallowRef(tabs[0].path);
@@ -59,8 +59,8 @@ export default {
       hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
       hammer.on('swiperight', previousTab);
       hammer.on('swipeleft', nextTab);
-      const userParty = currentUser.value.party;
-      const color = userParty ? iconColor(userParty) : 'gray';
+      const userfarbe = currentUser.value.farbe;
+      const color = userfarbe ? iconColor(userfarbe) : 'gray';
       document.documentElement.style.setProperty('--iconColor', color);
     });
 

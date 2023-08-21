@@ -3,8 +3,8 @@
 
 
 // Definieren der Farben basierend auf den Benutzerprofilen
-export function iconColor(party) {
-  switch (party) {
+export function iconColor(farbe) {
+  switch (farbe) {
     case '-4':
       return 'dodgerblue'; // Konservatismus
     case '-3':
@@ -20,7 +20,7 @@ export function iconColor(party) {
     case '3':
       return 'orange'; // Sozialisten/Kommunisten
     case '4':
-      return 'red'; // Populisten
+      return 'brown'; // Populisten
     default:
       return 'gray'; // Standardfarbe für unbekannte Parteien
   }

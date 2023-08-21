@@ -1,6 +1,6 @@
 <template>
     <div>
-      <SwipeProfilComponent @onTabSwitch="handleTabSwitch">
+      <SwipeProfilComponent :onTabSwitch="handleTabSwitch">
         <template #replies>
           <!-- Inhalte für den "Replies"-Tab -->
           <div v-show="activeTab === 'replies'">
@@ -26,6 +26,9 @@
    components: {
      SwipeProfilComponent,
    },
+   props: {
+     name: String, // Definiere die 'name' Prop als String
+   },
    data() {
      return {
        activeTab: 'replies',
@@ -34,6 +37,7 @@
    methods: {
      handleTabSwitch(path) {
        this.activeTab = path;
+
      },
    },
  };

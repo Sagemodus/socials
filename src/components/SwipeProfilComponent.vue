@@ -20,68 +20,70 @@
     </div>
   </template>
   
-  <script>
-  import { ref, reactive, onMounted, computed } from 'vue';
-  import Hammer from 'hammerjs';
-  import { iconColor } from './farben'
-  import { useStore } from 'vuex';
-  
-  export default {
-    name: 'SwipeProfilComponent',
-    props: {
-      onTabSwitch: {
-        type: Function,
-        required: true
-      }
-    },
-    data() {
-      return {
-        iconColor
-      }
-    },
-    setup(props) {
-      const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
 
-    // Definiere eine computed-Funktion, um den currentUser aus dem Vuex-Store zu erhalten
+    <script>
+import { ref, reactive, onMounted, computed } from 'vue';
+import Hammer from 'hammerjs';
+import { iconColor } from './farben'
+import { useStore } from 'vuex';
+
+export default {
+  name: 'SwipeProfilComponent',
+  props: {
+    onTabSwitch: {
+      type: Function,
+      required: true
+    }
+  },
+  setup(props) {
+    const store = useStore();
     const currentUser = computed(() => store.state.currentUser);
-      const tabs = reactive([
-        { name: 'Replies', path: 'replies' },
-        { name: 'Likes', path: 'likes' },
-      ]);
-  
-      const activeTab = ref(tabs[0].path);
-  
-      const switchTab = (path) => {
-        activeTab.value = path;
-        if (typeof props.onTabSwitch === 'function') {
-          props.onTabSwitch(path);
-        }
-      };
-  
-      const switchToTabByIndex = (index) => {
-        if (index < 0 || index >= tabs.length) return;
-        switchTab(tabs[index].path);
-      };
-  
-      const nextTab = () => {
-        const currentIndex = tabs.findIndex((tab) => tab.path === activeTab.value);
-        switchToTabByIndex(currentIndex + 1);
-      };
-  
-      const previousTab = () => {
-        const currentIndex = tabs.findIndex((tab) => tab.path === activeTab.value);
-        switchToTabByIndex(currentIndex - 1);
-      };
-  
-      onMounted(() => {
-        const el = document;
-        const hammer = new Hammer(el);
-        hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
-        hammer.on('swiperight', previousTab);
-        hammer.on('swipeleft', nextTab);
+
+    const tabs = reactive([
+      { name: 'Replies', path: 'replies' },
+      { name: 'Likes', path: 'likes' },
+    ]);
+
+    const activeTab = ref(tabs[0].path);
+
+    const switchTab = (path) => {
+     
+      activeTab.value = path;
+      if (typeof props.onTabSwitch === 'function') {
+        props.onTabSwitch(path);
+      }
+    };
+
+    const switchToTabByIndex = (index) => {
+      if (index < 0 || index >= tabs.length) return;
+      switchTab(tabs[index].path);
+    };
+
+    const nextTab = () => {
+      const currentIndex = tabs.findIndex((tab) => tab.path === activeTab.value);
+      switchToTabByIndex(currentIndex + 1);
+    };
+
+    const previousTab = () => {
+      const currentIndex = tabs.findIndex((tab) => tab.path === activeTab.value);
+      switchToTabByIndex(currentIndex - 1);
+    };
+
+    onMounted(() => {
+      const el = document;
+      const hammer = new Hammer(el);
+      hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
+      hammer.on('swiperight', () => {
+   
+        previousTab();
+      });
+      hammer.on('swipeleft', () => {
+     
+        nextTab();
+      });
        // Setze die Farbe basierend auf dem currentUser
-      const userParty = currentUser.value.party;
-      const color = userParty ? iconColor(userParty) : 'gray';
+      const userfarbe = currentUser.value.farbe;
+      const color = userfarbe ? iconColor(userfarbe) : 'gray';
       document.documentElement.style.setProperty('--iconColor', color);
       });
   

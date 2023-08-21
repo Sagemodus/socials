@@ -21,7 +21,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import url('https://fonts.googleapis.com/css2?family=Avenir:wght@400;700&display=swap');
+
 .nav-bar .nav-link {
   color: iconColor; /* Farbe für die anderen Buttons */
 }
@@ -87,7 +87,10 @@ body {
 
 
 #app .conversation-prompt {
+  display: flex;
   max-height: 1%;
+  text-align: center;
+    justify-content: center;
 }
 /* Restlicher CSS-Code bleibt unverändert */
 /* ... */

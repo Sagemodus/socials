@@ -4,16 +4,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <div v-if="topic" class="topic-box">
   <div class="author-info">
-    <img :src="topic.createdBy.profileImage" alt="Author Profile Image" class="author-image" />
+    <div class="left-content">  
+      <div class="profilbild">
+        <img :src="topic.createdBy.profileImage" alt="Author Profile Image" class="author-image" />
+      </div>
+      <div class="author">
 
-
-    <!--Share button-->
-    <button @click="shareContent">Teilen</button>
-
-    <span class="author-name" style="line-height: 0.8;">{{ topic.createdBy.name }} <br>
-  <p style="font-weight: bold; font-size: 12px;" class="topic-text">{{ ' ' + topic.category.sub }}</p></span>
+      </div>
+      <div class="author-category">
+        <span class="author-name" style="line-height: 0.8;">{{ topic.createdBy.name }} </span>
+        <p style=" font-size: 12px;" class="topic-text">{{ ' ' + topic.category.sub }}</p>
+      </div>
+    
    
+  
+    </div>
+    
+<!--Buttons oben rechts-->
+<div class="right-content">
+  <button class="share-button" @click="shareContent">
+       <font-awesome-icon :icon="['fas', 'share']"         
+          class="icon"
+          :style="{ color: iconColor(currentUser.farbe) }"/>
+    </button>
+    <!--Save Button-->
+    <button  @click="saveChanges" class="savebutton">
+     
+      <font-awesome-icon
+      :icon="isSaved(topic.id)? ['fas', 'bookmark'] : ['far', 'bookmark']"
+          class="icon"
+          :style="{ color: iconColor(currentUser.farbe) }"
+        />
+    </button>
+
+ 
+</div>
+
+
   </div>
+
+
   <div class="topic-content" @click="goToTopic">
     <p class="topic-text">{{ topic.text }}</p>
   </div>
@@ -67,7 +97,7 @@
 
       <!--Konversation Button-->
     <div class="conversation-prompt">
-     <button @click="goToTopic"  :style="{ color: iconColor(currentUser.farbe)}" class="join-button"><span>Join the Conversation now!
+     <button @click="goToTopic"  :style="{ color: iconColor(currentUser.farbe)}" class="join-button"><span>Show more
        <font-awesome-icon :icon="['far', 'comments']" class="icon" @click="goToTopic"/>  </span>
       </button>
      
@@ -86,6 +116,7 @@ import { mapGetters, mapMutations } from 'vuex';
 import { iconColor } from './farben';
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
 import {  computed } from 'vue';
+import state from 'vue';
 
 
 export default {
@@ -105,6 +136,7 @@ export default {
       iconColor,
       currentUser, // Mache den currentUser verfügbar
       topicUrl:  '',
+      state,
 
     };
   },
@@ -136,9 +168,16 @@ export default {
 
   
   methods: {
-    ...mapMutations(['TOGGLE_LIKE', 'TOGGLE_DISLIKE']), // Import mutations
-       // Funktion zum Umschalten der Prozentanzeige
-  
+    ...mapMutations(['TOGGLE_LIKE', 'TOGGLE_DISLIKE','ADD_TOPIC_TO_SAVES']), // Import mutations
+      //Save button logik
+      saveChanges() {
+      this.ADD_TOPIC_TO_SAVES(this.topic.id);
+      
+    },
+    isSaved(topicId) {
+      return this.$store.getters.isTopicSaved(topicId);
+    },
+
     // Funktion zur Berechnung des Prozentsatzes
     shareContent() {
   const shareData = {
@@ -233,7 +272,31 @@ export default {
 
 
 <style lang="scss" >
+.savebutton{
+  background-color: transparent;
+}
 
+.right-content {
+    display: flex;
+    flex-direction: row;
+    min-width: 15%;
+    justify-content: flex-end;
+    gap: 10px;
+
+}
+.author-category {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 1em;
+
+  }
+
+
+
+.save-button {
+background-color: transparent;
+}
 
 
 .bar-text {
@@ -307,7 +370,6 @@ button.like-button{
 .topic-box {
   display: flex;
   flex-direction: column;
-  align-items: center;
 padding: 10px;
   margin: 20px auto;
   background-color: #ffffff;
@@ -367,13 +429,7 @@ padding: 10px;
 }
 
 
-.author-info {
-  width: 100%; /* Ensure the author-info takes up the entire width */
-  display: flex;
-  align-items: center;
 
- 
-}
 
 .author-image {
   width: 50px;
@@ -384,7 +440,7 @@ padding: 10px;
 
 .author-name {
   font-weight: bold;
-  padding-left: 1em;
+  
   padding-top: 1em;
 }
 
@@ -393,9 +449,15 @@ padding: 10px;
   
 }
 @media only screen and (max-width: 600px) {
+  .right-content {
+    width: 30%;
+    display: flex;
+    justify-content: flex-end;
+}
   .topic-box .author-info {
     display: flex;
     align-items: center;
+    
   }
 
   .author-image {
@@ -404,8 +466,9 @@ padding: 10px;
   }
 
   .author-name {
-    font-weight: bold;
-    padding-left: 0.5em; /* Adjust padding for the name */
+   font-weight: bold;
+
+   
   }
 
   
@@ -418,8 +481,13 @@ padding: 10px;
     min-width: 10em;
     display: flex;
 }
+.left-content{
+  width: 70%;
+}
 
 }
+
+// ende von mediascreen
 }
 
 button:active,
@@ -427,5 +495,36 @@ button:focus {
   background-color: transparent;
   outline: none; /* Entfernt den fokussierten Rahmen um den Button */
 }
+
+.author-info {
+
+  width: 100%;
+}
+
+button.share-button {
+  max-width: 30%;
+  min-width: 30%;
+  text-align: right;
+  justify-content: space-evenly;
+  background-color: transparent;
+}
+
+/* Füge folgende Regel hinzu, um die Elemente auf einer Zeile anzuzeigen */
+.topic-box .author-info,
+.topic-box .share-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+ 
+}
+.profilbild{
+  height: 100%;
+}
+.left-content {
+  min-width: 80%;  
+  display: flex;
+    align-items: center;
+}
+
 
 </style>

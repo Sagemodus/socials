@@ -12,7 +12,7 @@ export function iconColor(farbe) {
     case '-2':
       return 'deepskyblue'; // Sozialdemokratie
     case '-1':
-      return 'skyblue'; // Grüne/Ökologische Bewegung
+      return 'green'; // Grüne/Ökologische Bewegung
     case '1':
       return 'gold'; // Libertäre
     case '2':

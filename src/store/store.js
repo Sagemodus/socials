@@ -72,6 +72,7 @@ function generateComments(count, users) {
         upvotes: faker.datatype.number(),
         downvotes: faker.datatype.number(),
       },
+      iscommentpro:true,
 
     };
     comments.push(newComment);
@@ -129,8 +130,22 @@ export default createStore({
         id: 1,
         name: 'Dejan Pantos',
         profileImage: generateFakeProfileImage('Dejan Pantos'),
-        farbe: '4',
-  
+        farbe: '-1',
+        topicsaves:[],
+        votes: {
+          topics: {
+            upvoted: [],
+            downvoted: [],
+          },
+          comments: {
+            upvoted: [],
+            downvoted: [],
+          },
+          replies: {
+            upvoted: [],
+            downvoted: [],
+          },
+        },
       },
       {
         id: 2,
@@ -265,58 +280,71 @@ const reply = this.getters.getCommentById(replyId);{
   },
 
   // Mutation für das Upvoten einer Antwort (reply)
-  TOGGLE_LIKE(state, { topicId }) {
+  TOGGLE_LIKE(state, { topicId, userId }) {
     const topic = state.topics.find((topic) => topic.id === topicId);
   
     if (topic) {
-      if (topic.hasUpvoted) {
-        // If already upvoted, remove the upvote
-        topic.likes.upvotes -= 1;
-        topic.hasUpvoted = false;
-      } else {
-        // If not upvoted, add the upvote
-        if (topic.hasDownvoted) {
-          // If topic was previously downvoted, remove the downvote
-          topic.likes.downvotes -= 1;
-          topic.hasDownvoted = false;
-        }
-        if (!topic.likes) {
-          topic.likes = { upvotes: 0, downvotes: 0 };
-        }
-        topic.likes.upvotes += 1;
-        topic.hasUpvoted = true;
-      }
-  
-      updatePercentages(topic); // Update percentages
-    }
-  },
-  
-  TOGGLE_DISLIKE(state, { topicId }) {
-    const topic = state.topics.find((topic) => topic.id === topicId);
-  
-    if (topic) {
-      if (topic.hasDownvoted) {
-        // If already downvoted, remove the downvote
-        topic.likes.downvotes -= 1;
-        topic.hasDownvoted = false;
-      } else {
-        // If not downvoted, add the downvote
-        if (topic.hasUpvoted) {
-          // If topic was previously upvoted, remove the upvote
+      const user = state.users.find((user) => user.id === userId);
+      if (user) {
+        if (user.votes.topics.upvoted.includes(topicId)) {
+          // Wenn bereits upgevotet, entferne den Upvote
           topic.likes.upvotes -= 1;
+          user.votes.topics.upvoted = user.votes.topics.upvoted.filter((id) => id !== topicId);
           topic.hasUpvoted = false;
+        } else {
+          // Wenn nicht upgevotet, füge den Upvote hinzu
+          if (user.votes.topics.downvoted.includes(topicId)) {
+            // Wenn der Benutzer bereits downgevotet hat, entferne den Downvote
+            topic.likes.downvotes -= 1;
+            user.votes.topics.downvoted = user.votes.topics.downvoted.filter((id) => id !== topicId);
+            topic.hasDownvoted = false;
+          }
+          topic.likes.upvotes += 1;
+          user.votes.topics.upvoted.push(topicId);
+          topic.hasUpvoted = true;
         }
-        if (!topic.likes) {
-          topic.likes = { upvotes: 0, downvotes: 0 };
-        }
-        topic.likes.downvotes += 1;
-        topic.hasDownvoted = true;
-      }
   
-      updatePercentages(topic); // Update percentages
+        updatePercentages(topic); // Update percentages
+      }
     }
   },
-// Topic Likes und dislikes
+  
+  TOGGLE_DISLIKE(state, { topicId, userId }) {
+    const topic = state.topics.find((topic) => topic.id === topicId);
+  
+    if (topic) {
+      const user = state.users.find((user) => user.id === userId);
+      if (user) {
+        if (user.votes.topics.downvoted.includes(topicId)) {
+          // If already downvoted, remove the downvote
+          topic.likes.downvotes -= 1;
+          user.votes.topics.downvoted = user.votes.topics.downvoted.filter((id) => id !== topicId);
+          topic.hasDownvoted = false;
+        } else {
+          // If not downvoted, add the downvote
+          if (user.votes.topics.upvoted.includes(topicId)) {
+            // If topic was previously upvoted, remove the upvote
+            topic.likes.upvotes -= 1;
+            user.votes.topics.upvoted = user.votes.topics.upvoted.filter((id) => id !== topicId);
+            topic.hasUpvoted = false;
+          }
+          if (!topic.likes) {
+            topic.likes = { upvotes: 0, downvotes: 0 };
+          }
+          topic.likes.downvotes += 1;
+          topic.hasDownvoted = true;
+          user.votes.topics.downvoted.push(topicId);
+          user.votes.topics.upvoted = user.votes.topics.upvoted.filter((id) => id !== topicId); // Setze upvoted zurück
+        }
+  
+        updatePercentages(topic); // Update percentages
+      }
+    }
+  },
+  
+  
+  
+  
 
 
     // Kommentare
@@ -337,15 +365,33 @@ const reply = this.getters.getCommentById(replyId);{
           });
         }
       }
+
+
+      
     },
    
-    
+  
+    ADD_TOPIC_TO_SAVES(state, topicId) {
+      if (state.currentUser) {
+        const index = state.currentUser.topicsaves.indexOf(topicId);
+        if (index === -1) {
+          // Thema ist noch nicht gespeichert, also hinzufügen
+          state.currentUser.topicsaves.push(topicId);
+          console.log('Thema erfolgreich gespeichert.');
+          
+        } else {
+          // Thema ist bereits gespeichert, also entfernen
+          state.currentUser.topicsaves.splice(index, 1);
+          console.log('Thema erfolgreich entfernt.');
+        }
+      }
+    },
     
   
 
   },
   actions: {
-
+  
     updateTopicPercentages({ commit }, { topicId }) {
       commit('UPDATE_TOPIC_PERCENTAGES', { topicId });
     },
@@ -386,6 +432,13 @@ const reply = this.getters.getCommentById(replyId);{
     },
   },
   getters: {
+
+    isTopicSaved: (state) => (topicId) => {
+      if (state.currentUser) {
+        return state.currentUser.topicsaves.includes(topicId);
+      }
+      return false;
+    },
 
  // Check if a user has liked a comment
  getAllComments(state) {

@@ -80,7 +80,7 @@ props: {
   },
 },
 
-setup(props) {
+setup() {
 const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
 
 // Zugriff auf den currentUser aus dem Vuex-Store
@@ -268,11 +268,7 @@ methods: {
 
 
 
-    .username {
-      font-size: 14px;
-      font-weight: bold;
-      color: #333;
-    }
+  
   }
 
   .comment-content {

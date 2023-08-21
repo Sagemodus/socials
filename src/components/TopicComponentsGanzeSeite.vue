@@ -2,24 +2,27 @@
 <template>
   <div>
     <!-- Laden und Anzeigen von Themen -->
-    <div v-if="topic" class="topic-details">
-      <img :src="topic.image" alt="Topic image" class="topic-image" />
-      <h2 class="topic-title">{{ topic.title }}</h2>
-      <p class="topic-text">{{ topic.text }}</p>
+    <div v-if="topic" class="topic-ganzeseite">
+      <div class="author-info">
+        <img :src="topic.createdBy.profileImage" alt="Author Profile Image" class="author-image" />
+        <span class="author-name">{{ topic.createdBy.name }}</span>
+      </div>
+      <div class="topic-content" @click="goToTopic">
+        <p class="topic-text">{{ topic.text }}</p>
+      </div>
 
       <!-- Hinzufügen von Kommentaren -->
       <AddComment @add-comment="addComment" />
 
       <!-- Anzeige von Kommentaren -->
-      <div v-if="topic.comments.length > 0">
-      <CommentBox
-        v-for="comment in topic.comments"
-        :key="comment.id"
-        :comment="comment"
-        @reply-clicked="goToCommentPage"
-        @add-reply="addReplyToComment(comment, $event)"
-      />
-    </div>
+      <div v-if="topic.comments.length > 0" class="kommentare">
+        <CommentBox
+          v-for="comment in topic.comments"
+          :key="comment.id"
+          :comment="comment"
+          @reply-clicked="goToCommentPage"
+        />
+      </div>
 
       <!-- Anzeige, wenn keine Kommentare vorhanden sind -->
       <div v-else>
@@ -109,17 +112,43 @@ export default {
 
 
 <style scoped>
-.topic-details {
-  text-align: center; /* Zentriert den gesamten Inhalt in der Mitte */
-}
-img.topic-image {
-    min-width: 83%;
+.topic-ganzeseite {
+  max-width: 100%; /* Beispielwert für die maximale Breite */
+  margin: 0 auto; 
+  background-color: #ffffff;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+
 }
 
-.topic-text {
-  text-align: justify;
-max-width: 83%;
-  margin: 0 auto; /* Zentriert den Text horizontal */
-  margin-bottom: 1.5em;
+.author-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
 }
+
+.author-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.author-name {
+  font-weight: bold;
+}
+
+.topic-content {
+  margin-top: 20px;
+}
+
+
+
+.topic-text {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
 </style>

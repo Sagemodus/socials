@@ -17,7 +17,8 @@ import SearchbarComponent from '../components/SearchbarComponent.vue';
 import PopularComponent from '../components/PopularComponent.vue';
 import RecentComponent from '../components/RecentComponent.vue';
 import PeopleComponent from '../components/PeopleComponent.vue';
-import ConversationComponent from '../components/NotificationConversationComponent.vue';
+import ConversationComponent from '../components/ConversationComponent.vue'
+
 
 export default {
   name: 'SearchView',
@@ -28,6 +29,7 @@ export default {
     RecentComponent,
     PeopleComponent,
     ConversationComponent,
+  
   },
   setup() {
     const tabs = [
@@ -35,6 +37,7 @@ export default {
       { path: '/recent', component: RecentComponent },
       { path: '/people', component: PeopleComponent },
       { path: '/conversation', component: ConversationComponent },
+
     ];
     const currentTab = ref('/popular');
     const searchResults = ref([]); 
@@ -47,6 +50,7 @@ export default {
   currentTab.value = path;
   currentComponent.value = tabs.find((tab) => tab.path === path).component;
   performFiltering();
+
 };
     const handleScroll = () => {
       const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;

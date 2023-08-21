@@ -5,18 +5,24 @@
       v-for="topic in topics"
       :key="topic.id"
       :id="topic.id"
-      :image="topic.image"
-      :title="topic.title"
-      :text="topic.text"
-      :likes="topic.likes"
-      @topic-click="handleTopicClick"
+    
     />
   </div>
 </template>
 
 <script>
+<<<<<<< HEAD
 import { mapState } from 'vuex';
 import TopicBox from './TopicBox'; // Make sure to adjust the path accordingly
+=======
+
+import TopicBox from './TopicBox'; // Passe den Pfad entsprechend an
+import { mapState } from 'vuex';
+
+
+
+
+>>>>>>> 5d458ad752d31a9e997ab7889bceed4fad72bc1c
 
 export default {
   components: {

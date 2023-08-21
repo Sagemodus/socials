@@ -25,6 +25,9 @@ export default {
 .nav-bar .nav-link {
   color: iconColor; /* Farbe für die anderen Buttons */
 }
+*:focus {
+  outline: none; /* Entfernt den fokussierten Rahmen für alle fokussierten Elemente */
+}
 body {
   margin: 0;
   padding: 0;
@@ -46,7 +49,7 @@ body {
 }
 
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;

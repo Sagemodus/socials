@@ -13,7 +13,6 @@ export const fetchDataFromDatabase = async () => {
       return {
         id: doc.id,
         image: data.image || '', // Provide default values if fields are missing
-        title: data.title || '',
         text: data.text || '',
         likes: data.likes || {},
       };

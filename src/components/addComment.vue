@@ -3,7 +3,7 @@
     <textarea v-model="newComment" placeholder="Schreibe einen Kommentar..." class="comment-textarea"></textarea>
     <button 
   type="submit" 
-  :style="{ backgroundColor: iconColor(currentUser.party) }" 
+  :style="{ backgroundColor: iconColor(currentUser.farbe) }" 
   class="comment-button"
 >
   Kommentar absenden

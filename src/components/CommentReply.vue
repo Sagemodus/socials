@@ -22,7 +22,7 @@
 
       <!-- Antwort-Button anzeigen, um auf diese Antwort zu antworten -->
       <button  v-if="!showReplyForm && depth < 5" @click="showReplyForm = true" class=" action-button">
-        <font-awesome-icon :style="{ color: iconColor(currentUser.party) }" :icon="['fas', 'commenting']" class="icon"/>
+        <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" :icon="['fas', 'commenting']" class="icon"/>
       </button>
 
     <!-- Upvote Button -->
@@ -30,9 +30,9 @@
     <font-awesome-icon
     :icon="reply.hasUpvoted ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']"
       class="icon"
-      :style="{ color: iconColor(currentUser.party) }"
+      :style="{ color: iconColor(currentUser.farbe) }"
     />
-    <p :style="{ color: iconColor(currentUser.party) }">{{ reply?.votes?.upvotes }}</p>
+    <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.votes?.upvotes }}</p>
   </button>
 
     <!-- Downvote Button -->
@@ -40,9 +40,9 @@
       <font-awesome-icon
       :icon="reply.hasDownvoted ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" 
         class="icon"
-        :style="{ color: iconColor(currentUser.party) }"
+        :style="{ color: iconColor(currentUser.farbe) }"
       />
-      <p :style="{ color: iconColor(currentUser.party) }">{{ reply?.votes?.downvotes }}</p>
+      <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.votes?.downvotes }}</p>
     </button>
 <!-- {{ replyCount+ ' Antworten' }} -->
 
@@ -52,20 +52,20 @@
   :class="[ 'action-button', depth >= 5 ? 'disabled' : '']"
 >
   <font-awesome-icon
-    :style="{ color: iconColor(currentUser.party) }"
+    :style="{ color: iconColor(currentUser.farbe) }"
     v-if="!expandReplies"
     :icon="['fas', 'angle-down']"
   />
   <font-awesome-icon
-    :style="{ color: iconColor(currentUser.party) }"
+    :style="{ color: iconColor(currentUser.farbe) }"
     v-else
     :icon="['fas', 'angle-up']"
   />
-  <p :style="{ color: iconColor(currentUser.party) }">{{ replyCount + ' Replies' }}</p>
+  <p :style="{ color: iconColor(currentUser.farbe) }">{{ replyCount + ' Replies' }}</p>
 </button>
 
 <!--Aufklapp Button-->
-<router-link  :style="{ color: iconColor(currentUser.party) }" v-if="reply && depth === 5 && reply.id" :to="`/reply/${reply.id}`" class="more-link">
+<router-link  :style="{ color: iconColor(currentUser.farbe) }" v-if="reply && depth === 5 && reply.id" :to="`/reply/${reply.id}`" class="more-link">
   Show more..
 </router-link>
 </div>
@@ -87,7 +87,7 @@
       <textarea v-model="newReply" placeholder="Write your answer..." class="reply-textarea"></textarea>
       <div class="reply-actions">
         <button @click="cancelReply" class="cancel-reply-button">Cancel</button>
-        <button @click="submitReply" :style="{ backgroundColor: iconColor(currentUser.party)}" class="submit-reply-button">Reply</button>
+        <button @click="submitReply" :style="{ backgroundColor: iconColor(currentUser.farbe)}" class="submit-reply-button">Reply</button>
       </div>
     </div>
     <!--Antwortbox-->
@@ -101,7 +101,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { mapGetters, mapActions } from 'vuex';
 import { iconColor } from './farben';
 import { useStore } from 'vuex';
-import { computed, ref} from 'vue';
+import { computed } from 'vue';
 
 export default {
 props:{
@@ -114,7 +114,10 @@ reply: { // Füge das 'reply'-Prop hinzu
       required: true,
     },
 },
+
+
   setup() {
+
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
@@ -302,7 +305,7 @@ reply: { // Füge das 'reply'-Prop hinzu
 
   .replies-section {
     margin-top: 10px;
-    padding-left: 3%; /* Adjusted padding for nested replies */
+    padding-left: 2%; /* Adjusted padding for nested replies */
   }
 
   .expand-button {

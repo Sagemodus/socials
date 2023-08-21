@@ -101,7 +101,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { mapGetters, mapActions } from 'vuex';
 import { iconColor } from './farben';
 import { useStore } from 'vuex';
-import { computed, ref } from 'vue';
+import { computed, ref} from 'vue';
 
 export default {
 props:{
@@ -114,63 +114,45 @@ reply: { // Füge das 'reply'-Prop hinzu
       required: true,
     },
 },
-
-
-  setup(props) {
-
+  setup() {
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
-
     // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
-
- 
-
- 
     return {
       iconColor,
-
       currentUser,
-   
  // Mache den currentUser verfügbar
     };
   },
-
 
   data() {
     return {
     showReplyForm: false,
     newReply: "",
     expandReplies: false,
-
     };
   },
   computed: {
     ...mapGetters(['getUserProfile', 'getCommentById']),
-
     replyCount() {
     return this.reply.replies ? this.reply.replies.length : 0;
-
     },
-   
-
-
   },
 
-
-
   methods: {
-
-    ...mapActions(['upvoteComment', 'downvoteComment', 'removeUpvoteComment', 'removeDownvoteComment', 'addReplyToComment']),
+    ...mapActions([
+      'upvoteComment',
+      'downvoteComment',
+      'removeUpvoteComment',
+      'removeDownvoteComment',
+      'addReplyToComment',
+    ]),
    
-
-
     upvoteReplyAction(replyId) {
     this.$store.dispatch('upvoteReply', { replyId });
     this.$nextTick(() => {
       this.animateButton(this.$refs.upvoteButton);
     });
-   
-    
   },
 
   downvoteReplyAction(replyId) {
@@ -183,8 +165,7 @@ reply: { // Füge das 'reply'-Prop hinzu
   animateButton(buttonRef) {
     const button = buttonRef;
     button.animate(
-      [
-        // keyframes
+      [// keyframes
         { transform: 'scale(1)' },
         { transform: 'scale(1.3)' },
         { transform: 'scale(1)' }
@@ -198,27 +179,25 @@ reply: { // Füge das 'reply'-Prop hinzu
     },
   
     // Funktion zum Einreichen einer Antwort auf diese Antwort
-  submitReply() {
-  const newReply = {
-    id: uuidv4(),
-    text: this.newReply,
-    author: this.getUserProfile, // immer Benutzer 'Dejan Pantos'
-    replies: [], 
-  };
+    submitReply() {
+      const newReply = {
+        id: uuidv4(),
+        text: this.newReply,
+        author: this.getUserProfile(),
+        replies: [],
+      };
 
-      // Fügt die neue Antwort zu den Antworten dieser Antwort hinzu
-      if (!this.reply.replies) {
-        this.reply.replies = [];
+      const localReply = ref(this.reply); // Create a local variable to store modified reply
+      if (!localReply.value.replies) {
+        localReply.value.replies = [];
       }
-      this.reply.replies.push(newReply);
+      localReply.value.replies.push(newReply);
 
-      // Setzt das Antwort-Formular zurück
       this.newReply = "";
       this.showReplyForm = false;
 
-      // Wenn die Verschachtelungstiefe 3 erreicht, leite den Benutzer zur gewünschten Seite weiter
       if (this.depth >= 5) {
-        this.$emit('reply-clicked', this.reply.id);
+        this.$emit('reply-clicked', localReply.value.id);
       }
     },
 

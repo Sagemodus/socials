@@ -80,7 +80,7 @@ props: {
   },
 },
 
-setup(props) {
+setup() {
 const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
 
 // Zugriff auf den currentUser aus dem Vuex-Store
@@ -146,18 +146,12 @@ methods: {
       author: this.getUserProfile,
     };
 
-    // Fügt die Antwort zu den Kommentar-Replies hinzu
-    if (!this.comment.replies) {
-      this.comment.replies = [];
-    }
-    this.comment.replies.push(reply);
+    // Emit the 'new-reply' event to notify the parent component
+    this.$emit('new-reply', reply);
 
-    // Setzt das Antwort-Formular zurück
+    // Reset the reply form
     this.newReply = "";
     this.showReplyForm = false;
-
-    // Wenn die dritte Antwort oder mehr hinzugefügt wird, leite den Benutzer zur gewünschten Seite weiter
- 
   },
 
   // Funktion zum Abbrechen der Antwort

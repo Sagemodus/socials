@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Schleife über die Daten und erzeuge die TopicBox-Komponenten für jedes Thema -->
+    <!-- Loop through the data and create TopicBox components for each topic -->
     <TopicBox
       v-for="topic in topics"
       :key="topic.id"
@@ -14,15 +14,9 @@
   </div>
 </template>
 
-
 <script>
-import { ref, onMounted } from 'vue';
-import TopicBox from './TopicBox'; // Passe den Pfad entsprechend an
 import { mapState } from 'vuex';
-import { fetchDataFromDatabase } from '../firebase/dataFetcher';
-
-
-
+import TopicBox from './TopicBox'; // Make sure to adjust the path accordingly
 
 export default {
   components: {
@@ -30,21 +24,19 @@ export default {
   },
   computed: {
     ...mapState({
-      topics: state => state.topics // Dies bringt den topics-State aus dem Store in Ihre Komponente
+      topics: state => state.topics
     })
   },
-
   methods: {
     handleTopicClick(topicId) {
-      // Hier wird die ID des angeklickten Themas erhalten.
-      // Navigiere nun zur TopicComponentGanzeSeite.vue und übergebe die ID als Parameter in der Route.
+      // Get the ID of the clicked topic.
+      // Now navigate to TopicComponentGanzeSeite.vue and pass the ID as a parameter in the route.
       this.$router.push({ name: 'TopicDetails', params: { id: topicId } });
     }
   },
-
-
-
-  
 };
-
 </script>
+
+<style scoped>
+/* Add your component-specific styles here */
+</style>

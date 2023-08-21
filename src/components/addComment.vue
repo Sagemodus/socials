@@ -12,11 +12,14 @@
 </template>
 
 <script>
+// eslint-disable-next-line no-unused-vars
 import { v4 as uuidv4 } from 'uuid';
+// eslint-disable-next-line no-unused-vars
 import { mapGetters, mapActions } from 'vuex';
-import { iconColor } from './farben'; // Überprüfen Sie bitte den korrekten Pfad
-import { useStore } from 'vuex'; // Importiere das useStore-Hook
-import { computed } from 'vue'; /// Importiere das computed-Hook
+// eslint-disable-next-line no-unused-vars
+import { iconColor } from './farben'; // Make sure to check the correct path
+import { useStore } from 'vuex';
+import { computed } from 'vue';
 
 export default {
 

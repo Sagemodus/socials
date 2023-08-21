@@ -12,13 +12,14 @@
 
       <!-- Anzeige von Kommentaren -->
       <div v-if="topic.comments.length > 0">
-        <CommentBox
-          v-for="comment in topic.comments"
-          :key="comment.id"
-          :comment="comment"
-          @reply-clicked="goToCommentPage"
-        />
-      </div>
+      <CommentBox
+        v-for="comment in topic.comments"
+        :key="comment.id"
+        :comment="comment"
+        @reply-clicked="goToCommentPage"
+        @add-reply="addReplyToComment(comment, $event)"
+      />
+    </div>
 
       <!-- Anzeige, wenn keine Kommentare vorhanden sind -->
       <div v-else>
@@ -58,6 +59,7 @@ export default {
       return this.$store.state.currentUser; 
     },
   },
+  
   methods: {
     ...mapActions(['fetchComments', 'addCommentToTopic', 'addReplyToComment']),
     addComment(commentText) {
@@ -68,6 +70,16 @@ export default {
       };
       this.$store.dispatch('addCommentToTopic', { topicId: this.topic.id, comment: newComment });
     },
+
+    addReplyToComment(comment, replyText) {
+      const newReply = {
+        id: uuidv4(),
+        text: replyText,
+        author: this.getUserProfile,
+      };
+      this.addReplyToComment({ commentId: comment.id, reply: newReply });
+    },
+
     goToCommentPage(commentId) {
       const comment = this.$store.getters.getCommentById(commentId);
       // Führt Sie zur Kommentarseite, wenn es ausreichend Antworten gibt

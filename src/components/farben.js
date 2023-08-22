@@ -20,7 +20,7 @@ export function iconColor(farbe) {
     case '3':
       return 'orange'; // Sozialisten/Kommunisten
     case '4':
-      return 'brown'; // Populisten
+      return 'blue'; // Populisten
     default:
       return 'gray'; // Standardfarbe für unbekannte Parteien
   }

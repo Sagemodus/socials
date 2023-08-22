@@ -22,23 +22,22 @@
       <!-- Anzeige von Kommentaren -->
      
       <div v-if="selectedTab === 'pro'" class="kommentare">
-  <CommentBox
-    v-for="comment in proComments"
-    :key="comment.id"
-    :comment="comment"
-    @reply-clicked="goToCommentPage"
-  />
-</div>
+    <CommentBox
+      v-for="comment in sortedProCommentsByTopic"
+      :key="comment.id"
+      :comment="comment"
+      @reply-clicked="goToCommentPage"
+    />
+  </div>
 
-<div v-else-if="selectedTab === 'contra'" class="kommentare">
-  <CommentBox
-    v-for="comment in contraComments"
-    :key="comment.id"
-    :comment="comment"
-    @reply-clicked="goToCommentPage"
-  />
-</div>
-
+  <div v-else-if="selectedTab === 'contra'" class="kommentare">
+    <CommentBox
+      v-for="comment in sortedContraCommentsByTopic"
+      :key="comment.id"
+      :comment="comment"
+      @reply-clicked="goToCommentPage"
+    />
+  </div>
       <!-- Anzeige, wenn keine Kommentare vorhanden sind -->
       <div v-else>
         <p>Noch keine Kommentare vorhanden.</p>
@@ -66,15 +65,13 @@ export default {
   // ... andere setup-Abschnitte ...
 
   const selectedTab = computed(() => store.state.selectedTab);
-  const proComments = computed(() => store.state.proComments);
-  const contraComments = computed(() => store.state.contraComments);
+  
 
   return {
     // ... andere zurückgegebene Werte ...
     selectedTab,
 
-     proComments,
-      contraComments,
+   
   };
 },
   components: {
@@ -94,9 +91,32 @@ export default {
     user() {
       return this.$store.state.currentUser; 
     },
+
+    sortedProCommentsByTopic() {
+      return this.sortedCommentsByTopic('proComments');
+    },
+
+    sortedContraCommentsByTopic() {
+      return this.sortedCommentsByTopic('contraComments');
+    },
+
   },
   methods: {
     ...mapActions(['fetchComments', 'addCommentToTopic', 'addReplyToComment', 'selectTab']),
+
+    sortedCommentsByTopic(commentType) {
+      const topicId = this.$route.params.id;
+      const topic = this.getTopicById(topicId);
+      if (topic) {
+        const commentsArray = topic[commentType];
+        return commentsArray
+          .slice()
+          .sort((a, b) => b.votes.upvotes - a.votes.upvotes);
+      }
+      return [];
+    },
+  },
+
     selectTabs(tab) {
       console.log(this.selectedTab)
     
@@ -130,7 +150,7 @@ export default {
         }
       }
     },
-  },
+  
   created() {
     this.fetchComments();
   },

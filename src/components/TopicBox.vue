@@ -102,21 +102,11 @@
      </div>
 
     
-      <div v-if="selectedTab2 === 'pro'" class="kommentare">
-  <CommentBox
-    v-for="comment in sortedProComments.slice(0, 3)"
-    :key="comment.id"
-    :comment="comment"
-  />
-</div>
-<div v-else-if="selectedTab2 === 'contra'" class="kommentare">
-  <CommentBox
-    v-for="comment in sortedContraComments.slice(0, 3)"
-    :key="comment.id"
-    :comment="comment"
-  />
-</div>
-
+     <CommentBox
+  v-for="comment in sortedComments(topic.id, 'pro')"
+  :key="comment.id"
+  :comment="comment"
+/>
 
 
 
@@ -170,21 +160,7 @@ export default {
 
     // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
-    const selectedTab2 = computed(() => store.state.selectedTab);
-    const proComments = computed(() => store.state.proComments);
-    const contraComments = computed(() => store.state.contraComments);
-
-    const sortedProComments = computed(() =>
-      proComments.value
-        .slice()
-        .sort((a, b) => b.votes.upvotes - a.votes.upvotes)
-    );
-
-    const sortedContraComments = computed(() =>
-      contraComments.value
-        .slice()
-        .sort((a, b) => b.votes.upvotes - a.votes.upvotes)
-    );
+const selectedTab2 = computed(() => store.state.selectedTab);
 
     
     return {
@@ -193,10 +169,8 @@ export default {
       topicUrl:  '',
       state,
       selectedTab2,
-      proComments,
-      contraComments,
-      sortedProComments,
-      sortedContraComments
+    
+     
     };
   },
 
@@ -209,7 +183,17 @@ export default {
   computed: {
     ...mapGetters(['getTopicById','getAllComments']),
 
-
+    sortedComments() {
+      return (topicId, type) => {
+        const topic = this.getTopicById(topicId);
+        if (type === 'pro') {
+          return topic.proComments.slice().sort((a, b) => b.votes.upvotes - a.votes.upvotes);
+        } else if (type === 'contra') {
+          return topic.contraComments.slice().sort((a, b) => b.votes.upvotes - a.votes.upvotes);
+        }
+        return [];
+      };
+    },
 
  
 

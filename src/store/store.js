@@ -18,19 +18,33 @@ function generateFakeUser(id) {
     profileImage: `https://fakeimg.pl/50x50/?text=${faker.name.findName(id)}&font=lobster`,
   };
 }
-
+function searchCommentInArray(comments, commentId) {
+  for (const comment of comments) {
+    if (comment.id === commentId) {
+      console.log("Found comment with ID:", commentId);
+      return comment;
+    }
+    if (comment.replies) {
+      const foundReply = searchCommentInArray(comment.replies, commentId);
+      if (foundReply) {
+        return foundReply;
+      }
+    }
+  }
+  return null;
+}
 
 
 function findComment(state, commentId) {
   // Durchsuche proComments nach dem Kommentar
-  for (const comment of state.proComments) {
+  for (const comment of state.topics.proComments) {
     if (comment.id === commentId) {
       return comment;
     }
   }
 
   // Durchsuche contraComments nach dem Kommentar
-  for (const comment of state.contraComments) {
+  for (const comment of state.topics.contraComments) {
     if (comment.id === commentId) {
       return comment;
     }
@@ -104,19 +118,20 @@ function generateTopics(count, users) {
   const topics = [];
   for (let i = 0; i < count; i++) {
     const id = faker.datatype.uuid();
-    const category = faker.random.arrayElement(categories); // Zufällige Kategorie auswählen
+    const category = faker.random.arrayElement(categories);
 
     const newTopic = {
       id,
       text: faker.lorem.paragraph(),
-      comments: generateComments(3, users),
       createdBy: users[faker.datatype.number({ min: 0, max: users.length - 1 })],
       createdAt: faker.date.past(),
       likes: {
         upvotes: faker.datatype.number({ min: 0, max: 100 }),
         downvotes: faker.datatype.number({ min: 0, max: 100 }),
       },
-      category: category, // Verwendet die zufällig ausgewählte Kategorie
+      category: category,
+      proComments: [],    // Array for "pro" comments
+      contraComments: [], // Array for "contra" comments
     };
 
     // Berechne Prozentwerte
@@ -126,6 +141,9 @@ function generateTopics(count, users) {
 
     newTopic.likes.upvotePercentage = upvotePercentage.toFixed(2);
     newTopic.likes.downvotePercentage = downvotePercentage.toFixed(2);
+
+    newTopic.proComments = generateComments(3, users, true); // Generate "pro" comments
+    newTopic.contraComments = generateComments(3, users, false); // Generate "contra" comments
 
     topics.push(newTopic);
   }
@@ -141,7 +159,7 @@ export default createStore({
         id: 1,
         name: 'Dejan Pantos',
         profileImage: generateFakeProfileImage('Dejan Pantos'),
-        farbe: '-1',
+        farbe: '4',
         topicsaves:[],
         votes: {
           topics: {
@@ -172,8 +190,7 @@ export default createStore({
       topics: generateTopics(10, users),
       users,
       currentUser: users[0],
-      proComments: [],    // Array für "pro" Kommentare
-      contraComments: [], // Array für "contra" Kommentare
+
       selectedTab: 'pro',
       selectedTab2: 'pro',
   // Array to store likes
@@ -184,12 +201,6 @@ export default createStore({
   },
 
   mutations: {
-    SET_PRO_COMMENTS(state, comments) {
-      state.proComments = comments;
-    },
-    SET_CONTRA_COMMENTS(state, comments) {
-      state.contraComments = comments;
-    },
 
     UPDATE_TOPIC_PERCENTAGES(state, { topicId }) {
       const topic = state.topics.find((topic) => topic.id === topicId);
@@ -374,22 +385,26 @@ const reply = this.getters.getCommentById(replyId);{
       const topic = state.topics.find((topic) => topic.id === topicId);
       if (topic) {
         if (comment.text.trim() !== "") {
-          // Initialisiere die Vote-Eigenschaften für den neuen Kommentar
+          // Initialize the Vote properties for the new comment
           comment.votes = { upvotes: 0, downvotes: 0 };
+    
+          if (comment.iscommentpro) {
+            topic.proComments.push(comment);
+          } else {
+            topic.contraComments.push(comment);
+          }
+    
           topic.comments.push(comment);
         } else {
-          // Zeige eine SweetAlert-Meldung, wenn der Kommentar leer ist
+          // Show a SweetAlert message if the comment is empty
           Swal.fire({
             icon: 'error',
-            title: 'Fehler',
-            text: 'Der Kommentar darf nicht leer sein.',
+            title: 'Error',
+            text: 'The comment cannot be empty.',
             confirmButtonText: 'OK',
           });
         }
       }
-
-
-      
     },
    
   
@@ -431,13 +446,7 @@ const reply = this.getters.getCommentById(replyId);{
       commit('SET_SELECTED_TAB2', tab);
     },
 
-    generateComments({ commit, state }) {
-      const proComments = generateComments(5, state.users);
-      const contraComments = generateComments(5, state.users);
-
-      commit('SET_PRO_COMMENTS', proComments);
-      commit('SET_CONTRA_COMMENTS', contraComments);
-    },
+ 
   
     updateTopicPercentages({ commit }, { topicId }) {
       commit('UPDATE_TOPIC_PERCENTAGES', { topicId });
@@ -466,7 +475,7 @@ const reply = this.getters.getCommentById(replyId);{
       commit('ADD_REPLY_TO_COMMENT', { commentId, reply });
     },
     fetchComments({ state, commit }) {
-      if (state.topics.every((topic) => topic.comments.length > 0)) {
+      if (state.topics.every((topic) => topic.proComments.length > 0 || topic.contraComments.length > 0)) {
         return;
       }
 
@@ -505,60 +514,24 @@ const reply = this.getters.getCommentById(replyId);{
       return state.users[0];
     },
   
-    getCommentById: (state) => (commentId) => {
-      console.log("Searching for comment with ID:", commentId);
-    
-      const proComments = state.proComments;
-      const contraComments = state.contraComments;
-    
-      function searchReplies(replies) {
-        for (const reply of replies) {
-          console.log("Checking reply:", reply.id);
-          if (reply.id === commentId) {
-            console.log("Found comment with ID:", commentId);
-            return reply;
-          }
-          if (reply.replies) {
-            const foundReply = searchReplies(reply.replies);
-            if (foundReply) {
-              return foundReply;
-            }
-          }
-        }
-        return null;
-      }
-    
-      for (const comment of proComments) {
-        console.log("Checking proComment:", comment.id);
-        if (comment.id === commentId) {
-          console.log("Found proComment with ID:", commentId);
-          return comment;
-        }
-        if (comment.replies) {
-          const foundReply = searchReplies(comment.replies);
-          if (foundReply) {
-            return foundReply;
-          }
-        }
-      }
-    
-      for (const comment of contraComments) {
-        console.log("Checking contraComment:", comment.id);
-        if (comment.id === commentId) {
-          console.log("Found contraComment with ID:", commentId);
-          return comment;
-        }
-        if (comment.replies) {
-          const foundReply = searchReplies(comment.replies);
-          if (foundReply) {
-            return foundReply;
-          }
-        }
-      }
-    
-      console.log("Comment not found!");
-      return null;
-    },
+getCommentById: (state) => (commentId) => {
+  for (const topic of state.topics) {
+    const foundProComment = searchCommentInArray(topic.proComments, commentId);
+    if (foundProComment) {
+      return foundProComment;
+    }
+
+    const foundContraComment = searchCommentInArray(topic.contraComments, commentId);
+    if (foundContraComment) {
+      return foundContraComment;
+    }
+  }
+
+  console.log("Comment not found!");
+  return null;
+},
+
+
     
     getUserfarbe(state) {
       return state.currentUser.farbe;

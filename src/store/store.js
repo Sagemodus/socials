@@ -22,13 +22,21 @@ function generateFakeUser(id) {
 
 
 function findComment(state, commentId) {
-  for (const topic of state.topics) {
-    const comment = topic.comments.find(comment => comment.id === commentId);
-    if (comment) {
+  // Durchsuche proComments nach dem Kommentar
+  for (const comment of state.proComments) {
+    if (comment.id === commentId) {
       return comment;
     }
   }
-  return null;
+
+  // Durchsuche contraComments nach dem Kommentar
+  for (const comment of state.contraComments) {
+    if (comment.id === commentId) {
+      return comment;
+    }
+  }
+
+  return null; // Wenn der Kommentar nicht gefunden wurde
 }
 
 
@@ -72,11 +80,12 @@ function generateComments(count, users) {
         upvotes: faker.datatype.number(),
         downvotes: faker.datatype.number(),
       },
-      iscommentpro:true,
-
+      iscommentpro: true,
     };
     comments.push(newComment);
   }
+
+
   return comments;
 }
 
@@ -124,7 +133,9 @@ function generateTopics(count, users) {
 }
 
 export default createStore({
+
   state() {
+
     const users = [
       {
         id: 1,
@@ -161,13 +172,24 @@ export default createStore({
       topics: generateTopics(10, users),
       users,
       currentUser: users[0],
- 
+      proComments: [],    // Array für "pro" Kommentare
+      contraComments: [], // Array für "contra" Kommentare
+      selectedTab: 'pro',
+      selectedTab2: 'pro',
   // Array to store likes
     };
 
-  },
-  mutations: {
+    
 
+  },
+
+  mutations: {
+    SET_PRO_COMMENTS(state, comments) {
+      state.proComments = comments;
+    },
+    SET_CONTRA_COMMENTS(state, comments) {
+      state.contraComments = comments;
+    },
 
     UPDATE_TOPIC_PERCENTAGES(state, { topicId }) {
       const topic = state.topics.find((topic) => topic.id === topicId);
@@ -387,10 +409,35 @@ const reply = this.getters.getCommentById(replyId);{
       }
     },
     
-  
-
+    SET_SELECTED_TAB(state, tab) {
+      
+      state.selectedTab = tab;
+      console.log(state.selectedTab);
+    },
+    SET_SELECTED_TAB2(state, tab) {
+      
+      state.selectedTab = tab;
+      console.log(state.selectedTab);
+    },
   },
   actions: {
+
+    selectTab({ commit }, tab) {
+      
+      commit('SET_SELECTED_TAB', tab);
+    },
+    selectTab2({ commit }, tab) {
+      
+      commit('SET_SELECTED_TAB2', tab);
+    },
+
+    generateComments({ commit, state }) {
+      const proComments = generateComments(5, state.users);
+      const contraComments = generateComments(5, state.users);
+
+      commit('SET_PRO_COMMENTS', proComments);
+      commit('SET_CONTRA_COMMENTS', contraComments);
+    },
   
     updateTopicPercentages({ commit }, { topicId }) {
       commit('UPDATE_TOPIC_PERCENTAGES', { topicId });
@@ -448,7 +495,7 @@ const reply = this.getters.getCommentById(replyId);{
   }
   return allComments;
 },
-
+ 
 
 
     getTopicById: (state) => (id) => {
@@ -458,51 +505,65 @@ const reply = this.getters.getCommentById(replyId);{
       return state.users[0];
     },
   
-      getCommentById: (state) => (commentId) => {
-        // Zuerst in den Kommentaren suchen
-        for (const topic of state.topics) {
-          for (const comment of topic.comments) {
-            if (comment.id === commentId) {
-              return comment;
+    getCommentById: (state) => (commentId) => {
+      console.log("Searching for comment with ID:", commentId);
+    
+      const proComments = state.proComments;
+      const contraComments = state.contraComments;
+    
+      function searchReplies(replies) {
+        for (const reply of replies) {
+          console.log("Checking reply:", reply.id);
+          if (reply.id === commentId) {
+            console.log("Found comment with ID:", commentId);
+            return reply;
+          }
+          if (reply.replies) {
+            const foundReply = searchReplies(reply.replies);
+            if (foundReply) {
+              return foundReply;
             }
           }
         }
-    
-        // Wenn nicht in den Kommentaren gefunden, in den Antworten suchen
-        function searchReplies(replies) {
-          for (const reply of replies) {
-            if (reply.id === commentId) {
-              return reply;
-            }
-            if (reply.replies) {
-              const foundReply = searchReplies(reply.replies);
-              if (foundReply) {
-                return foundReply;
-              }
-            }
-          }
-          return null;
-        }
-    
-        for (const topic of state.topics) {
-          for (const comment of topic.comments) {
-            if (comment.replies) {
-              const foundComment = searchReplies(comment.replies);
-              if (foundComment) {
-                return foundComment;
-              }
-            }
-          }
-        }
-    
-        console.log("getCommentById: Comment not found!");
         return null;
-      
+      }
+    
+      for (const comment of proComments) {
+        console.log("Checking proComment:", comment.id);
+        if (comment.id === commentId) {
+          console.log("Found proComment with ID:", commentId);
+          return comment;
+        }
+        if (comment.replies) {
+          const foundReply = searchReplies(comment.replies);
+          if (foundReply) {
+            return foundReply;
+          }
+        }
+      }
+    
+      for (const comment of contraComments) {
+        console.log("Checking contraComment:", comment.id);
+        if (comment.id === commentId) {
+          console.log("Found contraComment with ID:", commentId);
+          return comment;
+        }
+        if (comment.replies) {
+          const foundReply = searchReplies(comment.replies);
+          if (foundReply) {
+            return foundReply;
+          }
+        }
+      }
+    
+      console.log("Comment not found!");
+      return null;
     },
-   
+    
     getUserfarbe(state) {
       return state.currentUser.farbe;
     },
+    
 
   },
 });

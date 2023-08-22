@@ -1,4 +1,5 @@
 <template>
+
 <div class="comment-box">
     <div class="user-info">
       <div class="header-comment">
@@ -86,13 +87,13 @@ const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
 // Zugriff auf den currentUser aus dem Vuex-Store
 const currentUser = computed(() => store.state.currentUser);
 
-// Zustand von Upvote und Downvote aus dem Vuex-Store holen
+
 
 
 return {
   iconColor,
   currentUser,
-
+  
 };
 },
 
@@ -294,7 +295,7 @@ display: flex;
 justify-content:flex-start;
 align-items: center;
 gap: 18px;
-padding-left: 30px;
+
 
 }
 

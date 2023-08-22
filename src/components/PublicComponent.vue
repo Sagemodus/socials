@@ -30,6 +30,7 @@ export default {
     })
   },
 
+
   methods: {
     handleTopicClick(topicId) {
       // Hier wird die ID des angeklickten Themas erhalten.

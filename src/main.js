@@ -22,5 +22,5 @@ app.component('font-awesome-icon', FontAwesomeIcon)
 app.use(store)
 app.config.globalProperties.$swal = Swal;
 app.mount('#app')
-
+store.dispatch('generateComments');
 

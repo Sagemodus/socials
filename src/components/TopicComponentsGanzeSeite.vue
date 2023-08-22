@@ -1,6 +1,6 @@
 // TopicComponentGanzeSeite.vue
 <template>
-  <div>
+  
     <!-- Laden und Anzeigen von Themen -->
     <div v-if="topic" class="topic-ganzeseite">
       <div class="author-info">
@@ -13,27 +13,40 @@
 
       <!-- Hinzufügen von Kommentaren -->
       <AddComment @add-comment="addComment" />
-
-      <!-- Anzeige von Kommentaren -->
-      <div v-if="topic.comments.length > 0" class="kommentare">
-        <CommentBox
-          v-for="comment in topic.comments"
-          :key="comment.id"
-          :comment="comment"
-          @reply-clicked="goToCommentPage"
-        />
+      
+      
+      <div class="tab-selection">
+        <button @click="selectTabs('pro')" :class="{ 'active-tab': selectedTab === 'pro' }">Pro</button>
+        <button @click="selectTabs('contra')" :class="{ 'active-tab': selectedTab === 'contra' }">Contra</button> 
       </div>
+      <!-- Anzeige von Kommentaren -->
+     
+      <div v-if="selectedTab === 'pro'" class="kommentare">
+  <CommentBox
+    v-for="comment in proComments"
+    :key="comment.id"
+    :comment="comment"
+    @reply-clicked="goToCommentPage"
+  />
+</div>
+
+<div v-else-if="selectedTab === 'contra'" class="kommentare">
+  <CommentBox
+    v-for="comment in contraComments"
+    :key="comment.id"
+    :comment="comment"
+    @reply-clicked="goToCommentPage"
+  />
+</div>
 
       <!-- Anzeige, wenn keine Kommentare vorhanden sind -->
       <div v-else>
         <p>Noch keine Kommentare vorhanden.</p>
       </div>
-    </div>
+
 
     <!-- Anzeige, wenn das Thema geladen wird -->
-    <div v-else>
-      <p>Loading topic...</p>
-    </div>
+
   </div>
 </template>
 
@@ -42,8 +55,28 @@ import { mapGetters, mapActions } from 'vuex';
 import CommentBox from './CommentBox';
 import AddComment from '../components/addComment.vue';
 import { v4 as uuidv4 } from 'uuid';
+import { useStore } from 'vuex';
+import { computed } from 'vue';
+
 
 export default {
+  setup() {
+  const store = useStore();
+
+  // ... andere setup-Abschnitte ...
+
+  const selectedTab = computed(() => store.state.selectedTab);
+  const proComments = computed(() => store.state.proComments);
+  const contraComments = computed(() => store.state.contraComments);
+
+  return {
+    // ... andere zurückgegebene Werte ...
+    selectedTab,
+
+     proComments,
+      contraComments,
+  };
+},
   components: {
     CommentBox,
     AddComment,
@@ -63,7 +96,12 @@ export default {
     },
   },
   methods: {
-    ...mapActions(['fetchComments', 'addCommentToTopic', 'addReplyToComment']),
+    ...mapActions(['fetchComments', 'addCommentToTopic', 'addReplyToComment', 'selectTab']),
+    selectTabs(tab) {
+      console.log(this.selectedTab)
+    
+  this.selectTab(tab);
+},
     addComment(commentText) {
       const newComment = {
         id: uuidv4(),

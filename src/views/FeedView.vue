@@ -72,9 +72,31 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss" >
+.topic-box + .topic-box {
+  margin-top: 40px; // Füge hier den gewünschten Abstand hinzu
+}
+.comment-reply .action-button {
+  font-size: 13px;
+}
+.comment-reply .buttons-container{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
 
- 
+
+}
+.comment-box{
+  width: 100%;
+  max-width: 95%;
+}
+
+
+.actions {
+    gap: 10px;
+}
 .topic-text{
 padding-left: 1em;
 }

@@ -23,7 +23,7 @@
 <!--Buttons oben rechts-->
 <div class="right-content">
   <button class="share-button" @click="shareContent">
-       <font-awesome-icon :icon="['fas', 'share']"         
+       <font-awesome-icon :icon="['fas', 'share-nodes']"         
           class="icon"
           :style="{ color: iconColor(currentUser.farbe) }"/>
     </button>
@@ -95,6 +95,31 @@
 
       </div>
 
+      <!--ConPro Button-->
+     <div class="tab-selection">
+     <button @click="selectTabs('pro')" :class="{ 'active-tab': selectedTab2 === 'pro' }">Pro</button>
+     <button @click="selectTabs('contra')" :class="{ 'active-tab': selectedTab2 === 'contra' }">Contra</button>
+     </div>
+
+    
+      <div v-if="selectedTab2 === 'pro'" class="kommentare">
+  <CommentBox
+    v-for="comment in sortedProComments.slice(0, 3)"
+    :key="comment.id"
+    :comment="comment"
+  />
+</div>
+<div v-else-if="selectedTab2 === 'contra'" class="kommentare">
+  <CommentBox
+    v-for="comment in sortedContraComments.slice(0, 3)"
+    :key="comment.id"
+    :comment="comment"
+  />
+</div>
+
+
+
+
       <!--Konversation Button-->
     <div class="conversation-prompt">
      <button @click="goToTopic"  :style="{ color: iconColor(currentUser.farbe)}" class="join-button"><span>Show more
@@ -105,6 +130,22 @@
 
   </div>
 </div>
+
+<!---->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <div v-else>
     <!-- Placeholder content while topic is loading, or error message if topic couldn't be loaded -->
     <p>Loading topic...</p>
@@ -112,24 +153,38 @@
 </template>
 
 <script>
-import { mapGetters, mapMutations } from 'vuex';
+import { mapGetters, mapMutations, mapActions} from 'vuex';
 import { iconColor } from './farben';
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
 import {  computed } from 'vue';
 import state from 'vue';
+import CommentBox from './CommentBox';
 
 
 export default {
   components: {
-    
+    CommentBox,
   },
   setup() {
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
 
     // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
+    const selectedTab2 = computed(() => store.state.selectedTab);
+    const proComments = computed(() => store.state.proComments);
+    const contraComments = computed(() => store.state.contraComments);
 
+    const sortedProComments = computed(() =>
+      proComments.value
+        .slice()
+        .sort((a, b) => b.votes.upvotes - a.votes.upvotes)
+    );
 
+    const sortedContraComments = computed(() =>
+      contraComments.value
+        .slice()
+        .sort((a, b) => b.votes.upvotes - a.votes.upvotes)
+    );
 
     
     return {
@@ -137,7 +192,11 @@ export default {
       currentUser, // Mache den currentUser verfügbar
       topicUrl:  '',
       state,
-
+      selectedTab2,
+      proComments,
+      contraComments,
+      sortedProComments,
+      sortedContraComments
     };
   },
 
@@ -148,10 +207,9 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(['getTopicById']),
+    ...mapGetters(['getTopicById','getAllComments']),
 
 
-  
 
  
 
@@ -168,7 +226,15 @@ export default {
 
   
   methods: {
-    ...mapMutations(['TOGGLE_LIKE', 'TOGGLE_DISLIKE','ADD_TOPIC_TO_SAVES']), // Import mutations
+    ...mapMutations(['TOGGLE_LIKE', 'TOGGLE_DISLIKE','ADD_TOPIC_TO_SAVES',]), // Import mutations
+    ...mapActions(['fetchComments', 'addCommentToTopic', 'addReplyToComment', 'selectTab2']),
+    selectTabs(tab) {
+      console.log(this.selectedTab)
+    
+  this.selectTab2(tab);
+},
+
+
       //Save button logik
       saveChanges() {
       this.ADD_TOPIC_TO_SAVES(this.topic.id);
@@ -272,6 +338,56 @@ export default {
 
 
 <style lang="scss" >
+
+.tab-selection {
+  display: flex;
+  justify-content: space-evenly;
+  margin-top: 10px;
+
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: #333;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    
+    &:before {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: transparent;
+      transition: background-color 0.3s ease;
+    }
+    
+
+
+    &.active-tab {
+      color: var(--iconColor);
+      font-weight: bold;
+      &:before {
+        background-color: var(--iconColor);
+      }
+    }
+  }
+}
+
+
+
+.tab-content-enter-active,
+.tab-content-leave-active {
+  transition: opacity 0.5s ease-in-out;
+}
+
+.tab-content-enter, .tab-content-leave-to /* .tab-content-leave-active in <2.1.8 */ {
+  opacity: 0;
+}
+
 .savebutton{
   background-color: transparent;
 }
@@ -371,17 +487,15 @@ button.like-button{
   display: flex;
   flex-direction: column;
 padding: 10px;
-  margin: 20px auto;
+  margin: 10px auto;
   background-color: #ffffff;
   border-radius: 10px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  max-width: 75%;
+  max-width: 90%;
   transition: transform 0.3s ease-in-out;
 
 
-  &:hover {
-    transform: scale(1.05);
-  }
+
 
   .topic-image {
     min-width: 80%;

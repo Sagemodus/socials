@@ -390,48 +390,59 @@ setSessionId(state, sessionId) {
       }
     },
     
-TOGGLE_LIKE(state, { topicId, userId }) {
-  const topic = state.topics.find((topic) => topic.id === topicId);
-
-  if (topic) {
-    const user = state.users.find((user) => user.id === userId);
-    if (user) {
-      if (!user.haslikedtopic.includes(topicId)) {
-        
-        // Füge den Like hinzu
-        topic.upvotes += 1;
-        user.haslikedtopic.push(topicId);
-      } else {
-        // Entferne den Like
-        topic.upvotes -= 1;
-        user.haslikedtopic = user.haslikedtopic.filter((id) => id !== topicId);
+    TOGGLE_LIKE(state, { topicId, userId }) {
+      const topic = state.topics.find((topic) => topic.id === topicId);
+    
+      if (topic) {
+        const user = state.users.find((user) => user.id === userId);
+        if (user) {
+          if (!user.haslikedtopic.includes(topicId)) {
+            // Füge den Like hinzu
+            topic.upvotes += 1;
+            user.haslikedtopic.push(topicId);
+    
+            // Entferne den Dislike (falls vorhanden)
+            if (user.hasdislikedtopic.includes(topicId)) {
+              topic.downvotes -= 1;
+              user.hasdislikedtopic = user.hasdislikedtopic.filter((id) => id !== topicId);
+            }
+          } else {
+            // Entferne den Like
+            topic.upvotes -= 1;
+            user.haslikedtopic = user.haslikedtopic.filter((id) => id !== topicId);
+          }
+    
+          updatePercentages(topic); // Aktualisiere Prozentsätze
+        }
       }
-
-      updatePercentages(topic); // Aktualisiere Prozentsätze
-    }
-  }
-},
-
-TOGGLE_DISLIKE(state, { topicId, userId }) {
-  const topic = state.topics.find((topic) => topic.id === topicId);
-
-  if (topic) {
-    const user = state.users.find((user) => user.id === userId);
-    if (user) {
-      if (!user.hasdislikedtopic.includes(topicId)) {
-        // Füge den Dislike hinzu
-        topic.downvotes += 1;
-        user.hasdislikedtopic.push(topicId);
-      } else {
-        // Entferne den Dislike
-        topic.downvotes -= 1;
-        user.hasdislikedtopic = user.hasdislikedtopic.filter((id) => id !== topicId);
+    },
+    
+    TOGGLE_DISLIKE(state, { topicId, userId }) {
+      const topic = state.topics.find((topic) => topic.id === topicId);
+    
+      if (topic) {
+        const user = state.users.find((user) => user.id === userId);
+        if (user) {
+          if (!user.hasdislikedtopic.includes(topicId)) {
+            // Füge den Dislike hinzu
+            topic.downvotes += 1;
+            user.hasdislikedtopic.push(topicId);
+    
+            // Entferne den Like (falls vorhanden)
+            if (user.haslikedtopic.includes(topicId)) {
+              topic.upvotes -= 1;
+              user.haslikedtopic = user.haslikedtopic.filter((id) => id !== topicId);
+            }
+          } else {
+            // Entferne den Dislike
+            topic.downvotes -= 1;
+            user.hasdislikedtopic = user.hasdislikedtopic.filter((id) => id !== topicId);
+          }
+    
+          updatePercentages(topic); // Prozentwerte aktualisieren
+        }
       }
-
-      updatePercentages(topic); // Prozentwerte aktualisieren
-    }
-  }
-},
+    },
   
   
   

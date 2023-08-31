@@ -127,33 +127,25 @@ type: String,
   setup(props) {
 
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
-
     // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
 
-
- 
     return {
       iconColor,
-
       currentUser,
-   
  // Mache den currentUser verfügbar
     };
   },
-
 
   data() {
     return {
     showReplyForm: false,
     newReply: "",
     expandReplies: false,
-
     };
   },
   computed: {
     ...mapGetters(['getUserProfile', 'getCommentById']),
-
     replyCount() {
       
     return this.reply.replies ? this.reply.replies.length : 0;},
@@ -168,9 +160,8 @@ type: String,
 
   },
 
-
-
   methods: {
+
 
     ...mapActions(['upvoteComment', 'downvoteComment', 'removeUpvoteComment', 'removeDownvoteComment', ]),
  
@@ -200,8 +191,6 @@ type: String,
     this.$nextTick(() => {
       this.animateButton(this.$refs.upvoteButton);
     });
-   
-    
   },
 
   downvoteReplyAction(replyId,currentUserId,topicId,commentId) {
@@ -214,8 +203,7 @@ type: String,
   animateButton(buttonRef) {
     const button = buttonRef;
     button.animate(
-      [
-        // keyframes
+      [// keyframes
         { transform: 'scale(1)' },
         { transform: 'scale(1.3)' },
         { transform: 'scale(1)' }
@@ -231,6 +219,7 @@ type: String,
     // Funktion zum Einreichen einer Antwort auf diese Antwort
     submitReply() {
       const newReply = {
+
         topicId: this.topic,
         id: uuidv4(),
         text: this.newReply,
@@ -244,16 +233,15 @@ type: String,
       // Fügt die neue Antwort zu den Antworten dieser Antwort hinzu
       if (!this.reply.replies) {
         this.reply.replies = [];
-      }
-      this.reply.replies.push(newReply);
 
-      // Setzt das Antwort-Formular zurück
+      }
+      localReply.value.replies.push(newReply);
+
       this.newReply = "";
       this.showReplyForm = false;
 
-      // Wenn die Verschachtelungstiefe 3 erreicht, leite den Benutzer zur gewünschten Seite weiter
       if (this.depth >= 5) {
-        this.$emit('reply-clicked', this.reply.id);
+        this.$emit('reply-clicked', localReply.value.id);
       }
     },
   

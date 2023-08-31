@@ -119,6 +119,7 @@ export default {
     },
 
   },
+  
   methods: {
     ...mapActions(['fetchComments', 'addCommentToTopic', 'selectTab']),
     updateTabAndColor(tab) {
@@ -126,7 +127,6 @@ export default {
       this.$store.dispatch('selectTab', tab); // Action aufrufen
       this.$store.dispatch('updateSelectedTabColor'); // Action aufrufen
     },
-   
 
     showMoreComments() {
     
@@ -173,11 +173,6 @@ addComment(commentText) {
   },
 },
 
-
-  
-
-
-  
     goToCommentPage(commentId) {
       const comment = this.$store.getters.getCommentById(commentId);
       // Führt Sie zur Kommentarseite, wenn es ausreichend Antworten gibt

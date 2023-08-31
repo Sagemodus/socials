@@ -92,7 +92,7 @@
       </div>
     <h3>Your Replies</h3>
 
-    <div v-for="reply in repliescreatedCommentsList" :key="reply.id" @click="() => goToTopic(reply.topicId)">
+    <div v-for="reply in repliescreatedCommentsList" :key="reply.id" >
       <!-- Hier kannst du die Inhalte der Antworten anzeigen -->
       <CommentReply :reply="reply" />
     </div>

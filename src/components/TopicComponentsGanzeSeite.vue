@@ -27,20 +27,22 @@
      
       <div v-if="selectedTab === 'pro'" class="kommentare">
     <CommentBox
-      v-for="comment in sortedProCommentsByTopic"
+      v-for="comment in displayedProComments"
       :key="comment.id"
       :comment="comment"
-      @reply-clicked="goToCommentPage"
+      :topic ="topic.id"
     />
+    <button v-if="displayedCommentCount < sortedProCommentsByTopic.length" @click="showMoreComments">Mehr anzeigen</button>
   </div>
 
   <div v-else-if="selectedTab === 'contra'" class="kommentare">
     <CommentBox
-      v-for="comment in sortedContraCommentsByTopic"
+      v-for="comment in displayedContraComments"
       :key="comment.id"
       :comment="comment"
-      @reply-clicked="goToCommentPage"
+      :topic ="topic.id"
     />
+    <button v-if="displayedCommentCount < sortedContraCommentsByTopic.length" @click="showMoreComments">Mehr anzeigen</button>
   </div>
       <!-- Anzeige, wenn keine Kommentare vorhanden sind -->
       <div v-else>
@@ -75,13 +77,39 @@ export default {
   // ... andere setup-Abschnitte ...
 
   const selectedTab = computed(() => store.state.selectedTab);
+  const displayedCommentCount = ref(4);
   
+  const lastScrollPosition = ref(0);
+    const isTabBarSticky = ref(false);
+    const isScrolled = ref(false);
+    const handleScroll = () => {
+      const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+      isTabBarSticky.value = scrollPosition < lastScrollPosition.value; // Überprüfe die Scroll-Richtung
+      lastScrollPosition.value = scrollPosition; // Aktualisiere die letzte Scroll-Position
+      isScrolled.value = scrollPosition > 0; // Neu hinzugefügt
+    };
+
+    onMounted(() => {
+      window.addEventListener('scroll', handleScroll);
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('scroll', handleScroll);
+    });
+
+    const selectedTabColor = computed(() => store.state.selectedTabColor);
+
+   
+watchEffect(() => {
+  document.documentElement.style.setProperty('--selectedTabColor', selectedTabColor.value);
+});
 
   return {
     // ... andere zurückgegebene Werte ...
     selectedTab,
-
-   
+    displayedCommentCount,
+    isTabBarSticky,
+      isScrolled,
   };
 },
   components: {

@@ -149,12 +149,6 @@ function generateTopics(count, users) {
     newTopic.proComments = generateComments(5, users,newTopic.id); // Generate "pro" comments
     newTopic.contraComments = generateComments(5, users,newTopic.id); // Generate "contra" comments
 
-    newTopic.proComments = generateComments(3, users, true); // Generate "pro" comments
-    newTopic.contraComments = generateComments(3, users, false); // Generate "contra" comments
-
-    newTopic.proComments = generateComments(3, users, true); // Generate "pro" comments
-    newTopic.contraComments = generateComments(3, users, false); // Generate "contra" comments
-
     topics.push(newTopic);
   }
   return topics;

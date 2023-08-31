@@ -1,25 +1,34 @@
+<!--addComment.vue-->
 <template>
   <form @submit.prevent="submitComment" class="comment-form">
-    <textarea v-model="newComment" placeholder="Schreibe einen Kommentar..." class="comment-textarea"></textarea>
-    <button 
-  type="submit" 
-  :style="{ backgroundColor: iconColor(currentUser.farbe) }" 
-  class="comment-button"
->
-  Kommentar absenden
-</button>
+    <div class="comment-input-container">
+      <div class="textarea-container">
+        <textarea
+          v-model="newComment"
+          placeholder="Schreibe einen Kommentar..."
+          rows="1"
+          class="comment-textarea"
+          ref="textarea"
+        ></textarea>
+      </div>
+      <button
+        type="submit"
+        :style="{ color: iconColor(currentUser.farbe)}"
+        class="comment-button"
+      >
+        <font-awesome-icon :icon="['fas', 'paper-plane']" />
+      </button>
+    </div>
   </form>
 </template>
 
+
 <script>
-// eslint-disable-next-line no-unused-vars
-import { v4 as uuidv4 } from 'uuid';
-// eslint-disable-next-line no-unused-vars
-import { mapGetters, mapActions } from 'vuex';
-// eslint-disable-next-line no-unused-vars
-import { iconColor } from './farben'; // Make sure to check the correct path
-import { useStore } from 'vuex';
-import { computed } from 'vue';
+
+import { iconColor } from './farben'; // Überprüfen Sie bitte den korrekten Pfad
+import { useStore } from 'vuex'; // Importiere das useStore-Hook
+import { computed } from 'vue'; /// Importiere das computed-Hook
+import autosize from 'autosize';
 
 export default {
 
@@ -29,9 +38,13 @@ export default {
     // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
 
+ // Automatisches Anpassen der Textarea-Zeilen
+
+
     return {
       iconColor,
       currentUser, // Mache den currentUser verfügbar
+    
     };
   },
 
@@ -40,53 +53,62 @@ export default {
       newComment: "",
     };
   },
+  mounted() {
+  autosize(this.$refs.textarea);
+},
   methods: {
+ 
     submitComment() {
-      this.$emit('add-comment', this.newComment);
-      this.newComment = "";
-    },
+    this.$emit('add-comment', this.newComment);
+    this.newComment = "";
+  },
+  
   },
 };
 </script>
 
-<style lang="scss" scoped>
-.comment-form {
+<style lang="scss">
+.textarea-container {
+  max-height: 100%;
+  overflow: hidden;
+  flex: 1;
+  padding: 10px;
+}
+.comment-textarea {
+  resize: vertical;
+
+}
+.comment-input-container {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
+  border: 1px solid #ccc;
+  border-radius: 30px;
+  padding: 8px;
+  position: fixed;
+  bottom: 55px;
+ left: 0;
+ right:0;
+ background-color: white;
+ align-items: center;
 
-  .comment-textarea {
-    display: flex;
-    resize:vertical;
-    padding: 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    transition: border-color 0.3s;
-    min-width: 80%;
-    height: 10vh;
-    &:focus {
-      outline: none;
-      border-color: #8a8a8a;
-    }
-  }
+}
 
-  .comment-button {
-    background-color: #1da1f2;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 20px;
-    border: none;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
+.comment-textarea {
+  max-height: 200px;
+width: 100%;
+  border: none;
 
-    &:hover {
-      background-color: #0c85d0;
-    }
-  }
+  resize: none;
+}
+
+.comment-button {
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: 20px;
 }
 </style>

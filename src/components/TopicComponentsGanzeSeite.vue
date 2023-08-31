@@ -1,6 +1,12 @@
 // TopicComponentGanzeSeite.vue
 <template>
-  <div>
+        <div class="sticky-tab-bar" :class="{ 'sticky': isTabBarSticky, 'scrolled': isScrolled }">
+      <div class="tab-selection">
+        <button @click="updateTabAndColor('pro')" :class="{ 'active-tab': selectedTab === 'pro' }">Pro</button>
+        <button @click="updateTabAndColor('contra')" :class="{ 'active-tab': selectedTab === 'contra' }">Contra</button> 
+      </div>
+    </div>
+ <div class="topic-container">
     <!-- Laden und Anzeigen von Themen -->
     <div v-if="topic" class="topic-ganzeseite">
       <div class="author-info">
@@ -10,31 +16,46 @@
       <div class="topic-content" @click="goToTopic">
         <p class="topic-text">{{ topic.text }}</p>
       </div>
+    </div>
 
+      
       <!-- Hinzufügen von Kommentaren -->
-      <AddComment @add-comment="addComment" />
+  
+      
 
       <!-- Anzeige von Kommentaren -->
-      <div v-if="topic.comments.length > 0" class="kommentare">
-        <CommentBox
-          v-for="comment in topic.comments"
-          :key="comment.id"
-          :comment="comment"
-          @reply-clicked="goToCommentPage"
-        />
-      </div>
+     
+      <div v-if="selectedTab === 'pro'" class="kommentare">
+    <CommentBox
+      v-for="comment in sortedProCommentsByTopic"
+      :key="comment.id"
+      :comment="comment"
+      @reply-clicked="goToCommentPage"
+    />
+  </div>
 
+  <div v-else-if="selectedTab === 'contra'" class="kommentare">
+    <CommentBox
+      v-for="comment in sortedContraCommentsByTopic"
+      :key="comment.id"
+      :comment="comment"
+      @reply-clicked="goToCommentPage"
+    />
+  </div>
       <!-- Anzeige, wenn keine Kommentare vorhanden sind -->
       <div v-else>
         <p>Noch keine Kommentare vorhanden.</p>
       </div>
-    </div>
 
-    <!-- Anzeige, wenn das Thema geladen wird -->
-    <div v-else>
-      <p>Loading topic...</p>
-    </div>
+
+    <!-- An zeige, wenn das Thema geladen wird -->
+
   </div>
+
+  <div class="add-comment-container">
+      <AddComment @add-comment="addComment" />
+    </div>
+ 
 </template>
 
 <script>
@@ -42,8 +63,27 @@ import { mapGetters, mapActions } from 'vuex';
 import CommentBox from './CommentBox';
 import AddComment from '../components/addComment.vue';
 import { v4 as uuidv4 } from 'uuid';
+import { useStore } from 'vuex';
+import { computed,  watchEffect} from 'vue';
+import { ref, onMounted, onBeforeUnmount, } from 'vue';
+import dayjs from 'dayjs';
 
 export default {
+  setup() {
+  const store = useStore();
+
+  // ... andere setup-Abschnitte ...
+
+  const selectedTab = computed(() => store.state.selectedTab);
+  
+
+  return {
+    // ... andere zurückgegebene Werte ...
+    selectedTab,
+
+   
+  };
+},
   components: {
     CommentBox,
     AddComment,
@@ -51,6 +91,14 @@ export default {
   computed: {
     ...mapGetters(['getTopicById', 'getAllComments','getUserProfile']),
    
+    displayedProComments() {
+      return this.sortedProCommentsByTopic.slice(0, this.displayedCommentCount);
+    },
+    displayedContraComments() {
+      return this.sortedContraCommentsByTopic.slice(0, this.displayedCommentCount);
+    },
+
+
     topic() {
       const topicId = this.$route.params.id;
       return this.getTopicById(topicId); 
@@ -61,27 +109,69 @@ export default {
     user() {
       return this.$store.state.currentUser; 
     },
+
+    sortedProCommentsByTopic() {
+      return this.sortedCommentsByTopic('proComments');
+    },
+
+    sortedContraCommentsByTopic() {
+      return this.sortedCommentsByTopic('contraComments');
+    },
+
   },
   
   methods: {
-    ...mapActions(['fetchComments', 'addCommentToTopic', 'addReplyToComment']),
-    addComment(commentText) {
-      const newComment = {
-        id: uuidv4(),
-        text: commentText,
-        author: this.getUserProfile,
-      };
-      this.$store.dispatch('addCommentToTopic', { topicId: this.topic.id, comment: newComment });
+    ...mapActions(['fetchComments', 'addCommentToTopic', 'selectTab']),
+    updateTabAndColor(tab) {
+   
+      this.$store.dispatch('selectTab', tab); // Action aufrufen
+      this.$store.dispatch('updateSelectedTabColor'); // Action aufrufen
     },
 
-    addReplyToComment(comment, replyText) {
-      const newReply = {
-        id: uuidv4(),
-        text: replyText,
-        author: this.getUserProfile,
-      };
-      this.addReplyToComment({ commentId: comment.id, reply: newReply });
+    showMoreComments() {
+    
+      this.displayedCommentCount+= 20; // Adjust the number as needed
     },
+  
+
+    sortedCommentsByTopic(commentType) {
+  const topicId = this.$route.params.id;
+  const topic = this.getTopicById(topicId);
+  if (topic) {
+    const commentsArray = topic[commentType];
+    
+    // Sortiere die Kommentare nach den Votes in absteigender Reihenfolge
+    const sortedComments = commentsArray.slice().sort((a, b) => b.upvotes - a.upvotes);
+    
+    // Teile die Kommentare in die ersten 3 und den Rest auf
+    const topComments = sortedComments.slice(0, 3);
+    const restComments = sortedComments.slice(3);
+    
+    // Sortiere den Rest der Kommentare nach der Zeit in aufsteigender Reihenfolge
+    const sortedRestComments = restComments.sort((b, a) => new Date(a.createdAt) - new Date(b.createdAt));
+    
+    // Füge die ersten 3 Kommentare mit den meisten Votes zuerst hinzu, dann den Rest der sortierten Kommentare
+    return [...topComments, ...sortedRestComments];
+  }
+  return [];
+},
+addComment(commentText) {
+    const topicId = this.topic.id;
+    const newComment = {
+      topicId: topicId ,
+      id: uuidv4(),
+      text: commentText,
+      author: this.user,
+      upvotes: 0, 
+      downvotes: 0 ,
+      createdAt: dayjs() // Aktuelle Zeit hinzufügen
+    };
+
+    const selectedTab = this.selectedTab; // Richtiges Property verwenden
+   
+    this.$store.dispatch('addCommentToTopic', { topicId, comment: newComment, selectedTab });
+  },
+},
 
     goToCommentPage(commentId) {
       const comment = this.$store.getters.getCommentById(commentId);
@@ -103,7 +193,7 @@ export default {
         }
       }
     },
-  },
+  
   created() {
     this.fetchComments();
   },
@@ -111,22 +201,30 @@ export default {
 </script>
 
 
-<style scoped>
-.topic-ganzeseite {
-  max-width: 100%; /* Beispielwert für die maximale Breite */
-  margin: 0 auto; 
-  background-color: #ffffff;
-  padding: 10px;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+<style lang="scss" scoped>
 
+p.topic-text{
+    font-size: 16px;
+    line-height: 1.5;
+    text-align: justify;
+    padding: 10px;
+    padding-top: 0px;
+    margin-top: 0;
+    margin-bottom: 0;
 }
+
+.topic-container{
+  margin-bottom: 120px;
+  padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 10px;
+}
+
 
 .author-info {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+ 
 }
 
 .author-image {
@@ -141,7 +239,7 @@ export default {
 }
 
 .topic-content {
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 
@@ -150,5 +248,47 @@ export default {
   font-size: 16px;
   line-height: 1.5;
 }
+.tab-selection {
+  display: flex;
+  justify-content: space-evenly;
+  background-color: white;
+  
+
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: #333;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    
+    &:before {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: transparent;
+      transition: background-color 0.3s ease;
+    }
+    
+
+   
+
+
+    &.active-tab {
+      color: var(--selectedTabColor);
+      font-weight: bold;
+      &:before {
+        background-color: var(--selectedTabColor);
+      }
+    }
+  }
+}
+
+
 
 </style>

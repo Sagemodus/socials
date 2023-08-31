@@ -21,13 +21,8 @@ export default {
 </script>
 
 <style lang="scss">
-@import url('https://fonts.googleapis.com/css2?family=Avenir:wght@400;700&display=swap');
-.nav-bar .nav-link {
-  color: iconColor; /* Farbe für die anderen Buttons */
-}
-*:focus {
-  outline: none; /* Entfernt den fokussierten Rahmen für alle fokussierten Elemente */
-}
+
+
 body {
   margin: 0;
   padding: 0;
@@ -68,7 +63,7 @@ body {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   font-size: 12px;
   margin-bottom: 0px;
-  padding-left: 5.5em;
+  padding-left: 60px;
   padding-right: 10px;
   margin-top: 0%;
   text-align: left;
@@ -78,7 +73,7 @@ body {
   font-size: 12px;
   margin-top: 5px;
     margin-top: 0px;
-    padding-left: 3.8em;
+    padding-left: 40px;
    
     padding-bottom: 0px;
   margin-bottom: 0px;
@@ -87,7 +82,10 @@ body {
 
 
 #app .conversation-prompt {
+  display: flex;
   max-height: 1%;
+  text-align: center;
+    justify-content: center;
 }
 /* Restlicher CSS-Code bleibt unverändert */
 /* ... */

@@ -2,27 +2,17 @@
   <div>
     <!-- Loop through the data and create TopicBox components for each topic -->
     <TopicBox
-      v-for="topic in topics"
+      v-for="topic in sortedTopics.slice()"
       :key="topic.id"
       :id="topic.id"
-    
     />
   </div>
 </template>
 
 <script>
-<<<<<<< HEAD
+
 import { mapState } from 'vuex';
 import TopicBox from './TopicBox'; // Make sure to adjust the path accordingly
-=======
-
-import TopicBox from './TopicBox'; // Passe den Pfad entsprechend an
-import { mapState } from 'vuex';
-
-
-
-
->>>>>>> 5d458ad752d31a9e997ab7889bceed4fad72bc1c
 
 export default {
   components: {
@@ -30,9 +20,18 @@ export default {
   },
   computed: {
     ...mapState({
-      topics: state => state.topics
-    })
+
+      topics: state => state.topics // Dies bringt den topics-State aus dem Store in Ihre Komponente
+    }),
+    sortedTopics() {
+      return this.topics.slice().sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+    }
+
+
   },
+
   methods: {
     handleTopicClick(topicId) {
       // Get the ID of the clicked topic.

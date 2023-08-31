@@ -14,7 +14,7 @@ export const fetchDataFromDatabase = async () => {
         id: doc.id,
         image: data.image || '', // Provide default values if fields are missing
         text: data.text || '',
-        likes: data.likes || {},
+        upvotes: data.upvotes|| {},
       };
     });
 

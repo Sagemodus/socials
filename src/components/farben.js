@@ -14,13 +14,13 @@ export function iconColor(farbe) {
     case '-1':
       return 'green'; // Grüne/Ökologische Bewegung
     case '1':
-      return 'gold'; // Libertäre
+      return 'green'; // Libertäre
     case '2':
       return 'goldenrod'; // Nationalisten
     case '3':
       return 'orange'; // Sozialisten/Kommunisten
     case '4':
-      return 'brown'; // Populisten
+      return 'blue'; // Populisten
     default:
       return 'gray'; // Standardfarbe für unbekannte Parteien
   }

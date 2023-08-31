@@ -2,10 +2,9 @@
   <div>
     <!-- Schleife über die Daten und erzeuge die TopicBox-Komponenten für jedes Thema -->
     <TopicBox
-      v-for="topic in topics"
+      v-for="topic in sortedTopics.slice()"
       :key="topic.id"
       :id="topic.id"
-    
     />
   </div>
 </template>
@@ -27,7 +26,14 @@ export default {
   computed: {
     ...mapState({
       topics: state => state.topics // Dies bringt den topics-State aus dem Store in Ihre Komponente
-    })
+    }),
+    sortedTopics() {
+      return this.topics.slice().sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+    }
+
+
   },
 
 

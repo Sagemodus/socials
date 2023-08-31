@@ -15,13 +15,14 @@
         <span class="author-name" style="line-height: 0.8;">{{ topic.createdBy.name }} </span>
         <p style=" font-size: 12px;" class="topic-text">{{ ' ' + topic.category.sub }}</p>
       </div>
-    
+
    
   
     </div>
     
 <!--Buttons oben rechts-->
 <div class="right-content">
+  <p>{{ $store.getters.formattedCreatedAt(topic.createdAt) }}</p>
   <button class="share-button" @click="shareContent">
        <font-awesome-icon :icon="['fas', 'share-nodes']"         
           class="icon"
@@ -49,23 +50,28 @@
   </div>
 
   
+<div class="balken">
+    <div
+      class="like-bar"
+      :class="{ liked: hasLikedTopic || hasDislikedTopic }"
+      :style="{ width: topic.upvotePercentage + '%' }"
+  
+      :title="topic.upvotePercentage + '%'" 
+      :interactive="true"
+    >
+      <p v-if="hasLikedTopic || hasDislikedTopic" class="bar-text">{{ topic.upvotePercentage + '%' }}</p>
+    </div>
+    <div
+      class="dislike-bar"
+      :class="{ disliked: hasLikedTopic || hasDislikedTopic }"
+      :style="{ width: topic.downvotePercentage + '%' }"
 
-    <div class="balken">
-  <div
-    class="like-bar"
-    :class="{ liked: topic.hasUpvoted || topic.hasDownvoted }"
-    :style="{ width: topic.likes.upvotePercentage + '%' }"
-  >
-    <p v-if="topic.hasUpvoted || topic.hasDownvoted" class="bar-text">{{ topic.likes.upvotePercentage + '%' }}</p>
+      :title="topic.downvotePercentage + '%'" 
+      :interactive="true"
+    >
+      <p v-if="hasLikedTopic || hasDislikedTopic" class="bar-text">{{ topic.downvotePercentage + '%' }}</p>
+    </div>
   </div>
-  <div
-    class="dislike-bar"
-    :class="{ disliked: topic.hasUpvoted || topic.hasDownvoted }"
-    :style="{ width: topic.likes.downvotePercentage + '%' }"
-  >
-    <p v-if="topic.hasUpvoted || topic.hasDownvoted" class="bar-text">{{ topic.likes.downvotePercentage + '%' }}</p>
-  </div>
-</div>
   
 
     <!--Like Button-->
@@ -74,49 +80,57 @@
       <div class="vote">
 
         <button @click="like" class="like-button" ref="likeButton">
-        <font-awesome-icon
-        :icon="topic.hasUpvoted ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" 
+      <font-awesome-icon
+        :icon="hasLikedTopic ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" 
         class="icon"
-        :style="{ color: iconColor(currentUser.farbe) }" />
-          
-     
-        <p :style="{ color: iconColor(currentUser.farbe) }">{{ this.topic.likes.upvotes }}</p>
-      </button>
-      <button @click="dislike" class="like-button" ref="dislikeButton">
-        <font-awesome-icon
-        :icon="topic.hasDownvoted ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" 
-          class="icon"
-          :style="{ color: iconColor(currentUser.farbe) }"
-        />
-        <p :style="{ color: iconColor(currentUser.farbe) }">{{ this.topic.likes.downvotes }}</p>
-      </button>
+        :style="{ color: iconColor(currentUser.farbe) }"
+      />
+      <p :style="{ color: iconColor(currentUser.farbe) }">{{ topic.upvotes }}</p>
+    </button>
+    <button @click="dislike" class="like-button" ref="dislikeButton">
+      <font-awesome-icon
+        :icon="hasDislikedTopic ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" 
+        class="icon"
+        :style="{ color: iconColor(currentUser.farbe) }"
+      />
+      <p :style="{ color: iconColor(currentUser.farbe) }">{{ topic.downvotes }}</p>
+    </button>
 
 
 
       </div>
 
       <!--ConPro Button-->
-     <div class="tab-selection">
-     <button @click="selectTabs('pro')" :class="{ 'active-tab': selectedTab2 === 'pro' }">Pro</button>
-     <button @click="selectTabs('contra')" :class="{ 'active-tab': selectedTab2 === 'contra' }">Contra</button>
-     </div>
-
+   
+      <div class="tab-selection" >
+        <button @click="updateTabAndColor('pro')" :class="{ 'active-tab': selectedTab === 'pro' }">Pro</button>
+        <button @click="updateTabAndColor('contra')" :class="{ 'active-tab': selectedTab === 'contra' }">Contra</button> 
+      
+      </div>
     
-      <div v-if="selectedTab2 === 'pro'" class="kommentare">
-  <CommentBox
-    v-for="comment in sortedProComments.slice(0, 3)"
-    :key="comment.id"
-    :comment="comment"
-  />
-</div>
-<div v-else-if="selectedTab2 === 'contra'" class="kommentare">
-  <CommentBox
-    v-for="comment in sortedContraComments.slice(0, 3)"
-    :key="comment.id"
-    :comment="comment"
-  />
-</div>
+   
+      <div v-if="selectedTab === 'pro'" class="kommentare">
+      <CommentBox
+        v-for="comment in sortedComments('pro').slice(0,2)"
+        :key="comment.id"
+        :comment="comment"
+        :topic ="id"
+ 
+      />
+    </div>
 
+    <div v-else-if="selectedTab === 'contra'" class="kommentare">
+      <CommentBox
+        v-for="comment in sortedComments('contra').slice(0,2)"
+        :key="comment.id"
+        :comment="comment"
+        :topic ="id"
+      />
+    </div>
+      <!-- Anzeige, wenn keine Kommentare vorhanden sind -->
+      <div v-else>
+        <p>Noch keine Kommentare vorhanden.</p>
+      </div>
 
 
 
@@ -156,7 +170,7 @@
 import { mapGetters, mapMutations, mapActions} from 'vuex';
 import { iconColor } from './farben';
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
-import {  computed } from 'vue';
+import {  computed, watchEffect } from 'vue';
 import state from 'vue';
 import CommentBox from './CommentBox';
 
@@ -164,39 +178,41 @@ import CommentBox from './CommentBox';
 export default {
   components: {
     CommentBox,
+    
   },
-  setup() {
+  setup(props) {
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
 
     // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
-    const selectedTab2 = computed(() => store.state.selectedTab);
-    const proComments = computed(() => store.state.proComments);
-    const contraComments = computed(() => store.state.contraComments);
+  
+    const selectedTab = computed(() => store.state.selectedTab);
+    const selectedTabColor = computed(() => store.state.selectedTabColor);
 
-    const sortedProComments = computed(() =>
-      proComments.value
-        .slice()
-        .sort((a, b) => b.votes.upvotes - a.votes.upvotes)
-    );
+   
+    watchEffect(() => {
+      document.documentElement.style.setProperty('--selectedTabColor', selectedTabColor.value);
+    });
+    
+    const isBarTooSmall = computed(() => {
+      const minWidthThreshold = 10;
+      return (
+        props.topic.upvotePercentage < minWidthThreshold ||
+        props.topic.downvotePercentage < minWidthThreshold
+      );
+    });
 
-    const sortedContraComments = computed(() =>
-      contraComments.value
-        .slice()
-        .sort((a, b) => b.votes.upvotes - a.votes.upvotes)
-    );
-
+  const topicprop = computed (()=> props.topic.id) 
     
     return {
       iconColor,
       currentUser, // Mache den currentUser verfügbar
       topicUrl:  '',
       state,
-      selectedTab2,
-      proComments,
-      contraComments,
-      sortedProComments,
-      sortedContraComments
+      selectedTab,
+      selectedTabColor,
+      isBarTooSmall,
+      topicprop,
     };
   },
 
@@ -210,6 +226,20 @@ export default {
     ...mapGetters(['getTopicById','getAllComments']),
 
 
+  hasLikedTopic() {
+    return this.currentUser.haslikedtopic.includes(this.topic.id);
+  },
+  hasDislikedTopic() {
+    return this.currentUser.hasdislikedtopic.includes(this.topic.id);
+  },
+    sortedComments() {
+      return (type) => {
+        const commentType = type === 'pro' ? 'proComments' : 'contraComments';
+        return this.topic[commentType]
+          .slice()
+          .sort((a, b) => b.upvotes - a.upvotes);
+      };
+    },
 
  
 
@@ -227,12 +257,15 @@ export default {
   
   methods: {
     ...mapMutations(['TOGGLE_LIKE', 'TOGGLE_DISLIKE','ADD_TOPIC_TO_SAVES',]), // Import mutations
-    ...mapActions(['fetchComments', 'addCommentToTopic', 'addReplyToComment', 'selectTab2']),
-    selectTabs(tab) {
-      console.log(this.selectedTab)
+    ...mapActions(['fetchComments', 'addCommentToTopic','selectTab',]),
     
-  this.selectTab2(tab);
-},
+  
+    updateTabAndColor(tab) {
+      
+      this.$store.dispatch('selectTab', tab); // Action aufrufen
+      this.$store.dispatch('updateSelectedTabColor'); // Action aufrufen
+    },
+   
 
 
       //Save button logik
@@ -307,9 +340,7 @@ export default {
         this.animateButton(this.$refs.likeButton);
       });
     },
-    getfarbeColor(farbe) {
-      return iconColor(farbe);
-    },
+  
     goToTopic(event) {
   const targetElement = event.target;
 
@@ -332,6 +363,8 @@ export default {
     },
     ...mapMutations(['UPDATE_LIKES']), // Füge die Mutation-Map hinzu, um die Vuex-Mutation aufzurufen
   },
+  
+  
 };
 </script>
 
@@ -342,7 +375,8 @@ export default {
 .tab-selection {
   display: flex;
   justify-content: space-evenly;
-  margin-top: 10px;
+  background-color: white;
+  
 
   button {
     padding: 10px 20px;
@@ -366,12 +400,14 @@ export default {
     }
     
 
+   
+
 
     &.active-tab {
-      color: var(--iconColor);
+      color: var(--selectedTabColor);
       font-weight: bold;
       &:before {
-        background-color: var(--iconColor);
+        background-color: var(--selectedTabColor);
       }
     }
   }

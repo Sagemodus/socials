@@ -1,24 +1,23 @@
 <template>
-    <div class="swipe-navigation">
-      <div class="tabs" ref="tabsContainer">
-        <div class="tabs-inner">
-          <div
-            v-for="tab in tabs"
-            :key="tab.path"
-            class="tab"
-            @click="switchTab(tab.path)"
-            :class="{ active: activeTab === tab.path }"
-          >
-            {{ tab.name }}
-          </div>
+  <div class="swipe-navigation">
+    <div class="tabs" ref="tabsContainer">
+      <div class="tabs-inner">
+        <div
+          v-for="tab in tabs"
+          :key="tab.path"
+          class="tab"
+          @click="switchTab(tab.path)"
+          :class="{ active: activeTab === tab.path }"
+        >
+          {{ tab.name }}
         </div>
       </div>
-      <div class="content">
-        <slot name="replies"></slot>
-        <slot name="likes"></slot>
-      </div>
     </div>
-  </template>
+    <div class="content">
+      <slot :name="activeTab"></slot>
+    </div>
+  </div>
+</template>
   
 
     <script>
@@ -26,15 +25,11 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import Hammer from 'hammerjs';
 import { iconColor } from './farben'
 import { useStore } from 'vuex';
+import { onUnmounted } from 'vue';
 
 export default {
-  name: 'SwipeProfilComponent',
-  props: {
-    onTabSwitch: {
-      type: Function,
-      required: true
-    }
-  },
+ 
+  
   setup(props) {
     const store = useStore();
     const currentUser = computed(() => store.state.currentUser);
@@ -69,23 +64,33 @@ export default {
       switchToTabByIndex(currentIndex - 1);
     };
 
-    onMounted(() => {
-      const el = document;
-      const hammer = new Hammer(el);
-      hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
-      hammer.on('swiperight', () => {
-   
-        previousTab();
-      });
-      hammer.on('swipeleft', () => {
-     
-        nextTab();
-      });
+    let hammer;
+onMounted(() => {
+  const el = document;
+  hammer = new Hammer(el); // Entfernen Sie das "const" hier
+  hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
+  hammer.on('swiperight', () => {
+    previousTab();
+  });
+  hammer.on('swipeleft', () => {
+    nextTab();
+  });
+});
+
+onUnmounted(() => {
+  if (hammer) {
+    hammer.off('swiperight');
+    hammer.off('swipeleft');
+    hammer.destroy();
+    hammer = null;
+  }
+});
+      
        // Setze die Farbe basierend auf dem currentUser
       const userfarbe = currentUser.value.farbe;
       const color = userfarbe ? iconColor(userfarbe) : 'gray';
       document.documentElement.style.setProperty('--iconColor', color);
-      });
+      
   
       return { activeTab, nextTab, previousTab, switchTab, tabs };
     },

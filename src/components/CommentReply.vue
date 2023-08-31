@@ -6,45 +6,44 @@
     <div class="profile-info">
       <img :src="reply?.author?.profileImage" alt="Profilbild" class="profile-image" />
       <h5 class="profile-name">{{ reply?.author?.name }}</h5>
+      <p class="antwort-text">{{ $store.getters.formattedCreatedAt(reply.createdAt) }}</p>
     </div>
     <p class="antwort-text">{{ reply?.text }}</p>
-    <!-- Antwort-Formular anzeigen, wenn auf diese Antwort geantwortet werden soll -->
+
    
-
-
-
 
     <div class="buttons-container">
 
-      
-      <!-- "Mehr anzeigen" Link anzeigen, wenn die Verschachtelungstiefe genau 3 ist -->
+  
 
 
       <!-- Antwort-Button anzeigen, um auf diese Antwort zu antworten -->
-      <button  v-if="!showReplyForm && depth < 5" @click="showReplyForm = true" class=" action-button">
-        <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" :icon="['fas', 'commenting']" class="icon"/>
-      </button>
+      <button v-if="!showReplyForm && depth < 5" @click="openReplyForm" class="action-button">
+  <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" :icon="['fas', 'commenting']" class="icon"/>
+</button>
 
     <!-- Upvote Button -->
-    <button @click="upvoteReplyAction(reply.id)" class="action-button" ref="upvoteButton">
+    <button @click="upvoteReplyAction(reply.id,currentUser.id,topic,commentId)" class="action-button" ref="upvoteButton">
     <font-awesome-icon
-    :icon="reply.hasUpvoted ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']"
+    :icon="hasLikedReply? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']"
       class="icon"
       :style="{ color: iconColor(currentUser.farbe) }"
     />
-    <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.votes?.upvotes }}</p>
+    <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.upvotes }}</p>
   </button>
 
+
+
     <!-- Downvote Button -->
-    <button @click="downvoteReplyAction(reply.id)" class="action-button" ref="downvoteButton">
+    <button @click="downvoteReplyAction(reply.id,currentUser.id,topic,commentId)" class="action-button" ref="downvoteButton">
       <font-awesome-icon
-      :icon="reply.hasDownvoted ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" 
+      :icon="hasDislikedReply ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" 
         class="icon"
         :style="{ color: iconColor(currentUser.farbe) }"
       />
-      <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.votes?.downvotes }}</p>
+      <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.downvotes }}</p>
     </button>
-<!-- {{ replyCount+ ' Antworten' }} -->
+
 
 <button
   v-if="reply && !showReplyForm && reply.replies && reply.replies.length > 0"
@@ -80,16 +79,18 @@
     :key="nestedReply.id"
     :reply="nestedReply"
     :depth="depth + 1"
+    :topic ="topic"
+    :commentId ="reply.id"
     @reply-clicked="$emit('reply-clicked', $event)"
   ></comment-reply>
 </div>
-<div v-if="showReplyForm" class="reply-form">
+<div v-if="showReplyForm" class="reply-form" >
       <textarea v-model="newReply" placeholder="Write your answer..." class="reply-textarea"></textarea>
       <div class="reply-actions">
         <button @click="cancelReply" class="cancel-reply-button">Cancel</button>
-        <button @click="submitReply" :style="{ backgroundColor: iconColor(currentUser.farbe)}" class="submit-reply-button">Reply</button>
+        <button @click="submitReply" :style="{ backgroundColor: iconColor(currentUser.farbe)}" class="submit-reply-button" ref="replyFormElement" >Reply</button >
       </div>
-    </div>
+    </div >
     <!--Antwortbox-->
 
 
@@ -113,17 +114,23 @@ reply: { // Füge das 'reply'-Prop hinzu
       type: Object,
       required: true,
     },
+topic: {
+type: String,
+   
+  },
+  commentId: {
+    tpye: String,
+  }
 },
 
 
-  setup() {
+  setup(props) {
 
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
 
     // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
 
- 
 
  
     return {
@@ -148,11 +155,16 @@ reply: { // Füge das 'reply'-Prop hinzu
     ...mapGetters(['getUserProfile', 'getCommentById']),
 
     replyCount() {
-    return this.reply.replies ? this.reply.replies.length : 0;
-
-    },
+      
+    return this.reply.replies ? this.reply.replies.length : 0;},
    
+    hasLikedReply() {
+    return this.currentUser.haslikedreply.includes(this.reply.id);
+  },
 
+  hasDislikedReply() {
+    return this.currentUser.hasdislikedreply.includes( this.reply.id );
+  },
 
   },
 
@@ -160,12 +172,31 @@ reply: { // Füge das 'reply'-Prop hinzu
 
   methods: {
 
-    ...mapActions(['upvoteComment', 'downvoteComment', 'removeUpvoteComment', 'removeDownvoteComment', 'addReplyToComment']),
-   
+    ...mapActions(['upvoteComment', 'downvoteComment', 'removeUpvoteComment', 'removeDownvoteComment', ]),
+ 
+    isCreatedByCurrentUser(reply) {
+      return this.currentUser.createdReplies.includes(reply.id);
+    },
 
+    openReplyForm() {
+  this.showReplyForm = true;
 
-    upvoteReplyAction(replyId) {
-    this.$store.dispatch('upvoteReply', { replyId });
+  // Scroll zum Ende des Viewports
+  this.$nextTick(() => {
+    const windowHeight = window.innerHeight;
+    const replyFormHeight = this.$refs.replyFormElement.clientHeight;
+    const scrollToPosition = this.$refs.replyFormElement.offsetTop + replyFormHeight - windowHeight;
+
+    window.scrollTo({
+      top: scrollToPosition+127,
+      behavior: 'smooth',
+    });
+  });
+},
+
+    upvoteReplyAction(replyId,currentUserId,topicId,commentId) {
+      console.log(commentId)
+    this.$store.dispatch('upvoteReply', { replyId,currentUserId,topicId,commentId});
     this.$nextTick(() => {
       this.animateButton(this.$refs.upvoteButton);
     });
@@ -173,8 +204,8 @@ reply: { // Füge das 'reply'-Prop hinzu
     
   },
 
-  downvoteReplyAction(replyId) {
-    this.$store.dispatch('downvoteReply', { replyId });
+  downvoteReplyAction(replyId,currentUserId,topicId,commentId) {
+    this.$store.dispatch('downvoteReply', { replyId,currentUserId,topicId,commentId});
     this.$nextTick(() => {
       this.animateButton(this.$refs.downvoteButton);
     });
@@ -198,13 +229,17 @@ reply: { // Füge das 'reply'-Prop hinzu
     },
   
     // Funktion zum Einreichen einer Antwort auf diese Antwort
-  submitReply() {
-  const newReply = {
-    id: uuidv4(),
-    text: this.newReply,
-    author: this.getUserProfile, // immer Benutzer 'Dejan Pantos'
-    replies: [], 
-  };
+    submitReply() {
+      const newReply = {
+        topicId: this.topic,
+        id: uuidv4(),
+        text: this.newReply,
+        author: this.currentUser, // Aktueller Benutzer
+        replies: [],
+        upvotes: 0, 
+        downvotes: 0 , 
+        createdAt: new Date(),// Initialisiere die Votes für die Antwort
+      };
 
       // Fügt die neue Antwort zu den Antworten dieser Antwort hinzu
       if (!this.reply.replies) {
@@ -221,6 +256,7 @@ reply: { // Füge das 'reply'-Prop hinzu
         this.$emit('reply-clicked', this.reply.id);
       }
     },
+  
 
     // Funktion zum Abbrechen der Antwort auf diese Antwort
     cancelReply() {
@@ -235,12 +271,13 @@ reply: { // Füge das 'reply'-Prop hinzu
 <style lang="scss">
 .comment-reply {
   border-left: 1px solid #ccc;
-  padding-right: 10px;
-
+  
+  position: static; /* Setze die Position auf static */
   .profile-info {
     display: flex;
     align-items: center;
     padding-left: 0.3em;
+   
   }
 
   .profile-image {
@@ -335,7 +372,6 @@ reply: { // Füge das 'reply'-Prop hinzu
   .buttons-container {
     display: flex;
     gap: 18px;
-    padding-left:30px;
     padding-right: 1px;
    
   }
@@ -348,6 +384,7 @@ reply: { // Füge das 'reply'-Prop hinzu
     display: flex;
     align-items: center;
     gap: 5px;
+    padding-left: 0px;
   }
 
   .action-button:hover {

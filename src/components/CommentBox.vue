@@ -5,10 +5,11 @@
       <div class="header-comment">
         <img :src="comment?.author?.profileImage" alt="Profilbild" class="profile-image" />
         <h5 class="username">{{ comment?.author?.name }}</h5>
+        <p>{{ $store.getters.formattedCreatedAt(comment?.createdAt) }}</p>
       </div>
     </div>
     <div class="comment-content">
-      <p class="comment-text">{{ comment?.text }}</p>
+      <p class="comment-text" @click='goToTopic(comment.topicId)'>{{ comment?.text }}</p>
     </div>
 
     <div class="actions">
@@ -18,17 +19,17 @@
       
       <!--Vote Buttons-->
       <button class="action-button"
-  @click="upvoteComment(comment.id)"
+  @click="upvoteComment(comment.id,currentUser.id,topic)"
   ref="upvoteButton">
-  <font-awesome-icon :icon="comment.hasUpvoted ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" class="icon" :style="{ color: iconColor(currentUser.farbe) }" />
-  <p :style="{ color: iconColor(currentUser.farbe) }">{{ comment?.votes?.upvotes }}</p>
+  <font-awesome-icon :icon="hasLikedComment ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" class="icon" :style="{ color: iconColor(currentUser.farbe) }" />
+  <p :style="{ color: iconColor(currentUser.farbe) }">{{ comment?.upvotes }}</p>
 </button>
 
 <button class="action-button"
-  @click="downvoteComment(comment.id)"
+  @click="downvoteComment(comment.id,currentUser.id,topic)"
   ref="downvoteButton">
-  <font-awesome-icon :icon="comment.hasDownvoted ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" class="icon" :style="{ color: iconColor(currentUser.farbe) }" />
-  <p :style="{ color: iconColor(currentUser.farbe) }">{{ comment?.votes?.downvotes }}</p>
+  <font-awesome-icon :icon="hasDislikedComment ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" class="icon" :style="{ color: iconColor(currentUser.farbe) }" />
+  <p :style="{ color: iconColor(currentUser.farbe) }">{{ comment?.downvotes }}</p>
 </button>
 
 
@@ -44,7 +45,7 @@
       <textarea v-model="newReply" placeholder="Write your Answer..." class="reply-textarea"></textarea>
       <div class="reply-actions">
         <button @click="cancelReply" class="cancel-reply-button">Cancel</button>
-        <button @click="submitReply" :style="{ backgroundColor: iconColor(currentUser.farbe) }" class="submit-reply-button">Reply</button>
+        <button @click="submitReply(comment)" :style="{ backgroundColor: iconColor(currentUser.farbe) }" class="submit-reply-button">Reply</button>
       </div>
     </div>
 
@@ -54,6 +55,8 @@
         :key="reply.id"
         :reply="reply"
         :depth="1"
+        :topic="topic"
+        :commentId="comment.id"
         @reply-clicked="onReplyClicked"
       ></comment-reply>
     </div>
@@ -63,13 +66,15 @@
 
 <script>
 import { v4 as uuidv4 } from 'uuid';
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters} from 'vuex';
 import CommentReply from './CommentReply.vue';
 import { iconColor } from './farben';
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
 import { computed } from 'vue'; 
-
+import { useRouter } from 'vue-router';
 export default {
+
+
 components: {
   CommentReply,
 },
@@ -79,21 +84,30 @@ props: {
     type: Object,
     required: true,
   },
+  topic: {
+    type: String,
+   
+  },
 },
 
 setup() {
 const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
-
+const router = useRouter();
 // Zugriff auf den currentUser aus dem Vuex-Store
 const currentUser = computed(() => store.state.currentUser);
 
+const selectedTab = computed (() => store.state.selectedTab);
 
-
-
+    const goToTopic = (topicId) => {
+      console.log("gedrückt")
+  router.push(`/topic/${topicId}`);
+};
 return {
   iconColor,
   currentUser,
-  
+  selectedTab,
+  store,
+  goToTopic
 };
 },
 
@@ -113,6 +127,13 @@ computed: {
     return this.comment.replies ? this.comment.replies.slice(0, this.maxDisplayedReplies) : [];
   },
  
+  hasLikedComment() {
+    return this.currentUser.haslikedcomment.includes(this.comment.id);
+  },
+  hasDislikedComment() {
+    return this.currentUser.hasdislikedcomment.includes( this.comment.id );
+  },
+
 replyCount() {
   return this.comment.replies ? this.comment.replies.length : 0;
 },
@@ -121,46 +142,56 @@ replyCount() {
 
 },
 methods: {
+
   
-  upvoteComment(commentId) {
-    this.$store.dispatch('upvoteComment', { commentId });
+  upvoteComment(commentId, currentUserId,topicId) {
+    this.$store.dispatch('upvoteComment', { commentId ,currentUserId,topicId});
     this.$nextTick(() => {
       this.animateButton(this.$refs.upvoteButton);
     });
   },
 
-  downvoteComment(commentId) {
-    this.$store.dispatch('downvoteComment', { commentId });
+  downvoteComment(commentId,currentUserId,topicId) {
+    this.$store.dispatch('downvoteComment', { commentId,currentUserId,topicId });
     this.$nextTick(() => {
       this.animateButton(this.$refs.downvoteButton);
     });
   },
 
 
-  ...mapActions(['addReplyToComment']),
+
 
   // Funktion zum Einreichen einer Antwort
-  submitReply() {
-    const reply = {
-      id: uuidv4(),
-      text: this.newReply,
-      author: this.getUserProfile,
-      votes: {upvotes:0 , downvotes:0}
-    };
+  submitReply(comment) {
+    console.log(this.getUserProfile)
+  const newReply2 = {
+    topicId:comment.topicId,
+    id: uuidv4(),
+    text: this.newReply,
+    author: this.getUserProfile,
+     upvotes: 0, 
+     downvotes: 0,
+    createdAt: new Date(),
+  };
 
-    // Fügt die Antwort zu den Kommentar-Replies hinzu
-    if (!this.comment.replies) {
-      this.comment.replies = [];
-    }
-    this.comment.replies.push(reply);
+  if (!comment.replies) {
+    comment.replies = [];
+  }
 
-    // Setzt das Antwort-Formular zurück
-    this.newReply = "";
-    this.showReplyForm = false;
+  
+  this.currentUser.createdReplies.push(newReply2.id)
+  comment.replies.push(newReply2);
 
-    // Wenn die dritte Antwort oder mehr hinzugefügt wird, leite den Benutzer zur gewünschten Seite weiter
- 
-  },
+  
+
+
+  this.newReply = "";
+  this.showReplyForm = false;
+
+  if (this.depth >= 5) {
+    this.$emit('reply-clicked', comment.id);
+  }
+},
 
   // Funktion zum Abbrechen der Antwort
   cancelReply() {
@@ -292,9 +323,9 @@ methods: {
 
 .actions {
 display: flex;
-justify-content:flex-start;
+justify-content:space-evenly;
 align-items: center;
-gap: 18px;
+gap: 10px;
 
 
 }
@@ -398,7 +429,7 @@ button {
 
 .header-comment{
   display: flex;
-  gap: 1em;
+  gap: 0.5em;
   
   align-items: center;
   max-height: 50px;

@@ -1,45 +1,26 @@
 <template>
-    <div>
-      <SwipeProfilComponent :onTabSwitch="handleTabSwitch">
-        <template #replies>
-          <!-- Inhalte für den "Replies"-Tab -->
-          <div v-show="activeTab === 'replies'">
-            <h2>Replies</h2>
-            <!-- Weitere Inhalte für den "Replies"-Tab hier -->
-          </div>
-        </template>
-        <template #likes>
-          <!-- Inhalte für den "Likes"-Tab -->
-          <div v-show="activeTab === 'likes'">
-            <h2>Likes</h2>
-            <!-- Weitere Inhalte für den "Likes"-Tab hier -->
-          </div>
-        </template>
-      </SwipeProfilComponent>
-    </div>
-  </template>
- <script>
- import SwipeProfilComponent from '../components/SwipeProfilComponent.vue';
- 
- export default {
-   name: 'ProfileView',
-   components: {
-     SwipeProfilComponent,
-   },
-   props: {
-     name: String, // Definiere die 'name' Prop als String
-   },
-   data() {
-     return {
-       activeTab: 'replies',
-     };
-   },
-   methods: {
-     handleTabSwitch(path) {
-       this.activeTab = path;
+  <settingsComponent />
+</template>
 
-     },
-   },
- };
- </script>
- 
+<script>
+import { useStore } from 'vuex'; 
+import { computed } from 'vue'; 
+import { iconColor } from '../components/farben';
+import settingsComponent from '../components/profilebutton/settingsComponent.vue';
+
+export default {
+  setup() {
+    const store = useStore();
+    const currentUser = computed(() => store.state.currentUser);
+
+    return {
+      iconColor,
+      currentUser,
+    
+    };
+  },
+  components: {
+    settingsComponent,
+  },
+};
+</script>

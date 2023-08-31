@@ -29,6 +29,7 @@ import { iconColor } from './farben'; // Überprüfen Sie bitte den korrekten Pf
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
 import { computed } from 'vue'; /// Importiere das computed-Hook
 import autosize from 'autosize';
+
 export default {
 
   setup() {

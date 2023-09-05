@@ -79,7 +79,7 @@
 
       <div class="vote">
 
-        <button @click="like" class="like-button" ref="likeButton">
+        <button @click="like" class="like-button" >
       <font-awesome-icon
         :icon="hasLikedTopic ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" 
         class="icon"
@@ -87,7 +87,7 @@
       />
       <p :style="{ color: iconColor(currentUser.farbe) }">{{ topic.upvotes }}</p>
     </button>
-    <button @click="dislike" class="like-button" ref="dislikeButton">
+    <button @click="dislike" class="like-button" >
       <font-awesome-icon
         :icon="hasDislikedTopic ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" 
         class="icon"
@@ -172,6 +172,7 @@ import { iconColor } from './farben';
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
 import {  computed, watchEffect } from 'vue';
 import state from 'vue';
+import { onMounted } from 'vue';
 import CommentBox from './CommentBox';
 
 
@@ -202,8 +203,11 @@ export default {
       );
     });
 
-  const topicprop = computed (()=> props.topic.id) 
+  
     
+
+  
+   
     return {
       iconColor,
       currentUser, // Mache den currentUser verfügbar
@@ -212,7 +216,7 @@ export default {
       selectedTab,
       selectedTabColor,
       isBarTooSmall,
-      topicprop,
+      onMounted
     };
   },
 
@@ -307,39 +311,36 @@ export default {
   },
    
 
-    animateButton(buttonRef) {
-      const button = buttonRef;
-      button.animate(
-        [
-          // keyframes
-          { transform: 'scale(1)' },
-          { transform: 'scale(1.3)' },
-          { transform: 'scale(1)' }
-        ],
-        {
-          // timing options
-          duration: 400,
-          easing: 'ease-in-out'
-        }
-      );
-    },
+  animateButton(target) {
+  target.animate(
+    [
+      // keyframes
+      { transform: 'scale(1)' },
+      { transform: 'scale(1.3)' },
+      { transform: 'scale(1)' }
+    ],
+    {
+      // timing options
+      duration: 400,
+      easing: 'ease-in-out'
+    }
+  );
+},
 
 
-    dislike() {
-      const userId = this.currentUser.id;
-      this.TOGGLE_DISLIKE({ topicId: this.id, userId });
-      this.$nextTick(() => {
-        this.animateButton(this.$refs.dislikeButton);
-      });
-    },
+dislike(event) {
+  const userId = this.currentUser.id;
+  this.TOGGLE_DISLIKE({ topicId: this.id, userId });
+  const dislikeButton = event.target;
+  this.animateButton(dislikeButton);
+},
 
-  like() {
-      const userId = this.currentUser.id;
-      this.TOGGLE_LIKE({ topicId: this.id, userId });
-      this.$nextTick(() => {
-        this.animateButton(this.$refs.likeButton);
-      });
-    },
+like(event) {
+  const userId = this.currentUser.id;
+  this.TOGGLE_LIKE({ topicId: this.id, userId });
+  const likeButton = event.target;
+  this.animateButton(likeButton);
+},
   
     goToTopic(event) {
   const targetElement = event.target;

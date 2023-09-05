@@ -8,7 +8,7 @@
       <h5 class="profile-name">{{ reply?.author?.name }}</h5>
       <p class="antwort-text">{{ $store.getters.formattedCreatedAt(reply.createdAt) }}</p>
     </div>
-    <p class="antwort-text">{{ reply?.text }}</p>
+    <p class="antwort-text" @click='goToTopic(reply.topicId)' :id="'comment-' + reply.id">{{ reply?.text }}</p>
 
    
 
@@ -103,6 +103,7 @@ import { mapGetters, mapActions } from 'vuex';
 import { iconColor } from './farben';
 import { useStore } from 'vuex';
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 
 export default {
 props:{
@@ -120,7 +121,8 @@ type: String,
   },
   commentId: {
     tpye: String,
-  }
+  },
+ 
 },
 
 
@@ -128,11 +130,27 @@ type: String,
 
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     // Zugriff auf den currentUser aus dem Vuex-Store
+    const router = useRouter();
     const currentUser = computed(() => store.state.currentUser);
+    const goToTopic = (topicId) => {
+  // Navigiere zur gewünschten Seite
+  router.push(`/topic/${topicId}`);
+
+  // Nach der Navigation, fokussiere das Element
+  router.afterEach(() => {
+    const targetCommentId = `comment-${props.reply.id}`;
+    const targetElement = document.getElementById(targetCommentId);
+    if (targetElement) {
+      targetElement.focus();
+    }
+  });
+};
 
     return {
       iconColor,
       currentUser,
+      goToTopic,
+      
  // Mache den currentUser verfügbar
     };
   },
@@ -219,7 +237,6 @@ type: String,
     // Funktion zum Einreichen einer Antwort auf diese Antwort
     submitReply() {
       const newReply = {
-
         topicId: this.topic,
         id: uuidv4(),
         text: this.newReply,
@@ -233,15 +250,16 @@ type: String,
       // Fügt die neue Antwort zu den Antworten dieser Antwort hinzu
       if (!this.reply.replies) {
         this.reply.replies = [];
-
       }
-      localReply.value.replies.push(newReply);
+      this.reply.replies.push(newReply);
 
+      // Setzt das Antwort-Formular zurück
       this.newReply = "";
       this.showReplyForm = false;
 
+      // Wenn die Verschachtelungstiefe 3 erreicht, leite den Benutzer zur gewünschten Seite weiter
       if (this.depth >= 5) {
-        this.$emit('reply-clicked', localReply.value.id);
+        this.$emit('reply-clicked', this.reply.id);
       }
     },
   

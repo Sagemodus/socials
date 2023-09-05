@@ -25,29 +25,31 @@
 
       <!-- Anzeige von Kommentaren -->
      
-      <div v-if="selectedTab === 'pro'" class="kommentare">
-    <CommentBox
-      v-for="comment in displayedProComments"
-      :key="comment.id"
-      :comment="comment"
-      :topic ="topic.id"
-    />
-    <button v-if="displayedCommentCount < sortedProCommentsByTopic.length" @click="showMoreComments">Mehr anzeigen</button>
-  </div>
+      
+<div v-if="selectedTab === 'pro'" class="kommentare">
+  <CommentBox
+    v-for="comment in topic.proComments.slice(0, displayedCommentCount)"
+    :key="comment.id"
+    :comment="comment"
+    :topic="topic.id"
+  />
+  <button v-if="this.displayedCommentCount < topic.proComments.length" @click="showMoreComments">Mehr anzeigen</button>
+</div>
 
-  <div v-else-if="selectedTab === 'contra'" class="kommentare">
-    <CommentBox
-      v-for="comment in displayedContraComments"
-      :key="comment.id"
-      :comment="comment"
-      :topic ="topic.id"
-    />
-    <button v-if="displayedCommentCount < sortedContraCommentsByTopic.length" @click="showMoreComments">Mehr anzeigen</button>
-  </div>
-      <!-- Anzeige, wenn keine Kommentare vorhanden sind -->
-      <div v-else>
-        <p>Noch keine Kommentare vorhanden.</p>
-      </div>
+<div v-else-if="selectedTab === 'contra'" class="kommentare">
+  <CommentBox
+    v-for="comment in topic.contraComments.slice(0, displayedCommentCount)"
+    :key="comment.id"
+    :comment="comment"
+    :topic="topic.id"
+    :id="'comment-' + comment.id" 
+  />
+  <button v-if="this.displayedCommentCount < topic.contraComments.length" @click="showMoreComments">Mehr anzeigen</button>
+</div>
+<!-- Anzeige, wenn keine Kommentare vorhanden sind -->
+<div v-else>
+  <p>Noch keine Kommentare vorhanden.</p>
+</div>
 
 
     <!-- An zeige, wenn das Thema geladen wird -->
@@ -69,15 +71,29 @@ import { useStore } from 'vuex';
 import { computed,  watchEffect} from 'vue';
 import { ref, onMounted, onBeforeUnmount, } from 'vue';
 import dayjs from 'dayjs';
+import { useRoute } from 'vue-router';
+
 
 export default {
-  setup() {
-  const store = useStore();
+  props: ['id', 'commentId'], // Empfange die Parameter als Props
 
+  watch: {
+  commentId(newCommentId) {
+    // Hier kannst du die Kommentarliste nach dem Kommentar mit der comment.id durchsuchen
+    // und den Kommentar im Fokus setzen
+    // Verwende newCommentId, um den Kommentar zu identifizieren
+    this.focusComment(newCommentId);
+  },
+},
+  setup(props) {
+  const store = useStore();
+  const topicId = computed(() =>props.id);
+
+  const topic = computed(() => store.getters.getTopicById(topicId.value));
   // ... andere setup-Abschnitte ...
 
   const selectedTab = computed(() => store.state.selectedTab);
-  const displayedCommentCount = ref(4);
+  const displayedCommentCount = computed(() => store.state.displayedCommentCount);
   
   const lastScrollPosition = ref(0);
     const isTabBarSticky = ref(false);
@@ -88,13 +104,14 @@ export default {
       lastScrollPosition.value = scrollPosition; // Aktualisiere die letzte Scroll-Position
       isScrolled.value = scrollPosition > 0; // Neu hinzugefügt
     };
-
+    
     onMounted(() => {
       window.addEventListener('scroll', handleScroll);
     });
 
     onBeforeUnmount(() => {
       window.removeEventListener('scroll', handleScroll);
+      store.commit('resetDisplayedCommentCount');
     });
 
     const selectedTabColor = computed(() => store.state.selectedTabColor);
@@ -110,6 +127,10 @@ watchEffect(() => {
     displayedCommentCount,
     isTabBarSticky,
       isScrolled,
+      store,
+      topic
+      
+     
   };
 },
   components: {
@@ -119,70 +140,57 @@ watchEffect(() => {
   computed: {
     ...mapGetters(['getTopicById', 'getAllComments','getUserProfile']),
    
-    displayedProComments() {
-      return this.sortedProCommentsByTopic.slice(0, this.displayedCommentCount);
-    },
-    displayedContraComments() {
-      return this.sortedContraCommentsByTopic.slice(0, this.displayedCommentCount);
-    },
+    ...mapGetters(['getTopicById']),
 
 
-    topic() {
-      const topicId = this.$route.params.id;
-      return this.getTopicById(topicId); 
-    },
-    comments() {
-      return this.getAllComments;
-    },
+ 
+ 
     user() {
       return this.$store.state.currentUser; 
     },
 
-    sortedProCommentsByTopic() {
-      return this.sortedCommentsByTopic('proComments');
-    },
-
-    sortedContraCommentsByTopic() {
-      return this.sortedCommentsByTopic('contraComments');
-    },
+ 
 
   },
   
   methods: {
     ...mapActions(['fetchComments', 'addCommentToTopic', 'selectTab']),
+
+
+    focusComment(newCommentId) {
+    const commentToFocus = this.findCommentById(newCommentId);
+
+    if (commentToFocus) {
+      // Scrollen zur Position des Kommentars
+      const commentElement = document.getElementById(`comment-${commentToFocus.id}`);
+      if (commentElement) {
+        commentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  },
+  // Hilfsfunktion, um den Kommentar mit der neuen ID zu finden
+  findCommentById(newCommentId) {
+    // Durchsuche die Kommentarliste nach dem Kommentar mit der neuen ID
+    const allComments = [...this.topic.proComments, ...this.topic.contraComments];
+    return allComments.find(comment => comment.id === newCommentId);
+  },
+
+
+
     updateTabAndColor(tab) {
    
       this.$store.dispatch('selectTab', tab); // Action aufrufen
       this.$store.dispatch('updateSelectedTabColor'); // Action aufrufen
     },
 
-    showMoreComments() {
     
-      this.displayedCommentCount+= 20; // Adjust the number as needed
-    },
+    showMoreComments() {
+  this.$store.commit('incrementDisplayedCommentCount', 20); // Adjust the increment value as needed
+},
+
   
 
-    sortedCommentsByTopic(commentType) {
-  const topicId = this.$route.params.id;
-  const topic = this.getTopicById(topicId);
-  if (topic) {
-    const commentsArray = topic[commentType];
-    
-    // Sortiere die Kommentare nach den Votes in absteigender Reihenfolge
-    const sortedComments = commentsArray.slice().sort((a, b) => b.upvotes - a.upvotes);
-    
-    // Teile die Kommentare in die ersten 3 und den Rest auf
-    const topComments = sortedComments.slice(0, 3);
-    const restComments = sortedComments.slice(3);
-    
-    // Sortiere den Rest der Kommentare nach der Zeit in aufsteigender Reihenfolge
-    const sortedRestComments = restComments.sort((b, a) => new Date(a.createdAt) - new Date(b.createdAt));
-    
-    // Füge die ersten 3 Kommentare mit den meisten Votes zuerst hinzu, dann den Rest der sortierten Kommentare
-    return [...topComments, ...sortedRestComments];
-  }
-  return [];
-},
+   
 addComment(commentText) {
     const topicId = this.topic.id;
     const newComment = {

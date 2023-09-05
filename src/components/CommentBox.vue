@@ -9,7 +9,21 @@
       </div>
     </div>
     <div class="comment-content">
-      <p class="comment-text" @click='goToTopic(comment.topicId)'>{{ comment?.text }}</p>
+
+      <router-link
+       @click="handleRouterLinkClick(comment)"
+  :to="{
+    name: 'topic-ganze-seite',
+    params: { 
+      id: comment.topicId,
+      commentId: comment.id
+    }
+  }"
+ 
+>
+  {{ comment.text }}
+</router-link>
+
     </div>
 
     <div class="actions">
@@ -72,6 +86,9 @@ import { iconColor } from './farben';
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
 import { computed } from 'vue'; 
 import { useRouter } from 'vue-router';
+
+
+
 export default {
 
 
@@ -90,24 +107,48 @@ props: {
   },
 },
 
-setup() {
+setup(props) {
+  console.log(props.topic);
+ 
 const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
 const router = useRouter();
 // Zugriff auf den currentUser aus dem Vuex-Store
 const currentUser = computed(() => store.state.currentUser);
 
 const selectedTab = computed (() => store.state.selectedTab);
+const displaycommentcount = computed (() => store.state.displayedCommentCount);
+const topicobjekt =  store.getters.getTopicById(props.topic);
 
-    const goToTopic = (topicId) => {
-      console.log("gedrückt")
-  router.push(`/topic/${topicId}`);
-};
+const findCommentIndex = (commentId, commentsArray) => {
+    return commentsArray.findIndex(comment => comment.id === commentId);
+  };
+
+  // Je nach props.comment.commentType das entsprechende Array durchsuchen
+  const commentArrayToSearch = computed(() => {
+   
+    if (props.comment.commentType === 'pro') {
+      return topicobjekt.proComments;
+    } else if (props.comment.commentType === 'contra') {
+      return topicobjekt.contraComments;
+    } else {
+      // Standardverhalten, falls der commentType unbekannt ist
+      return [];
+    }
+  });
+
+  const commentIndex = computed(() => {
+    return findCommentIndex(props.comment.id, commentArrayToSearch.value)+1;
+  });
+
 return {
   iconColor,
   currentUser,
   selectedTab,
   store,
-  goToTopic
+  displaycommentcount,
+  topicobjekt,
+  commentIndex,
+
 };
 },
 
@@ -122,6 +163,12 @@ data() {
 },
 computed: {
   ...mapGetters(['getUserProfile']),
+  ...mapGetters(['getTopicById']),
+   
+  
+
+ 
+
   visibleReplies() {
     // Return the first 'maxDisplayedReplies' number of replies to display
     return this.comment.replies ? this.comment.replies.slice(0, this.maxDisplayedReplies) : [];
@@ -142,8 +189,38 @@ replyCount() {
 
 },
 methods: {
+  handleRouterLinkClick(comment) {
+    console.log(this.commentIndex);
+    console.log(this.displaycommentcount)
+    const differenz = this.commentIndex - this.displaycommentcount;
+    const puffer = 3;
 
-  
+    if(this.commentIndex > this.displaycommentcount){
+      this.$store.commit('incrementDisplayedCommentCount', differenz+puffer  );
+    }
+    else {
+
+      if (comment.commentType === 'pro') {
+      this.$store.state.selectedTab = 'pro';
+    } else {
+      this.$store.state.selectedTab = 'contra';
+    }
+
+    // Hier kannst du weitere Aktionen durchführen, falls notwendig.
+
+    // Führe die Navigation aus
+    this.$router.push({
+      name: 'topic-ganze-seite',
+      params: { 
+        id: comment.topicId,
+        commentId: comment.id
+      }
+    });
+
+    }
+
+  },
+    
   upvoteComment(commentId, currentUserId,topicId) {
     this.$store.dispatch('upvoteComment', { commentId ,currentUserId,topicId});
     this.$nextTick(() => {

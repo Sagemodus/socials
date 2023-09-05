@@ -100,6 +100,15 @@ const routes = [
     component: SwipeProfilComponent
   },
   //Comemnt und Topic weiterleitung
+  {
+    path: '/topic/:id/:commentId?',
+    component: TopicComponentGanzeSeite,
+    name: 'topic-ganze-seite',
+    props: true,
+    meta: {
+      settingsComponentRoute: true, // Dieses Feld markiert die Route für SettingsComponent
+    },
+  },
   { path: '/topic/:id', component: TopicComponentGanzeSeite },
   {
     path: '/reply/:commentId',

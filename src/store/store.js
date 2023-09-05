@@ -46,13 +46,14 @@ function generateFakeUser(id) {
   };
 }
 function searchCommentInArray(comments, commentId) {
-  for (const comment of comments) {
-    if (comment.id === commentId) {
-      console.log("Found comment with ID:", commentId);
-      return comment;
+  for (const currentComment of comments) {
+    if (currentComment.id === commentId) {
+
+      
+      return currentComment;
     }
-    if (comment.replies) {
-      const foundReply = searchCommentInArray(comment.replies, commentId);
+    if (currentComment.replies) {
+      const foundReply = searchCommentInArray(currentComment.replies, commentId);
       if (foundReply) {
         return foundReply;
       }
@@ -60,6 +61,11 @@ function searchCommentInArray(comments, commentId) {
   }
   return null;
 }
+
+
+
+
+
 
 
 
@@ -88,7 +94,7 @@ function generateReplies(count, userId,topicId) {
   return replies;
 }
 
-function generateComments(count, users,topicId) {
+function generateComments(count, users, topicId,commentType) {
   const comments = [];
   for (let i = 0; i < count; i++) {
     const id = faker.datatype.uuid();
@@ -98,16 +104,30 @@ function generateComments(count, users,topicId) {
       topicId: topicId,
       text: faker.lorem.paragraph(),
       author: generateFakeUser(users[authorId].id),
-      
-    upvotes: faker.datatype.number(),
-    downvotes: faker.datatype.number(),
-      
-      createdAt: faker.date.past(), // Erstellungsdatum hinzufügen
-      replies: generateReplies(4, users[authorId].id,topicId),
+      upvotes: faker.datatype.number(),
+      downvotes: faker.datatype.number(),
+      createdAt: faker.date.past(),
+      replies: generateReplies(4, users[authorId].id, topicId),
+      commentType: commentType,
     };
+
     comments.push(newComment);
   }
-  return comments;
+  
+  // Sortiere die Kommentare nach den meisten Likes absteigend
+  comments.sort((a, b) => b.upvotes - a.upvotes);
+  
+  // Teile die Kommentare in zwei Gruppen auf: Die ersten 3 mit den meisten Likes und der Rest
+  const top3 = comments.slice(0, 3);
+  const rest = comments.slice(3);
+  
+  // Sortiere die restlichen Kommentare nach dem Erstellungsdatum aufsteigend
+  rest.sort((a, b) => a.createdAt - b.createdAt);
+  
+  // Kombiniere die beiden Gruppen, um das endgültige Ergebnis zu erhalten
+  const sortedComments = top3.concat(rest);
+  
+  return sortedComments;
 }
 
 
@@ -146,8 +166,8 @@ function generateTopics(count, users) {
     newTopic.upvotePercentage = upvotePercentage.toFixed(2);
     newTopic.downvotePercentage = downvotePercentage.toFixed(2);
 
-    newTopic.proComments = generateComments(5, users,newTopic.id); // Generate "pro" comments
-    newTopic.contraComments = generateComments(5, users,newTopic.id); // Generate "contra" comments
+    newTopic.proComments = generateComments(10, users,newTopic.id,'pro'); // Generate "pro" comments
+    newTopic.contraComments = generateComments(10, users,newTopic.id,'contra'); // Generate "contra" comments
 
     topics.push(newTopic);
   }
@@ -199,6 +219,7 @@ export default createStore({
         notifications: [], // Benachrichtigungen für den Benutzer
         messages: [], // Privatnachrichten des Benutzers
         topicsaves:[],
+        
         joinedAt:'28.08.2023',
         email:"dejan.pantos@maschene.com",
         bio: 'King of the street',
@@ -219,6 +240,7 @@ export default createStore({
       selectedTab: 'pro',
       selectedTabColor : 'green',
       sessionId: null, 
+      displayedCommentCount: 5,
   // Array to store likes
     };
 
@@ -227,8 +249,16 @@ export default createStore({
   },
 
   mutations: {
+
+    resetDisplayedCommentCount(state) {
+      state.displayedCommentCount = 5; // Set it to the desired initial value
+    },
+    incrementDisplayedCommentCount(state, incrementAmount) {
+      console.log('geklickt' + incrementAmount + " " + state.displayedCommentCount);
+      state.displayedCommentCount += incrementAmount;
+      console.log('geklickt2' + incrementAmount + " " + state.displayedCommentCount);
+    },
   
-    
 
 // Login mutation
 setSessionId(state, sessionId) {
@@ -458,10 +488,12 @@ setSessionId(state, sessionId) {
           comment.upvotes= 0
           comment.downvotes= 0
     
-          if (selectedTab === 'contra') { // Richtiges Property verwenden
+          if (selectedTab === 'contra') { 
+            comment.commentType = 'contra'// Richtiges Property verwenden
             topic.contraComments.push(comment);
             state.currentUser.contracreated.push(comment.id)
           } else {
+            comment.commentType = 'pro'
             topic.proComments.push(comment);
             state.currentUser.procreated.push(comment.id)
           }
@@ -502,6 +534,9 @@ setSessionId(state, sessionId) {
  
   },
   actions: {
+
+  
+
     addRandomGeneratedCommentsToRandomTopic({ state }) {
       const proCommentCount = 4;
       const contraCommentCount = 4;
@@ -511,13 +546,13 @@ setSessionId(state, sessionId) {
   
       if (randomTopic) {
         for (let i = 0; i < proCommentCount; i++) {
-          const newProComment = generateComments(1, state.users,randomTopic.id)[0];
+          const newProComment = generateComments(1, state.users,randomTopic.id,'pro')[0];
           randomTopic.proComments.push(newProComment);
           state.currentUser.procreated.push(newProComment.id);
         }
         
         for (let i = 0; i < contraCommentCount; i++) {
-          const newContraComment = generateComments(1, state.users,randomTopic.id)[0];
+          const newContraComment = generateComments(1, state.users,randomTopic.id,'contra')[0];
           randomTopic.contraComments.push(newContraComment);
           state.currentUser.contracreated.push(newContraComment.id);
         }
@@ -556,7 +591,7 @@ setSessionId(state, sessionId) {
   
 
     upvoteReply({ commit }, { replyId,currentUserId,topicId,commentId}) {
-      console.log(commentId + " mach kei sheiss")
+
       commit('UPVOTE_REPLY', { replyId,currentUserId,topicId,commentId });
     },
     downvoteReply({ commit }, { replyId ,currentUserId,topicId,commentId}) {
@@ -604,6 +639,7 @@ setSessionId(state, sessionId) {
 
 
     getTopicById: (state) => (id) => {
+    
       return state.topics.find((topic) => topic.id === id);
     },
     getUserProfile: (state) => {
@@ -613,11 +649,15 @@ setSessionId(state, sessionId) {
 getCommentById: (state) => (commentId) => {
   for (const topic of state.topics) {
     const foundProComment = searchCommentInArray(topic.proComments, commentId);
+    
     if (foundProComment) {
+
+     
       return foundProComment;
     }
 
     const foundContraComment = searchCommentInArray(topic.contraComments, commentId);
+
     if (foundContraComment) {
       return foundContraComment;
     }

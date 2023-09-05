@@ -1,3 +1,4 @@
+//settingsComponent.vue
 <template>
   <div class="profile-page">
     <div class="background-image"></div>
@@ -61,7 +62,8 @@
       <div>
         <h5>{{ currentUser?.name }}</h5>
         <p>{{ currentUser?.bio }}</p>
-        <p> <font-awesome-icon :icon="['far', 'calendar-days']" class="icon" /> {{ " " + 'Joined ' + currentUser?.joinedAt }}
+        <p> <font-awesome-icon :icon="['far', 'calendar-days']" class="icon" /> {{ " " + 'Joined ' + currentUser?.joinedAt
+        }}
         </p>
         <div class="follow-container">
           <button class="following-buttons">
@@ -78,36 +80,53 @@
     </div>
 
     <SwipeProfilComponentVue>
-        <!-- Inhalte für den "Replies"-Tab -->
-        <template #replies>
-  <div>
-    <h3>Your Comments</h3>
-    <div v-for="comment in procreatedCommentList" :key="comment.id" >
-      <!-- Hier kannst du die Inhalte der procreated Topics anzeigen -->
-      <CommentBox :comment="comment" />
-    </div>
-    <div v-for="comment in contracreatedCommentsList" :key="comment.id" >
-      <!-- Hier kannst du die Inhalte der contracreated Topics anzeigen -->
-      <CommentBox :comment="comment" />
-      </div>
-    <h3>Your Replies</h3>
 
-    <div v-for="reply in repliescreatedCommentsList" :key="reply.id" >
-      <!-- Hier kannst du die Inhalte der Antworten anzeigen -->
-      <CommentReply :reply="reply" />
-    </div>
-  </div>
-</template>
 
-        <!-- Inhalte für den "Likes"-Tab -->
-        <template #likes>
-          <!-- Hier kommt der Inhalt für "Likes" -->
-          <!-- Zum Beispiel: -->
-          <div>
-            <p>Inhalt für den Likes-Tab</p>
+      <template #comments>
+        <div>
+          <button @click="test">test</button>
+          <div v-for="comment in procreatedCommentList"  :key="comment.id">
+            <!-- Hier kannst du die Inhalte der procreated Topics anzeigen -->
+            <CommentBox :comment="comment" :topic="comment.topicId"  />
           </div>
-        </template>
-      </SwipeProfilComponentVue>
+          <div v-for="comment in contracreatedCommentsList" :key="comment.id" :topic="comment.topicId">
+            <!-- Hier kannst du die Inhalte der contracreated Topics anzeigen -->
+            <CommentBox :comment="comment" :topic="comment.topicId" />
+          </div>
+        </div>
+      </template>
+
+
+      <!-- Inhalte für den "Replies"-Tab -->
+      <template #replies>
+        <div>
+          <div v-for="reply in repliescreatedCommentsList" :key="reply.id" >
+            <!-- Hier kannst du die Inhalte der Antworten anzeigen -->
+            <CommentReply :reply="reply" :topic="reply.topicId" />
+          </div>
+        </div>
+      </template>
+
+      <!-- Inhalte für den "Likes"-Tab -->
+      <template #votes>
+        <div>
+          <div v-for="topic in TopicUpVotes" :key="topic.id" :id="topic.id">
+            <TopicBox :key="topic.id" :id="topic.id" />
+          </div>
+
+        </div>
+        <div>
+          <div v-for="topic in TopicDownVotes" :key="topic.id" :id="topic.id">
+            <TopicBox :key="topic.id" :id="topic.id" />
+          </div>
+
+        </div>
+      </template>
+
+
+
+
+    </SwipeProfilComponentVue>
 
 
   </div>
@@ -121,60 +140,67 @@ import SwipeProfilComponentVue from '../SwipeProfilComponent.vue'
 import state from 'vue'
 import CommentBox from '../CommentBox.vue'
 import CommentReply from '../CommentReply.vue'
-import { useRouter } from 'vue-router';
+import TopicBox from '../TopicBox.vue'; // Hier importiere TopicBox
 
 export default {
   components: {
     SwipeProfilComponentVue,
     CommentBox,
-    CommentReply
+    CommentReply,
+    TopicBox,
   },
   setup() {
 
     const currentUser = computed(() => store.state.currentUser);
-    const router = useRouter();
 
+    const test = () => {
+  
+};
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
 
-    const procreatedComments = computed(()=> currentUser.value.procreated);
-    const contracreatedComments = computed(()=> currentUser.value.contracreated);
-    const repliescreated = computed (() => currentUser.value.createdReplies)
+    const procreatedComments = computed(() => currentUser.value.procreated);
+    const contracreatedComments = computed(() => currentUser.value.contracreated);
+    const repliescreated = computed(() => currentUser.value.createdReplies)
 
     const repliescreatedCommentsList = computed(() => {
-    return repliescreated.value.map(commentId => {
-      return store.getters.getCommentById(commentId);
-      
+      return repliescreated.value.map(commentId => {
+        return store.getters.getCommentById(commentId);
+
+      });
     });
-  });
+
+   const procreatedCommentList = computed(() => {
+  return procreatedComments.value.map(commentId => {
+   const comment = store.getters.getCommentById(commentId);
+    console.log(comment);
    
-    const procreatedCommentList = computed (() =>{
-      console.log(procreatedComments.value)
-      return procreatedComments.value.map (commentId => {
-
-      return store.getters.getCommentById(commentId);
-      });
-      });
-  
-const contracreatedCommentsList = computed(() => {
-
-  return contracreatedComments.value.map(commentId => {
-    
-    return store.getters.getCommentById(commentId);
+    return comment;
   });
 });
-     
 
-    // Zugriff auf den currentUser aus dem Vuex-Store
-  
+const contracreatedCommentsList = computed(() => {
+  return contracreatedComments.value.map(commentId => {
+    const comment = store.getters.getCommentById(commentId);
+    console.log(comment); // Füge diese Zeile hinzu
+    return comment;
+  });
+});
 
-   
- 
+    const TopicDownVotes = computed(() => {
+      return currentUser.value.hasdislikedtopic.map(commentId => {
+        return store.getters.getTopicById(commentId);
+
+      });
+    });
+
+
+    const TopicUpVotes = computed(() => {
+      return currentUser.value.haslikedtopic.map(commentId => {
+        return store.getters.getTopicById(commentId);
+
+      });
+    });
     
-
-    const goToTopic = (topicId) => {
-      console.log("gedrückt")
-  router.push(`/topic/${topicId}`);
-};
 
 
     const showDropdown = ref(false);
@@ -193,11 +219,17 @@ const contracreatedCommentsList = computed(() => {
       contracreatedCommentsList,
       state,
       repliescreatedCommentsList,
-      goToTopic,
+      TopicUpVotes,
+      TopicDownVotes,
+     test
     };
-  }
+  },
 
-}
+
+
+  }
+  
+
 </script>
 
 <style scoped>
@@ -404,4 +436,5 @@ img {
 
 .dropdown-menu li:hover {
   background-color: #ffffff;
-}</style>
+}
+</style>

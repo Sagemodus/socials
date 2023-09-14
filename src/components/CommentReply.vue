@@ -125,14 +125,6 @@ path: {
 
 
 
-    console.log("comment.value.path")
-    if (reply.value.path && props.depth > 1) {
-      console.log("Path wird gesetzt");
-      const path = computed(() => {
-        return `${reply.value.path}/${nestedIndex.value}`;
-      });
-      reply.value.path = path.value;
-    }
 
 
 

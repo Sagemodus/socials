@@ -20,7 +20,6 @@ import './firebase/init'; // Import and initialize Firebase before creating the 
 library.add(fas)
 library.add(far)
 
-store.dispatch('addRandomGeneratedCommentsToRandomTopic');
 
 const app = createApp(App)
 app.use(router)

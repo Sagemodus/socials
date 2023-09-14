@@ -84,14 +84,13 @@
 
       <template #comments>
         <div>
-          <button @click="test">test</button>
           <div v-for="comment in procreatedCommentList"  :key="comment.id">
             <!-- Hier kannst du die Inhalte der procreated Topics anzeigen -->
-            <CommentBox :comment="comment" :topic="comment.topicId"  />
+            <CommentBox :comment="comment" :topic="comment.topicId" :showreply ="showreply" :anzeige="false"  />
           </div>
           <div v-for="comment in contracreatedCommentsList" :key="comment.id" :topic="comment.topicId">
             <!-- Hier kannst du die Inhalte der contracreated Topics anzeigen -->
-            <CommentBox :comment="comment" :topic="comment.topicId" />
+            <CommentBox :comment="comment" :topic="comment.topicId" :anzeige="false"  />
           </div>
         </div>
       </template>
@@ -99,12 +98,29 @@
 
       <!-- Inhalte für den "Replies"-Tab -->
       <template #replies>
-        <div>
-          <div v-for="reply in repliescreatedCommentsList" :key="reply.id" >
-            <!-- Hier kannst du die Inhalte der Antworten anzeigen -->
-            <CommentReply :reply="reply" :topic="reply.topicId" />
-          </div>
-        </div>
+    <comment-reply
+            v-for="reply in replySuche"
+             :key="reply.id"
+              :reply="reply"
+              :depth="1"
+              :topic="reply.topicId"
+              :commentId="reply.commentobjekt.id"
+              :commentobjekt="reply.commentobjekt"
+             :commentIndex="reply.commentIndex"
+            :id ="reply.id"
+          ></comment-reply>
+
+           <comment-reply
+              v-for="reply in nestedReplySuche"
+               :key="reply.id"
+                :reply="reply"
+                :depth="2"
+                :topic="reply.topicId"
+                :commentId="reply.commentobjekt.id"
+                :commentobjekt="reply.commentobjekt"
+               :commentIndex="reply.commentIndex"
+              :id ="reply.id"
+            ></comment-reply>
       </template>
 
       <!-- Inhalte für den "Likes"-Tab -->
@@ -141,6 +157,7 @@ import state from 'vue'
 import CommentBox from '../CommentBox.vue'
 import CommentReply from '../CommentReply.vue'
 import TopicBox from '../TopicBox.vue'; // Hier importiere TopicBox
+import { useRoute } from 'vue-router';
 
 export default {
   components: {
@@ -150,17 +167,118 @@ export default {
     TopicBox,
   },
   setup() {
+    
+    const route = useRoute();
+    const store = useStore();
+    const state = store.state;
+    const topics = state.topics;
+    const userId = route.params.currentUserId;
+    
 
-    const currentUser = computed(() => store.state.currentUser);
+    // Verwende computed, um currentUser reaktiv zu machen
+    const currentUser = computed(() => store.state.users[userId]);
 
-    const test = () => {
-  
-};
-    const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
+    const showreply = false;
 
+     // Erhalte Zugriff auf den Vuex-Store
+ 
+
+   
     const procreatedComments = computed(() => currentUser.value.procreated);
     const contracreatedComments = computed(() => currentUser.value.contracreated);
-    const repliescreated = computed(() => currentUser.value.createdReplies)
+    const repliescreated = computed(() => currentUser.value.createdReplies);
+   
+
+    const nestedRepliesPaths = computed(() => {
+      console.log(currentUser.value);
+      return currentUser.value.nestedReplies.map(reply => reply);
+    });
+
+    
+    let topicsSuche = [];
+    let commentSuche = [];
+    let replySuche = [];
+    let nestedReplySuche = [];
+
+    function getLastElementFromPath() {
+      // Leeren Sie die Arrays zu Beginn jeder Ausführung der Funktion
+      topicsSuche.value = [];
+      commentSuche.value = [];
+      replySuche.value = [];
+      nestedReplySuche.value = [];
+
+      // Schleife durch die Pfade
+      nestedRepliesPaths.value.forEach(path => {
+        const ids = parseId(path); // Verwende die parseId Funktion, um die IDs zu extrahieren
+        const anzahleindexes = Object.keys(ids).length - 1;
+
+
+        let pathZurSuche = "";
+
+        for (let i = 0; i < anzahleindexes; i++) {
+          // Schleife durch die IDs
+          if (i === 0) {
+            pathZurSuche = `topics[${ids.topicIndex}]`;
+
+          }
+          else if (i === 1) {
+            if (ids.type === 'pro') {
+              pathZurSuche += `.proComments[${ids.commentIndex}]`;
+            }
+            else if (ids.type === 'contra') {
+              pathZurSuche += `.contraComments[${ids.commentIndex}]`;
+
+            }
+          }
+          else if (i === 2) {
+            pathZurSuche += `.replies[${ids.replyIndex1}]`;
+
+          }
+
+          else if (i > 2) {
+            for (let j = 2; j < anzahleindexes-1; j++) {
+              pathZurSuche += `.replies[${ids['replyIndex' + j]}]`;
+
+            }
+          }
+        }
+
+        // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
+        let nestedreply = eval(pathZurSuche);
+        if (anzahleindexes === 1) {
+          topicsSuche.push(nestedreply);
+        } else if (anzahleindexes === 2) {
+          commentSuche.push(nestedreply);
+        } else if (anzahleindexes === 3) {
+          replySuche.push(nestedreply);
+        } else if (anzahleindexes > 3) {
+          nestedReplySuche.push(nestedreply);
+        }
+
+        // Hier sollten Sie jetzt Zugriff auf die gewünschten Kommentare haben
+      });
+    }
+
+
+    getLastElementFromPath();
+
+    function parseId(path) {
+      const parts = path.split('/').filter(part => part !== ''); // Entferne leere Teile
+      const ids = {
+        topicIndex: parts[0],
+        type: parts[1].split('_')[0],
+        commentIndex: parts[1].split('_')[1],
+      };
+
+      // Füge alle weiteren Teile als replyIndex hinzu
+      for (let i = 2; i < parts.length; i++) {
+        ids['replyIndex' + (i - 1)] = parts[i];
+      }
+
+      return ids;
+    }
+
+
 
     const repliescreatedCommentsList = computed(() => {
       return repliescreated.value.map(commentId => {
@@ -172,7 +290,7 @@ export default {
    const procreatedCommentList = computed(() => {
   return procreatedComments.value.map(commentId => {
    const comment = store.getters.getCommentById(commentId);
-    console.log(comment);
+
    
     return comment;
   });
@@ -181,7 +299,7 @@ export default {
 const contracreatedCommentsList = computed(() => {
   return contracreatedComments.value.map(commentId => {
     const comment = store.getters.getCommentById(commentId);
-    console.log(comment); // Füge diese Zeile hinzu
+
     return comment;
   });
 });
@@ -221,7 +339,13 @@ const contracreatedCommentsList = computed(() => {
       repliescreatedCommentsList,
       TopicUpVotes,
       TopicDownVotes,
-     test
+      showreply,
+      topicsSuche,
+      replySuche,
+      commentSuche,
+      nestedReplySuche,
+
+
     };
   },
 

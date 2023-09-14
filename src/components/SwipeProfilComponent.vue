@@ -35,8 +35,10 @@ export default {
     const currentUser = computed(() => store.state.currentUser);
 
     const tabs = reactive([
+    { name: 'Comments', path: 'comments' },
       { name: 'Replies', path: 'replies' },
-      { name: 'Likes', path: 'likes' },
+      { name: 'Votes', path: 'votes' },
+      
     ]);
 
     const activeTab = ref(tabs[0].path);

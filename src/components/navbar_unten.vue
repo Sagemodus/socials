@@ -12,9 +12,9 @@
     <router-link to="/messages" :class="{ 'selected': $route.path === '/messages' }" :style="{ color: $route.path === '/messages' ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
       <font-awesome-icon :icon="['fas', 'envelope']" class="icon"/>
     </router-link>
-    <router-link to="/profile" :class="{ 'selected': $route.path === '/profile' }" :style="{ color: $route.path === '/profile' ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
-      <font-awesome-icon :icon="['fas', 'user']" class="icon"/>
-    </router-link>
+  <router-link :to="`/profile/${currentUserId}`" :class="{ 'selected': $route.path === `/profile/${currentUserId}` }" :style="{ color: $route.path === `/profile/${currentUserId}` ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
+    <font-awesome-icon :icon="['fas', 'user']" class="icon"/>
+  </router-link>
   </div>
 </template>
 
@@ -37,10 +37,12 @@ export default {
 
     // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
+    const currentUserId = computed(() => store.state.currentUser.id);
 
     return {
       iconColor,
       currentUser, // Mache den currentUser verfügbar
+      currentUserId
     };
   },
 };
@@ -79,4 +81,4 @@ li {
 
 </style>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+

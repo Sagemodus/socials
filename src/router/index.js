@@ -24,86 +24,100 @@ import SwipeProfilComponent from '../components/SwipeProfilComponent.vue';
 //CommentPage
 import ReplyPage from '../components/SingleReplyPage.vue';
 
-
+// Profil weiterleitungen
+import nestedReplyPage from '../components/profilebutton/nestedReplyPage.vue';
 
 
 const routes = [
   {
-    path: '/feed',
-    component: FeedView
+    path: "/feed",
+    component: FeedView,
   },
   {
-    path: '/search',
-    component: Search_view
+    path: "/search",
+    component: Search_view,
   },
   {
-    path: '/notifications',
-    component: Notifications_view
+    path: "/notifications",
+    component: Notifications_view,
   },
   {
-    path: '/messages',
-    component: Messages_view
+    path: "/messages",
+    component: Messages_view,
   },
   {
-    path: '/profile',
-    component: Profile_view
+    path: "/profile/:currentUserId",
+    component: Profile_view,
   },
   {
-    path: '/login',
-    name: 'login',
-    component: () => import(/* webpackChunkName: "about" */ '../views/LoginView.vue')
+    path: "/login",
+    name: "login",
+    component: () =>
+      import(/* webpackChunkName: "about" */ "../views/LoginView.vue"),
   },
   {
-    path: '/register',
-    name: 'register',
-    component: () => import ('../views/Register_view.vue')
+    path: "/register",
+    name: "register",
+    component: () => import("../views/Register_view.vue"),
   },
   {
-    path: '/publiccomponent',
-    name: 'public',
-    component: Public
+    path: "/publiccomponent",
+    name: "public",
+    component: Public,
   },
   {
-    path: '/fandfcomponent',
-    name: 'fandf',
-    component: FAndF
+    path: "/fandfcomponent",
+    name: "fandf",
+    component: FAndF,
   },
 
   {
-    path: '/popular',
-    name: 'Popular',
+    path: "/popular",
+    name: "Popular",
     component: PopularComponent,
   },
   {
-    path: '/recent',
-    name: 'Recent',
+    path: "/recent",
+    name: "Recent",
     component: RecentComponent,
   },
   {
-    path: '/people',
-    name: 'People',
+    path: "/people",
+    name: "People",
     component: PeopleComponent,
   },
- 
 
-
- 
   {
-    path: '/searchbar',
-    name: 'Searchbar',
-    component: SearchbarComponent
+    path: "/searchbar",
+    name: "Searchbar",
+    component: SearchbarComponent,
   },
   // Swipe-Profil-Komponente
   {
-    path: '/swipe-profil-component',
-    name: 'SwipeProfilComponent',
-    component: SwipeProfilComponent
+    path: "/swipe-profil-component",
+    name: "SwipeProfilComponent",
+    component: SwipeProfilComponent,
   },
   //Comemnt und Topic weiterleitung
-  { path: '/topic/:id', component: TopicComponentGanzeSeite },
   {
-    path: '/reply/:commentId',
+    path: "/topic/:id/:commentId?/:replyId?",
+    component: TopicComponentGanzeSeite,
+    name: "topic-ganze-seite",
+    props: true,
+    meta: {
+      settingsComponentRoute: true, // Dieses Feld markiert die Route für SettingsComponent
+    },
+  },
+  { path: "/topic/:id", component: TopicComponentGanzeSeite },
+  {
+    path: "/reply/:commentId",
     component: ReplyPage,
+  },
+  {
+    path: "/reply/:id/:commentId?/:replyId?",
+    component: nestedReplyPage,
+    name: "nested-reply-page",
+    meta: {},
   },
 ];
 

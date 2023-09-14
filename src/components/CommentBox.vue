@@ -61,7 +61,7 @@ import { mapGetters } from 'vuex';
 import CommentReply from './CommentReply.vue';
 import { iconColor } from './farben';
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
-import { computed, onBeforeMount, onBeforeUnmount, onUnmounted } from 'vue';
+import { computed, } from 'vue';
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
 
@@ -99,7 +99,6 @@ export default {
 
     const comment = computed(() => props.comment);
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
-    const router = useRouter();
     // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
 

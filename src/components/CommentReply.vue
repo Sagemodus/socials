@@ -83,7 +83,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { mapGetters, mapActions } from 'vuex';
 import { iconColor } from './farben';
 import { useStore } from 'vuex';
-import { computed, onBeforeMount } from 'vue';
+import { computed} from 'vue';
 import { useRouter } from 'vue-router';
 
 export default {

@@ -26,7 +26,7 @@
 
 <script>
 import { useStore } from 'vuex';
-import { computed, onBeforeMount, onMounted, onUnmounted } from 'vue';
+import { computed, onBeforeMount} from 'vue';
 import CommentReply from '../CommentReply.vue';
 import CommentBox from '../CommentBox.vue';
 
@@ -38,12 +38,11 @@ export default {
   setup() {
 
     const store = useStore();
-    const currentUser = computed(() => store.state.currentUser);
     const comment = store.state.comment;
     const reply = store.state.reply;
     const topicId = comment.topicId;
     const topic = computed(() => store.getters.getTopicById(topicId));
-    const topics = computed(() => store.state.topics);
+
 
 
     onBeforeMount(() => {

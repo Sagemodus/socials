@@ -26,7 +26,7 @@
 
 <script>
 import { useStore } from 'vuex';
-import { computed, onBeforeMount} from 'vue';
+import { computed, onBeforeMount, onMounted} from 'vue';
 import CommentReply from '../CommentReply.vue';
 import CommentBox from '../CommentBox.vue';
 
@@ -42,7 +42,7 @@ export default {
     const reply = store.state.reply;
     const topicId = comment.topicId;
     const topic = computed(() => store.getters.getTopicById(topicId));
-
+    const topics = computed(() => store.state.topics);
 
 
     onBeforeMount(() => {
@@ -145,7 +145,10 @@ export default {
 
 
 
-
+    onMounted(() => {
+      reply.expandReplies = false;
+      replyEltern.expandReplies = false;
+    });
 
 
 

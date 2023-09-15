@@ -176,7 +176,7 @@ export default {
     
 
     // Verwende computed, um currentUser reaktiv zu machen
-    const currentUser = computed(() => store.state.users[userId]);
+    const currentUser = computed(() => store.state.users[userId-1]);
 
     const showreply = false;
 
@@ -263,6 +263,7 @@ export default {
     getLastElementFromPath();
 
     function parseId(path) {
+      console.log(path)
       const parts = path.split('/').filter(part => part !== ''); // Entferne leere Teile
       const ids = {
         topicIndex: parts[0],
@@ -560,5 +561,17 @@ img {
 
 .dropdown-menu li:hover {
   background-color: #ffffff;
+}
+
+
+
+.comment-box:last-child{
+  border-bottom: 1px solid #ccc;
+  border-left: none;
+}
+.comment-reply{
+  border-left: none;
+  border-bottom: #ccc 1px solid;
+  margin-top: 10px;
 }
 </style>

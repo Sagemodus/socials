@@ -18,7 +18,9 @@
         <p class="topic-text">{{ topic.text }}</p>
       </div>
     </div>
+<div class="trenn-line">
 
+</div>
 
 
     <div v-if="selectedTab === 'pro'" class="kommentare">
@@ -284,7 +286,7 @@ export default {
 <style lang="scss" scoped>
 p.topic-text {
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.2;
   text-align: justify;
   padding: 10px;
   padding-top: 0px;
@@ -321,12 +323,6 @@ p.topic-text {
   margin-top: 10px;
 }
 
-
-
-.topic-text {
-  font-size: 16px;
-  line-height: 1.5;
-}
 
 .tab-selection {
   display: flex;
@@ -386,10 +382,17 @@ p.topic-text {
   /* Leichtes Vergrößern bei Hover */
 }
 
+
+
+
 @keyframes pulse {
   to {
     box-shadow: 0 0 10px rgba(144, 144, 144, 0.7);
     /* Größerer grauer Schatten bei Animation */
   }
+}
+.trenn-line {
+    width: 100%;
+    border-bottom: 1px solid lightgrey;
 }
 </style>

@@ -12,7 +12,7 @@
         </div>
         <div class="author-category">
           <span class="author-name" style="line-height: 0.8;">{{ topic.author.name }} </span>
-          <p style=" font-size: 12px;" class="topic-text">{{ ' ' + topic.category.sub }}</p>
+          <p style=" font-size: 11px;" class="topic-text">{{ ' ' + topic.category.sub }}</p>
         </div>
 
 
@@ -482,7 +482,7 @@ export default {
 
 
 .conversation-prompt {
-  background-color: #ffffff;
+  background-color: transparent;
 }
 
 
@@ -501,11 +501,11 @@ button.like-button {
 .topic-box {
   display: flex;
   flex-direction: column;
-  padding: 10px;
+  padding: 8px;
   margin: 10px auto;
   background-color: #ffffff;
   border-radius: 10px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 15px 20px rgba(1, 18, 251, 0.1);
   max-width: 90%;
   transition: transform 0.3s ease-in-out;
 
@@ -524,6 +524,7 @@ button.like-button {
     margin: 10px 0;
     text-align: justify;
     color: #333;
+
 
   }
 
@@ -570,7 +571,7 @@ button.like-button {
 
   .author-name {
     font-weight: bold;
-
+    font-size: 20px;
     padding-top: 1em;
   }
 
@@ -594,17 +595,12 @@ button.like-button {
     }
 
     .author-image {
-      width: 30px;
+      width: 50px;
       /* Set a smaller width for the image */
-      height: 30px;
+      height: 50px;
       /* Set a smaller height for the image */
     }
 
-    .author-name {
-      font-weight: bold;
-
-
-    }
 
 
 
@@ -619,7 +615,7 @@ button.like-button {
     }
 
     .left-content {
-      width: 70%;
+      width: 85%;
     }
 
   }
@@ -661,8 +657,9 @@ button.share-button {
 }
 
 .left-content {
-  min-width: 80%;
+  
   display: flex;
   align-items: center;
+  min-width: 85%;
 }
 </style>

@@ -15,7 +15,7 @@
           <li>
             <div class="bookmark-container">
 
-              <button class="bookmark-button">
+              <button class="bookmark-button" @click="bookmarkrouting">
                 <div class="Buttons-profilepage">
                   <font-awesome-icon :icon="['fas', 'bookmark']" class="icon"
                     :style="{ color: iconColor(currentUser.farbe) }" />
@@ -65,7 +65,8 @@
         <p> <font-awesome-icon :icon="['far', 'calendar-days']" class="icon" /> {{ " " + 'Joined ' + currentUser?.joinedAt
         }}
         </p>
-        <div class="follow-container">
+
+<!--         <div class="follow-container">
           <button class="following-buttons">
             <p>{{ currentUser?.following.length + ' Following' }}</p>
           </button>
@@ -73,7 +74,7 @@
           <button class="following-buttons">
             <p>{{ currentUser?.followers.length + ' Followers' }}</p>
           </button>
-        </div>
+        </div> -->
 
       </div>
 
@@ -154,11 +155,10 @@ import { computed } from 'vue';
 import { iconColor } from '../farben';
 import { ref } from 'vue';
 import SwipeProfilComponentVue from '../SwipeProfilComponent.vue'
-import state from 'vue'
 import CommentBox from '../CommentBox.vue'
 import CommentReply from '../CommentReply.vue'
 import TopicBox from '../TopicBox.vue'; // Hier importiere TopicBox
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 export default {
   components: {
@@ -174,10 +174,11 @@ export default {
     const state = store.state;
     const topics = state.topics;
     const userId = route.params.currentUserId;
+    const router = useRouter();
     
 
     // Verwende computed, um currentUser reaktiv zu machen
-    const currentUser = computed(() => store.state.users[userId]);
+    const currentUser = computed(() => store.state.users[userId-1]);
 
     const showreply = false;
 
@@ -188,12 +189,32 @@ export default {
     const procreatedComments = computed(() => currentUser.value.procreated);
     const contracreatedComments = computed(() => currentUser.value.contracreated);
     const repliescreated = computed(() => currentUser.value.createdReplies);
-   
 
+    const bookmarkrouting = () => {
+      router.push(`/bookmarksaves/${userId}`)
+    }
     const nestedRepliesPaths = computed(() => {
       console.log(currentUser.value);
       return currentUser.value.nestedReplies.map(reply => reply);
     });
+
+
+    const parseId = (element) => {
+            console.log(element)
+      const parts = element.split('/').filter(part => part !== ''); // Entferne leere Teile
+      const ids = {
+        topicIndex: parts[0],
+        type: parts[1].split('_')[0],
+        commentIndex: parts[1].split('_')[1],
+      };
+
+      // Füge alle weiteren Teile als replyIndex hinzu
+      for (let i = 2; i < parts.length; i++) {
+        ids['replyIndex' + (i - 1)] = parts[i];
+      }
+
+      return ids;
+    }
 
     
     let topicsSuche = [];
@@ -237,13 +258,13 @@ export default {
           }
 
           else if (i > 2) {
-            for (let j = 2; j < anzahleindexes-1; j++) {
-              pathZurSuche += `.replies[${ids['replyIndex' + j]}]`;
-
-            }
+            let läufer = 2;
+            pathZurSuche += `.replies[${ids['replyIndex' + läufer]}]`;
+            läufer++
           }
-        }
 
+        }
+           console.log(pathZurSuche);
         // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
         let nestedreply = eval(pathZurSuche);
         if (anzahleindexes === 1) {
@@ -262,22 +283,6 @@ export default {
 
 
     getLastElementFromPath();
-
-    function parseId(path) {
-      const parts = path.split('/').filter(part => part !== ''); // Entferne leere Teile
-      const ids = {
-        topicIndex: parts[0],
-        type: parts[1].split('_')[0],
-        commentIndex: parts[1].split('_')[1],
-      };
-
-      // Füge alle weiteren Teile als replyIndex hinzu
-      for (let i = 2; i < parts.length; i++) {
-        ids['replyIndex' + (i - 1)] = parts[i];
-      }
-
-      return ids;
-    }
 
 
 
@@ -345,6 +350,7 @@ const contracreatedCommentsList = computed(() => {
       replySuche,
       commentSuche,
       nestedReplySuche,
+      bookmarkrouting,
 
 
     };
@@ -561,5 +567,17 @@ img {
 
 .dropdown-menu li:hover {
   background-color: #ffffff;
+}
+
+
+
+.comment-box:last-child{
+  border-bottom: 1px solid #ccc;
+  border-left: none;
+}
+.comment-reply{
+  border-left: none;
+  border-bottom: #ccc 1px solid;
+  margin-top: 10px;
 }
 </style>

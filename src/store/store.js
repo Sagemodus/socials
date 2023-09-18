@@ -32,7 +32,6 @@ function updatePercentages(topic) {
   topic.downvotePercentage = ((topic.downvotes / totalVotes) * 100).toFixed(2);
 }
 
-
 function searchCommentInArray(comments, commentId) {
   for (const currentComment of comments) {
     if (currentComment.id === commentId) {
@@ -267,7 +266,7 @@ export default createStore({
         followers: [18, 25, 27], // Liste der Follower des Benutzerspro
         notifications: [], // Benachrichtigungen für den Benutzer
         messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
+        topicsaves: ["/0"],
         nestedReplies: [],
         createdReplies: [],
 
@@ -294,7 +293,7 @@ export default createStore({
         followers: [18, 25, 27], // Liste der Follower des Benutzerspro
         notifications: [], // Benachrichtigungen für den Benutzer
         messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
+        topicsaves: ["/0"],
         nestedReplies: [],
 
         joinedAt: "28.08.2023",
@@ -320,7 +319,7 @@ export default createStore({
         followers: [18, 25, 27], // Liste der Follower des Benutzerspro
         notifications: [], // Benachrichtigungen für den Benutzer
         messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
+        topicsaves: ["/0"],
         nestedReplies: [],
 
         joinedAt: "28.08.2023",
@@ -328,7 +327,7 @@ export default createStore({
         bio: "King of the street",
       },
       {
-        id: 3,
+        id: 4,
         name: "Vegeta",
         profileImage: generateFakeProfileImage("Vegeta"),
         farbe: "4",
@@ -346,7 +345,7 @@ export default createStore({
         followers: [18, 25, 27], // Liste der Follower des Benutzerspro
         notifications: [], // Benachrichtigungen für den Benutzer
         messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
+        topicsaves: ["/0"],
         nestedReplies: [],
 
         joinedAt: "28.08.2023",
@@ -379,9 +378,7 @@ export default createStore({
       state.displayedCommentCount = 3; // Set it to the desired initial value
     },
     incrementDisplayedCommentCount(state, incrementAmount) {
-      console.log(state.displayedCommentCount + "bevor");
       state.displayedCommentCount += incrementAmount;
-      console.log(state.displayedCommentCount + "nach");
     },
 
     // Login mutation
@@ -665,7 +662,7 @@ export default createStore({
         } else {
           // Thema ist bereits gespeichert, also entfernen
           state.currentUser.topicsaves.splice(index, 1);
-          console.log("Thema erfolgreich entfernt.");
+          ("Thema erfolgreich entfernt.");
         }
       }
     },

@@ -1,7 +1,7 @@
 
 <template>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <div v-if="topic" class="topic-box">
+  <div v-if="topic" class="topic-box" :style="{ border: getBorderColor() }">
     <div class="author-info">
       <div class="left-content">
         <div class="profilbild" @click="goToProfile(topic.author.id)">
@@ -184,7 +184,16 @@ export default {
       );
     });
     const goToProfile = () => {
+      console.log("klickt")
+      console.log(currentUser.value)
+      console.log ()
+      if (currentUser.value == topic.value.author) {
+        router.push(`/profil/${topic.value.author.id}`);
+      }
+      else {
       router.push(`/profile/${topic.value.author.id}`);
+      }
+
     }
 
     
@@ -212,6 +221,12 @@ export default {
     disableelements: {
 
     },
+    isDownVoted: {
+
+    },
+    isUpVoted: {
+
+    }
   },
   computed: {
     ...mapGetters(['getTopicById']),
@@ -248,6 +263,16 @@ export default {
     ...mapMutations(['TOGGLE_LIKE', 'TOGGLE_DISLIKE', 'ADD_TOPIC_TO_SAVES',]), // Import mutations
     ...mapActions(['fetchComments', 'addCommentToTopic', 'selectTab',]),
 
+
+    getBorderColor() {
+      if (this.isUpVoted) {
+        return '1.5px solid green'; // Setze den Rand auf Grün, wenn isUpVoted true ist
+      } else if (this.isDownVoted) {
+        return '1.5px solid red'; // Setze den Rand auf Rot, wenn isDownVoted true ist
+      } else {
+        return 'transparent'; // Setze den Rand auf transparent, wenn weder isUpVoted noch isDownVoted true sind
+      }
+    },
 
     updateTabAndColor(tab) {
 

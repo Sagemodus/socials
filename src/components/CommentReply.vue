@@ -167,8 +167,7 @@ export default {
       const ids = parseId(path); // Verwende die parseId Funktion, um die IDs zu extrahieren
       const anzahleindexes = Object.keys(ids).length - 1;
 
-      console.log(ids)
-      console.log(anzahleindexes)
+
 
       let pathZurSuche = "";
 
@@ -199,7 +198,7 @@ export default {
         }
 
       }
-      console.log(pathZurSuche);
+
       // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
       let nestedreply = eval(pathZurSuche);
       if (anzahleindexes === 1) {
@@ -213,11 +212,6 @@ export default {
       }
 
 
-      console.log(topicsSuche);
-      console.log(commentSuche);
-      console.log(replySuche);
-      console.log(nestedReplySuche);
-      // Hier sollten Sie jetzt Zugriff auf die gewünschten Kommentare haben
 
 
 
@@ -234,8 +228,7 @@ export default {
     }
 
     if (!reply.value.path && props.depth >= 2) {
-      console.log("Path wird gesetzt" + props.path);
-      console.log("Path wird gesetzt1" + nestedReplySuche[0]);
+
       getelement(props.path);
 
       // Verwende "nestedReplySuche", wenn es Werte gibt, andernfalls "replySuche"
@@ -245,7 +238,7 @@ export default {
       reply.value.path = `${props.path}/${replySearch[0]?.replies.length - 1}`;
       reply.value.author.nestedReplies.push(reply.value.path);
 
-      console.log(reply.value.path + "hallo bruder")
+
     }
 
 
@@ -282,7 +275,6 @@ export default {
     saveCommentDataToStore();
 
     const goToTopic = (topicId) => {
-      console.log(comment.value);
       const differenz = commentIndex.value - displaycommentcount.value;
       const puffer = 3;
 
@@ -302,7 +294,6 @@ export default {
 
 
 
-          console.log(comment.value.commentType);
           router.push({
             name: 'nested-reply-page', // Der Name der Route (stellen Sie sicher, dass Sie diesen Namen in Ihrer Route-Definition haben)
             params: {
@@ -315,17 +306,15 @@ export default {
         }, 50);
       }
       else {
-        console.log(commentIndex.value)
-        console.log(displaycommentcount.value)
 
 
-        console.log(differenz);
+
         comment.value.expandReplies = true;
 
         if (commentIndex.value > displaycommentcount.value) {
           store.commit('incrementDisplayedCommentCount', differenz + puffer);
         }
-        console.log(commentIndex.value);
+
         if (comment.value.commentType === 'pro') {
           store.state.selectedTab = 'pro';
           store.state.selectedTabColor = 'green';
@@ -423,8 +412,6 @@ export default {
     },
 
     upvoteReplyAction(replyId, currentUserId, topicId, commentId) {
-      console.log(commentId)
-      console.log("ausgelösd")
       this.$store.dispatch('upvoteReply', { replyId, currentUserId, topicId, commentId });
       this.$nextTick(() => {
         this.animateButton(this.$refs.upvoteButton);
@@ -432,7 +419,6 @@ export default {
     },
 
     downvoteReplyAction(replyId, currentUserId, topicId, commentId) {
-      console.log("ausgelösd")
       this.$store.dispatch('downvoteReply', { replyId, currentUserId, topicId, commentId });
       this.$nextTick(() => {
         this.animateButton(this.$refs.downvoteButton);
@@ -457,7 +443,6 @@ export default {
 
     // Funktion zum Einreichen einer Antwort auf diese Antwort
     submitReply() {
-      console.log(this.reply.commentobjekt)
       const newReply = {
         topicId: this.topic,
         id: uuidv4(),

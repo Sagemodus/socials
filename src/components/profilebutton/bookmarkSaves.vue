@@ -39,7 +39,6 @@ export default {
 
 
         const parseId = (element) => {
-            console.log(element)
             const parts = element.split('/').filter(part => part !== ''); // Entferne leere Teile
             const ids = {
                 topicIndex: parts[0],
@@ -75,8 +74,6 @@ export default {
 
 
                 let pathZurSuche = "";
-                console.log(anzahleindexes)
-                console.log(ids)
                 for (let i = 0; i < anzahleindexes; i++) {
                     // Schleife durch die IDs
                     if (i === 0) {
@@ -103,23 +100,17 @@ export default {
                         läufer++
                     }
                     let lauf = 0;
-                    console.log(lauf++)
 
                 }
-                console.log(pathZurSuche);
                 // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
                 let nestedreply = eval(pathZurSuche);
                 if (anzahleindexes === 1) {
-                    console.log(anzahleindexes + " anzahl indexes topic")
                     topicsSuche.push(nestedreply);
                 } else if (anzahleindexes === 2) {
-                    console.log(anzahleindexes + " anzahl indexes comment")
                     commentSuche.push(nestedreply);
                 } else if (anzahleindexes === 3) {
-                    console.log(anzahleindexes + " anzahl indexes reply")
                     replySuche.push(nestedreply);
                 } else if (anzahleindexes > 3) {
-                    console.log(anzahleindexes + " anzahl indexes nested")
                     nestedReplySuche.push(nestedreply);
                 }
 

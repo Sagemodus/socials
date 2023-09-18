@@ -4,7 +4,9 @@
       <div class="header-comment">
         <img :src="comment?.author?.profileImage" alt="Profilbild" class="profile-image" />
         <h5 class="username">{{ comment?.author?.name }}</h5>
-        <p>{{ $store.getters.formattedCreatedAt(comment?.createdAt) }}</p>
+        <div class="month" >
+          <p>{{ $store.getters.formattedCreatedAt(comment?.createdAt) }}</p>
+        </div>
       </div>
     </div>
     <div class="comment-content" @click="handleRouterLinkClick(comment)">{{ comment.text }}</div>
@@ -27,8 +29,8 @@
         <p :style="{ color: iconColor(currentUser.farbe) }">{{ comment?.downvotes }}</p>
       </button>
 
-      <div v-if="anzeige"> <!--Aufklapp Button-->
-        <button v-if="!showReplyForm && comment.replies && comment.replies.length && comment.showelement > 0"
+      <div > <!--Aufklapp Button-->
+        <button v-if="!showReplyForm && comment.replies && comment.replies.length > 0"
           @click="comment.expandReplies = !comment.expandReplies" class="action-button">
           <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-if="!comment.expandReplies"
             :icon="['fas', 'angle-down']" />
@@ -61,7 +63,7 @@ import { mapGetters } from 'vuex';
 import CommentReply from './CommentReply.vue';
 import { iconColor } from './farben';
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
-import { computed, onBeforeMount, onBeforeUnmount, onUnmounted } from 'vue';
+import { computed, } from 'vue';
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
 
@@ -99,7 +101,6 @@ export default {
 
     const comment = computed(() => props.comment);
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
-    const router = useRouter();
     // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
 
@@ -247,10 +248,10 @@ export default {
 
     // Funktion zum Einreichen einer Antwort
     submitReply(comment) {
-      console.log(this.getUserProfile);
+      console.log(this.comment);
 
       // Initialisiere commentIndex
-
+      
 
       const newReply2 = {
         topicId: comment.topicId,
@@ -260,7 +261,7 @@ export default {
         upvotes: 0,
         downvotes: 0,
         createdAt: new Date(),
-        commentobjekt: comment,
+        commentobjekt: this.comment,
         commentIndex: this.commentIndex, // Setze commentIndex basierend auf der Tab-Auswahl
       };
 
@@ -268,7 +269,7 @@ export default {
         comment.replies = [];
       }
 
-      newReply2.author.createdReplies.push(newReply2.id);
+       comment.expandReplies = true;
       comment.replies.push(newReply2);
 
       this.newReply = "";
@@ -316,7 +317,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss" >
 .reply-form {
   margin-top: 10px;
 
@@ -354,11 +355,18 @@ export default {
 }
 
 
-
+    .comment-content {
+      flex-grow: 1; // Nimmt den gesamten verfügbaren Platz ein
+      padding-top :10px;
+          padding-top: 10px;
+    text-align: left;
+    padding-left: 3px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    }
 
 
 .comment-box {
-  padding-top: 10px;
   padding-bottom: 10px;
   border-bottom: 1px solid #e1e4e8;
   font-family: Verdana, Geneva, sans-serif;
@@ -385,14 +393,7 @@ export default {
 
     }
 
-    .comment-content {
-      flex-grow: 1; // Nimmt den gesamten verfügbaren Platz ein
 
-      .comment-text {
-        font-size: 12px;
-        color: #1c1c1c;
-      }
-    }
 
 
 
@@ -400,13 +401,12 @@ export default {
 
   .profile-image {
     border-radius: 50%;
-    max-width: 90%;
+    height: 40px;
 
   }
 
   .actions {
     display: flex;
-    justify-content: space-evenly;
     align-items: center;
     gap: 10px;
 
@@ -455,36 +455,10 @@ export default {
           border-color: #0079d3;
         }
 
-        .user-info {
-          margin-bottom: 5px;
-        }
-
-        .username {
-          font-size: 14px;
-          font-weight: bold;
-          color: #333;
-        }
-
-        .comment-content {
-          .comment-text {
-            font-size: 12px;
-            color: #1c1c1c;
-          }
-        }
       }
     }
   }
 
-  .expand-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 10px;
-    /* Die Breite des Buttons festlegen */
-    height: 10px;
-    /* Die Höhe des Buttons festlegen */
-    font-size: 1.5rem;
-  }
 
 
   .reply-form {
@@ -523,18 +497,14 @@ export default {
     flex-wrap: wrap;
   }
 
-  .nested-reply {
-    margin-left: 15px;
-    /* Größere Einrückung für verschachtelte Kommentare */
-    border-left: 2px solid #ddd;
-    /* Unterschiedliche Farbe für den linken Strich */
-    padding-left: 10px;
-    /* Zusätzliche Einrückung für den Inhalt */
-  }
 
 }
 
 .comment-box h5 {
-  font-size: 14px;
+  font-size: 13px;
+}
+
+.month{
+  font-size: 11px;
 }
 </style>

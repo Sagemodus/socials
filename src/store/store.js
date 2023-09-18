@@ -32,15 +32,7 @@ function updatePercentages(topic) {
   topic.downvotePercentage = ((topic.downvotes / totalVotes) * 100).toFixed(2);
 }
 
-function generateFakeUser(id) {
-  return {
-    id,
-    name: faker.name.findName(),
-    profileImage: `https://fakeimg.pl/50x50/?text=${faker.name.findName(
-      id
-    )}&font=lobster`,
-  };
-}
+
 function searchCommentInArray(comments, commentId) {
   for (const currentComment of comments) {
     if (currentComment.id === commentId) {
@@ -663,12 +655,12 @@ export default createStore({
       }
     },
 
-    ADD_TOPIC_TO_SAVES(state, topicId) {
+    ADD_TOPIC_TO_SAVES(state, topicPath) {
       if (state.currentUser) {
-        const index = state.currentUser.topicsaves.indexOf(topicId);
+        const index = state.currentUser.topicsaves.indexOf(topicPath);
         if (index === -1) {
           // Thema ist noch nicht gespeichert, also hinzufügen
-          state.currentUser.topicsaves.push(topicId);
+          state.currentUser.topicsaves.push(topicPath);
           console.log("Thema erfolgreich gespeichert.");
         } else {
           // Thema ist bereits gespeichert, also entfernen

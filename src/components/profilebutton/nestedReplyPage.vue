@@ -26,7 +26,7 @@
 
 <script>
 import { useStore } from 'vuex';
-import { computed, onBeforeMount, onMounted, onUnmounted } from 'vue';
+import { computed, onBeforeMount, onMounted} from 'vue';
 import CommentReply from '../CommentReply.vue';
 import CommentBox from '../CommentBox.vue';
 
@@ -38,7 +38,6 @@ export default {
   setup() {
 
     const store = useStore();
-    const currentUser = computed(() => store.state.currentUser);
     const comment = store.state.comment;
     const reply = store.state.reply;
     const topicId = comment.topicId;
@@ -70,8 +69,11 @@ export default {
       // Schleife durch die Pfade
       const path = reply.path;
       const ids = parseId(path); // Verwende die parseId Funktion, um die IDs zu extrahieren
-      const anzahleindexes = Object.keys(ids).length - 1;
+      const anzahleindexes = Object.keys(ids).length -2;
 
+      console.log(anzahleindexes);
+      console.log(path);
+      console.log(ids);
 
       let pathZurSuche = "";
 
@@ -95,13 +97,14 @@ export default {
 
         }
 
-        else if (i > 2) {
-          for (let j = 2; j < anzahleindexes - 1; j++) {
-            pathZurSuche += `.replies[${ids['replyIndex' + j]}]`;
-
-          }
+     else if (i > 2) {
+          let läufer = 2;
+          pathZurSuche += `.replies[${ids['replyIndex' + läufer]}]`;
+          läufer++
         }
+
       }
+      console.log(pathZurSuche);  
 
       // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
       let nestedreply = eval(pathZurSuche);
@@ -131,18 +134,20 @@ export default {
       };
 
       // Dieses -1 entfernt das letzte objekt sodass ich das 2. letzte objekt verwenden kann
-      for (let i = 2; i < parts.length - 1; i++) {
+      for (let i = 2; i < parts.length; i++) {
         ids['replyIndex' + (i - 1)] = parts[i];
       }
 
       return ids;
     }
 
-    const replyEltern = replySuche[0];
+    const replyEltern = replySuche[0] || commentSuche[0] || topicsSuche[0] || nestedReplySuche[0];
 
 
 
-
+    onMounted(() => {
+      replyEltern.expandReplies = false;
+    });
 
 
 

@@ -81,7 +81,6 @@ export default {
 }
 .comment-reply .buttons-container{
   display: flex;
-  justify-content: space-evenly;
   align-items: center;
   gap: 10px;
   margin-top: 10px;

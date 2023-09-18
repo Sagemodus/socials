@@ -97,12 +97,12 @@ export default {
 
         }
 
-        else if (i > 2) {
-          for (let j = 2; j < anzahleindexes ; j++) {
-            pathZurSuche += `.replies[${ids['replyIndex' + j]}]`;
-
-          }
+     else if (i > 2) {
+          let läufer = 2;
+          pathZurSuche += `.replies[${ids['replyIndex' + läufer]}]`;
+          läufer++
         }
+
       }
       console.log(pathZurSuche);  
 
@@ -146,7 +146,6 @@ export default {
 
 
     onMounted(() => {
-      reply.expandReplies = false;
       replyEltern.expandReplies = false;
     });
 

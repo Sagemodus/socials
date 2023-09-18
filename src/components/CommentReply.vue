@@ -134,143 +134,141 @@ export default {
     const replyelement = 3;
     const topicselement = 1;
     const replydepth = props.depth;
-    const topics =  store.state.topics;
+    const topics = store.state.topics;
 
 
-    onMounted(() => {
+    const parseId = (element) => {
+      const parts = element.split('/').filter(part => part !== ''); // Entferne leere Teile
+      const ids = {
+        topicIndex: parts[0],
+        type: parts[1].split('_')[0],
+        commentIndex: parts[1].split('_')[1],
+      };
 
-      const parseId = (element) => {
-        const parts = element.split('/').filter(part => part !== ''); // Entferne leere Teile
-        const ids = {
-          topicIndex: parts[0],
-          type: parts[1].split('_')[0],
-          commentIndex: parts[1].split('_')[1],
-        };
-
-        // Füge alle weiteren Teile als replyIndex hinzu
-        for (let i = 2; i < parts.length; i++) {
-          ids['replyIndex' + (i - 1)] = parts[i];
-        }
-
-        return ids;
+      // Füge alle weiteren Teile als replyIndex hinzu
+      for (let i = 2; i < parts.length; i++) {
+        ids['replyIndex' + (i - 1)] = parts[i];
       }
 
+      return ids;
+    }
 
 
-      const getelement = (path) => {
 
-        topicsSuche.value = [];
-        commentSuche.value = [];
-        replySuche.value = [];
-        nestedReplySuche.value = [];
+    const getelement = (path) => {
 
-        // Schleife durch die Pfade
+      topicsSuche.value = [];
+      commentSuche.value = [];
+      replySuche.value = [];
+      nestedReplySuche.value = [];
 
-        const ids = parseId(path); // Verwende die parseId Funktion, um die IDs zu extrahieren
-        const anzahleindexes = Object.keys(ids).length - 1;
+      // Schleife durch die Pfade
 
-        console.log(ids)
-        console.log(anzahleindexes)
+      const ids = parseId(path); // Verwende die parseId Funktion, um die IDs zu extrahieren
+      const anzahleindexes = Object.keys(ids).length - 1;
 
-        let pathZurSuche = "";
+      console.log(ids)
+      console.log(anzahleindexes)
 
-        for (let i = 0; i < anzahleindexes; i++) {
-          // Schleife durch die IDs
-          if (i === 0) {
-            pathZurSuche = `topics[${ids.topicIndex}]`;
+      let pathZurSuche = "";
 
-          }
-          else if (i === 1) {
-            if (ids.type === 'pro') {
-              pathZurSuche += `.proComments[${ids.commentIndex}]`;
-            }
-            else if (ids.type === 'contra') {
-              pathZurSuche += `.contraComments[${ids.commentIndex}]`;
-
-            }
-          }
-          else if (i === 2) {
-            pathZurSuche += `.replies[${ids.replyIndex1}]`;
-
-          }
-
-          else if (i > 2) {
-            let läufer = 2;
-            pathZurSuche += `.replies[${ids['replyIndex' + läufer]}]`;
-            läufer++
-          }
+      for (let i = 0; i < anzahleindexes; i++) {
+        // Schleife durch die IDs
+        if (i === 0) {
+          pathZurSuche = `topics[${ids.topicIndex}]`;
 
         }
-        console.log(pathZurSuche);
-        // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
-        let nestedreply = eval(pathZurSuche);
-        if (anzahleindexes === 1) {
-          topicsSuche.push(nestedreply);
-        } else if (anzahleindexes === 2) {
-          commentSuche.push(nestedreply);
-        } else if (anzahleindexes === 3) {
-          replySuche.push(nestedreply);
-        } else if (anzahleindexes > 3) {
-          nestedReplySuche.push(nestedreply);
+        else if (i === 1) {
+          if (ids.type === 'pro') {
+            pathZurSuche += `.proComments[${ids.commentIndex}]`;
+          }
+          else if (ids.type === 'contra') {
+            pathZurSuche += `.contraComments[${ids.commentIndex}]`;
+
+          }
+        }
+        else if (i === 2) {
+          pathZurSuche += `.replies[${ids.replyIndex1}]`;
+
         }
 
+        else if (i > 2) {
+          let läufer = 2;
+          pathZurSuche += `.replies[${ids['replyIndex' + läufer]}]`;
+          läufer++
+        }
 
-        console.log(topicsSuche);
-        console.log(commentSuche);
-        console.log(replySuche);
-        console.log(nestedReplySuche);
-        // Hier sollten Sie jetzt Zugriff auf die gewünschten Kommentare haben
-
-
-
+      }
+      console.log(pathZurSuche);
+      // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
+      let nestedreply = eval(pathZurSuche);
+      if (anzahleindexes === 1) {
+        topicsSuche.push(nestedreply);
+      } else if (anzahleindexes === 2) {
+        commentSuche.push(nestedreply);
+      } else if (anzahleindexes === 3) {
+        replySuche.push(nestedreply);
+      } else if (anzahleindexes > 3) {
+        nestedReplySuche.push(nestedreply);
       }
 
 
-
-      if (!reply.depth) {
-        reply.value.depth = props.depth;
-      }
-
-      if (!reply.replies) {
-        reply.value.replies = [];
-      }
-
-      if (!reply.value.path && props.depth >= 2) {
-        console.log("Path wird gesetzt" + props.path);
-        console.log("Path wird gesetzt1" + nestedReplySuche[0]);
-        getelement(props.path);
-
-        // Verwende "nestedReplySuche", wenn es Werte gibt, andernfalls "replySuche"
-        const replySearch = nestedReplySuche.length > 0 ? nestedReplySuche : replySuche;
-       
-        // Aktualisiere den Pfad basierend auf der Länge der Antworten
-        reply.value.path = `${props.path}/${replySearch[0]?.replies.length - 1}`;
-        reply.value.author.nestedReplies.push(reply.value.path);
-
-        console.log(reply.value.path+"hallo bruder")
-      }
+      console.log(topicsSuche);
+      console.log(commentSuche);
+      console.log(replySuche);
+      console.log(nestedReplySuche);
+      // Hier sollten Sie jetzt Zugriff auf die gewünschten Kommentare haben
 
 
 
+    }
 
 
 
-      if (!reply.value.path && props.depth <= 1) {
+    if (!reply.depth) {
+      reply.value.depth = props.depth;
+    }
 
-        const path = computed(() => {
-          return `${reply.value.commentobjekt.path}/${replyIndex.value - 1}`;
-        });
-        reply.value.path = path.value;
-      }
+    if (!reply.value.replies) {
+      reply.value.replies = [];
+    }
+
+    if (!reply.value.path && props.depth >= 2) {
+      console.log("Path wird gesetzt" + props.path);
+      console.log("Path wird gesetzt1" + nestedReplySuche[0]);
+      getelement(props.path);
+
+      // Verwende "nestedReplySuche", wenn es Werte gibt, andernfalls "replySuche"
+      const replySearch = nestedReplySuche.length > 0 ? nestedReplySuche : replySuche;
+
+      // Aktualisiere den Pfad basierend auf der Länge der Antworten
+      reply.value.path = `${props.path}/${replySearch[0]?.replies.length - 1}`;
+      reply.value.author.nestedReplies.push(reply.value.path);
+
+      console.log(reply.value.path + "hallo bruder")
+    }
 
 
-     } 
+
+
+
+
+    if (!reply.value.path && props.depth <= 1) {
+
+      const path = computed(() => {
+        return `${reply.value.commentobjekt.path}/${replyIndex.value - 1}`;
+      });
+      reply.value.path = path.value;
+    }
+
+
+
+
+  
       
       
-      
-      );
 
-      console.log("hallo")
+
   
 
     

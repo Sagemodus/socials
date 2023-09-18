@@ -4,7 +4,7 @@
   <div v-if="topic" class="topic-box">
     <div class="author-info">
       <div class="left-content">
-        <div class="profilbild">
+        <div class="profilbild" @click="goToProfile(topic.author.id)">
           <img :src="topic.author.profileImage" alt="Author Profile Image" class="author-image" />
         </div>
         <div class="author">
@@ -29,7 +29,7 @@
         <!--Save Button-->
         <button @click="saveChanges" class="savebutton">
 
-          <font-awesome-icon :icon="isSaved(topic.id) ? ['fas', 'bookmark'] : ['far', 'bookmark']" class="icon"
+          <font-awesome-icon :icon="isSaved(topic.path) ? ['fas', 'bookmark'] : ['far', 'bookmark']" class="icon"
             :style="{ color: iconColor(currentUser.farbe) }" />
         </button>
 
@@ -78,7 +78,7 @@
       </div>
 
       <!--ConPro Button-->
-
+<div v-if="!disableelements"   class="disableFromBookmark">
       <div class="tab-selection">
         <button @click="updateTabAndColor('pro')" :class="{ 'active-tab': selectedTab === 'pro' }">Pro</button>
         <button @click="updateTabAndColor('contra')" :class="{ 'active-tab': selectedTab === 'contra' }">Contra</button>
@@ -86,7 +86,7 @@
       </div>
 
 
-      <div v-if="selectedTab === 'pro'" class="kommentare">
+ <div v-if="selectedTab === 'pro'" class="kommentare">
         <CommentBox v-for="comment in sortedComments('pro').slice(0, 2)" :key="comment.id" :comment="comment"
           :topic="id" />
       </div>
@@ -109,6 +109,11 @@
         </button>
 
       </div>
+
+
+
+</div>
+     
 
     </div>
   </div>
@@ -141,6 +146,7 @@ import { useStore } from 'vuex'; // Importiere das useStore-Hook
 import { computed, watchEffect } from 'vue';
 import { onMounted } from 'vue';
 import CommentBox from './CommentBox';
+import { useRouter } from 'vue-router';
 
 
 export default {
@@ -148,15 +154,23 @@ export default {
     CommentBox,
 
   },
-  setup(props) {
-    const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
 
+  setup(props) {
+
+
+
+
+    const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
+    const router = useRouter();
+
+   
+    const topic = computed(() => store.getters.getTopicById(props.id));
     // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
 
     const selectedTab = computed(() => store.state.selectedTab);
     const selectedTabColor = computed(() => store.state.selectedTabColor);
-
+  
 
     watchEffect(() => {
       document.documentElement.style.setProperty('--selectedTabColor', selectedTabColor.value);
@@ -169,9 +183,11 @@ export default {
         props.topic.downvotePercentage < minWidthThreshold
       );
     });
+    const goToProfile = () => {
+      router.push(`/profile/${topic.value.author.id}`);
+    }
 
-
-
+    
 
 
 
@@ -182,7 +198,9 @@ export default {
       selectedTab,
       selectedTabColor,
       isBarTooSmall,
-      onMounted
+      onMounted,
+      goToProfile,
+      topic,
     };
   },
 
@@ -190,6 +208,9 @@ export default {
     id: {
       type: String,
       required: true,
+    },
+    disableelements: {
+
     },
   },
   computed: {
@@ -213,9 +234,7 @@ export default {
 
 
 
-    topic() {
-      return this.getTopicById(this.id);
-    },
+
 
   },
   data() {
@@ -240,7 +259,7 @@ export default {
 
     //Save button logik
     saveChanges() {
-      this.ADD_TOPIC_TO_SAVES(this.topic.id);
+      this.ADD_TOPIC_TO_SAVES(this.topic.path);
 
     },
     isSaved(topicId) {
@@ -657,7 +676,7 @@ button.share-button {
 }
 
 .left-content {
-  
+
   display: flex;
   align-items: center;
   min-width: 85%;

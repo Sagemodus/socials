@@ -58,7 +58,7 @@ import { useStore } from 'vuex';
 import { computed, watchEffect } from 'vue';
 import { ref, onMounted, onBeforeUnmount, } from 'vue';
 import dayjs from 'dayjs';
-import { useRoute } from 'vue-router';
+
 import { onUnmounted } from 'vue';
 
 export default {
@@ -66,7 +66,7 @@ export default {
 
 
   setup(props) {
-    const route = useRoute()
+
     const store = useStore();
     const topicId = computed(() => props.id);
     const commentId = props.commentId; // Kommentar-ID aus den Props extrahieren

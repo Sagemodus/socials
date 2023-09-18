@@ -26,7 +26,7 @@ import ReplyPage from '../components/SingleReplyPage.vue';
 
 // Profil weiterleitungen
 import nestedReplyPage from '../components/profilebutton/nestedReplyPage.vue';
-
+import bookmarkSaves from '../components/profilebutton/bookmarkSaves.vue'
 
 const routes = [
   {
@@ -118,6 +118,10 @@ const routes = [
     component: nestedReplyPage,
     name: "nested-reply-page",
     meta: {},
+  },
+  {
+    path: "/bookmarksaves/:userId",
+    component: bookmarkSaves,
   },
 ];
 

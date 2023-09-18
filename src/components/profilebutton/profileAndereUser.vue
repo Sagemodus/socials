@@ -2,54 +2,7 @@
 <template>
     <div class="profile-page">
         <div class="background-image"></div>
-        <div class="settings-container">
-            <button class="settings-button" @click="toggleDropdown">
-                <font-awesome-icon :icon="['fas', 'bars']" class="icon" />
-            </button>
-
-            <div class="dropdown" v-if="showDropdown">
-                <!-- Dropdown-Inhalt hier -->
-                <ul class="dropdown-menu">
-
-                    <!--Bookmarks-->
-                    <li>
-                        <div class="bookmark-container">
-
-                            <button class="bookmark-button" @click="bookmarkrouting">
-                                <div class="Buttons-profilepage">
-                                    <font-awesome-icon :icon="['fas', 'bookmark']" class="icon"
-                                        :style="{ color: iconColor(currentUser.farbe) }" />
-                                </div>
-                                <h3>Bookmarks</h3>
-                            </button>
-                        </div>
-                    </li>
-
-
-                    <li>
-                        <div class="friends-container">
-                            <button class="friends-button">
-                                <div class="Buttons-profilepage">
-                                    <font-awesome-icon :icon="['fas', 'gear']" class="icon"
-                                        :style="{ color: iconColor(currentUser.farbe) }" />
-                                </div>
-                                <h3>Settings</h3>
-                            </button>
-                        </div>
-
-                    </li>
-                    <li>
-                        <button class="logout-button">
-
-                            <font-awesome-icon :icon="['fas', 'right-from-bracket']" class="icon"
-                                :style="{ color: iconColor(currentUser.farbe) }" />
-                            <h3>Sign Out</h3>
-                        </button>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
+   
 
 
         <img :src="currentUser.profileImage" alt="Profilbild" class="profile-image">

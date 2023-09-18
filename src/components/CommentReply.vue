@@ -2,7 +2,7 @@
 <template>
   <div class="comment-reply" v-if="reply">
     <div class="profile-info">
-      <img :src="reply?.author?.profileImage" alt="Profilbild" class="profile-image" />
+      <img :src="reply?.author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile"/>
       <h5 class="profile-name">{{ reply?.author?.name }}</h5>
       <div class="month">
         <p>{{ $store.getters.formattedCreatedAt(reply.createdAt) }}</p>
@@ -153,7 +153,18 @@ export default {
       return ids;
     }
 
+    const goToProfile = () => {
+      console.log("klickt")
+      console.log(currentUser.value)
+      console.log()
+      if (currentUser.value == reply.value.author) {
+        router.push(`/profil/${reply.value.author.id}`);
+      }
+      else {
+        router.push(`/profile/${reply.value.author.id}`);
+      }
 
+    }
 
     const getelement = (path) => {
 
@@ -356,6 +367,8 @@ export default {
       commentSuche,
       nestedReplySuche,
       replydepth,
+      goToProfile,
+      
 
       // Mache den currentUser verfügbar
     };

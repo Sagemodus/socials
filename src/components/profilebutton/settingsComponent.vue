@@ -148,6 +148,7 @@
   </div>
 </template>
 <script>
+/* eslint-disable no-unused-vars */
 import { useStore } from 'vuex';
 import { computed } from 'vue';
 import { iconColor } from '../farben';

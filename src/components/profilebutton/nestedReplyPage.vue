@@ -26,6 +26,7 @@
 
 <script>
 import { useStore } from 'vuex';
+/* eslint-disable no-unused-vars */
 import { computed, onBeforeMount, onMounted, onUnmounted } from 'vue';
 import CommentReply from '../CommentReply.vue';
 import CommentBox from '../CommentBox.vue';

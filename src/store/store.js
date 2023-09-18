@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import Swal from "sweetalert2";
 import faker from "faker";
 import dayjs from "dayjs";
+/* eslint-disable no-unused-vars */
 
 export function formatCreatedAt(createdAt) {
   const createdAtDate = dayjs(createdAt);

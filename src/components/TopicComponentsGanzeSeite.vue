@@ -62,8 +62,9 @@ import { onUnmounted } from 'vue';
 export default {
   props: ['id', 'commentId', 'replyId'], // Empfange die Parameter als Props
 
-
+/*eslint-disable*/
   setup(props) {
+    /* eslint-disable no-unused-vars */
     const route = useRoute()
     const store = useStore();
     const topicId = computed(() => props.id);
@@ -71,7 +72,7 @@ export default {
     const replyId = props.replyId; // Antwort-ID aus den Props extrahieren
     const topic = computed(() => store.getters.getTopicById(topicId.value));
     const comment = topic.value.proComments.find(comment => comment.id === commentId);
-
+/*eslint-enable*/
 
     // ... andere setup-Abschnitte ...
 

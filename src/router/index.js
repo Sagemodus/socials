@@ -27,6 +27,7 @@ import ReplyPage from '../components/SingleReplyPage.vue';
 // Profil weiterleitungen
 import nestedReplyPage from '../components/profilebutton/nestedReplyPage.vue';
 import bookmarkSaves from '../components/profilebutton/bookmarkSaves.vue'
+import profileAndereUser from '../components/profilebutton/profileAndereUser.vue'
 
 const routes = [
   {
@@ -46,8 +47,12 @@ const routes = [
     component: Messages_view,
   },
   {
-    path: "/profile/:currentUserId",
+    path: "/profil/:currentUserId",
     component: Profile_view,
+  },
+  {
+    path: "/profile/:currentUserId",
+    component: profileAndereUser,
   },
   {
     path: "/login",

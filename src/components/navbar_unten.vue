@@ -12,7 +12,7 @@
     <router-link to="/messages" :class="{ 'selected': $route.path === '/messages' }" :style="{ color: $route.path === '/messages' ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
       <font-awesome-icon :icon="['fas', 'envelope']" class="icon"/>
     </router-link>
-  <router-link :to="`/profile/${currentUserId}`" :class="{ 'selected': $route.path === `/profile/${currentUserId}` }" :style="{ color: $route.path === `/profile/${currentUserId}` ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
+  <router-link :to="`/profil/${currentUserId}`" :class="{ 'selected': $route.path === `/profil/${currentUserId}` }" :style="{ color: $route.path === `/profil/${currentUserId}` ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
     <font-awesome-icon :icon="['fas', 'user']" class="icon"/>
   </router-link>
   </div>

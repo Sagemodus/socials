@@ -209,7 +209,6 @@ export default {
       if (commentElement) {
         // Scrollen zum Element mit sanftem Verhalten
         commentElement.scrollIntoView({ behavior: "smooth" });
-        console.log(commentElement + "2")
       }
     },
 

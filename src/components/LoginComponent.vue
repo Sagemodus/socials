@@ -45,12 +45,10 @@ export default {
     }
     signInWithEmailAndPassword(getAuth(), this.username, this.password) // Use this.username instead of this.email
     .then(() => {
-      console.log("Successfully signed in!");
       this.$router.push('/feed'); // Use this.$router.push instead of this.router.push
       this.$emit('loggedIn');
     })
     .catch((error) => {
-  console.log(error.code);
   switch (error.code) {
     case "auth/invalid-email":
       this.errorMsg = "The Email that was provided either doesn't exist or is wrong";

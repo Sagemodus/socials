@@ -1,124 +1,69 @@
 <template>
-    <div class="login-container">
-      <div class="form-container">
-        <h1>Login</h1>
-        <form @submit="login">
-          <div class="column">
-            <div class="input-group">
-              <label for="user">User:</label>
-              <input type="text" id="user" v-model="user" required>
-            </div>
-            <div class="input-group">
-              <label for="email">Email:</label>
-              <input type="email" id="email" v-model="email" required>
-            </div>
-            <div class="input-group">
-              <label for="birthdate">Birthdate:</label>
-              <input type="date" id="birthdate" v-model="birthdate" required>
-            </div>
-          </div>
-          <div class="column">
-            <div class="input-group">
-              <label for="password">Password:</label>
-              <input type="password" id="password" v-model="password" required>
-            </div>
-            <div class="input-group">
-              <label for="confirmPassword">Confirm Password:</label>
-              <input type="password" id="confirmPassword" v-model="confirmPassword" required>
-            </div>
-          </div>
-          <div class="additional-links">
-            <a href="/login">Already have an account?</a>
-            <p><a href="#">Forgot your password?</a></p>
-          </div>
-          <button type="submit" @click="register">Login</button>
-        </form>
-      </div>
+  <div class="login-container">
+    <div class="form-container">
+      <h1>Register</h1>
+      <form @submit.prevent="register">
+        <div class="input-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" v-model="username" required>
+        </div>
+        <div class="input-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" v-model="email" required>
+        </div>
+        <div class="input-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" v-model="password" required>
+        </div>
+        <div class="input-group">
+          <label for="confirmPassword">Confirm Password:</label>
+          <input type="password" id="confirmPassword" v-model="confirmPassword" required>
+        </div>
+        <button type="submit">Register</button>
+      </form>
     </div>
-  </template>
+  </div>
+</template>
   
-  <script>
-  import { collection, addDoc } from "firebase/firestore";
-  import db from '../firebase/init.js';
-  import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-  import { useRouter } from 'vue-router'
-  
-  const colRef = collection(db, 'users');
-  
-  export default {
-    data() {
-        return {
-    email: "",
-    password: "",
-    uName: "", // Add this line
-    TelNumber: "", // Add this line
-    dob: "", // Add this line
-    router: null
-  };
-    },
-  
-    mounted() {
-      this.router = useRouter();
-    },
-  
-    methods: {
-      calculateAge(dob) {
-        let currentDate = new Date();
-        let birthDate = new Date(dob);
-        let difference = currentDate - birthDate;
-        let age = Math.floor(difference / 31557600000);
-        return age;
-      },
-  
-      register() {
-        if (this.calculateAge(this.dob) < 18) {
-          alert("We do not accept people under the age of 18");
-          return;
-        }
-  
-        createUserWithEmailAndPassword(getAuth(), this.email, this.password)
-          .then(() => {
-            const userAuth = getAuth().currentUser;
-            console.log("Successfully registered!");
-            var user = {
-              uid: userAuth.uid,
-              userName: this.uName,
-              email: this.email,
-              TelephoneNumber: this.TelNumber,
-              DateOfBirth: this.dob,
-              coins: 0,
-              multiplier: 1,
-              activeBet: {}
-            };
-            updateProfile(userAuth, {
-              displayName: this.uName
-            })
-              .then(() => {
-                console.log("User profile updated!");
-              })
-              .catch((error) => {
-                console.log(error.code);
-                alert(error.message);
-              });
-  
-            addDoc(colRef, user)
-              .then((docRef) => {
-                console.log('Document was created with following ID:', docRef.id)
-                this.router.push('/feed');
-              })
-              .catch((error) => {
-                console.log(error.code);
-                alert(error.message);
-              });
-          })
-          .catch((error) => {
-            console.log(error.code);
-            alert(error.message);
-          });
+<script>
+import axios from 'axios'; // Import Axios for making API requests
+
+export default {
+  data() {
+    return {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: ""
+    };
+  },
+  methods: {
+    register() {
+      // Check if passwords match
+      if (this.password !== this.confirmPassword) {
+        alert("Passwords do not match.");
+        return;
       }
+
+      // Send registration data to your Express.js server
+      axios.post('/api/register', {
+        username: this.username,
+        email: this.email,
+        password: this.password
+      })
+      .then((response) => {
+        // Handle the response from the server (e.g., redirect to login page)
+        console.log(response.data);
+        // Redirect to login page or display a success message
+      })
+      .catch((error) => {
+        console.error(error);
+        // Handle registration error (e.g., display error message)
+      });
     }
   }
-  </script>
+};
+</script>
   
   <style>
   .login-container {

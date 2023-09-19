@@ -4,7 +4,9 @@
     <div class="profile-info">
       <img :src="reply?.author?.profileImage" alt="Profilbild" class="profile-image" />
       <h5 class="profile-name">{{ reply?.author?.name }}</h5>
-      <p class="antwort-text">{{ $store.getters.formattedCreatedAt(reply.createdAt) }}</p>
+      <div class="month">
+        <p>{{ $store.getters.formattedCreatedAt(reply.createdAt) }}</p>
+      </div>
     </div>
     <p class="antwort-text" @click='goToTopic(reply.topicId)'>{{ reply?.text }}</p>
     <div class="buttons-container">
@@ -44,17 +46,16 @@
 
     <!-- Anzeige der Antworten auf diese Antwort -->
     <div v-if="reply.expandReplies && reply && reply.replies && reply.replies.length > 0" class="replies-section">
-      <comment-reply v-for="nestedReply in reply.replies" :key="nestedReply.id" :reply="nestedReply" :path="reply.path" :depth="depth + 1"
-        :topic="topic" :commentId="reply.id" :commentobjekt="comment.value"
-    
+      <comment-reply v-for="nestedReply in reply.replies" :key="nestedReply.id" :reply="nestedReply" :path="reply.path"
+        :depth="depth + 1" :topic="topic" :commentId="reply.id" :commentobjekt="comment?.value"
         @reply-clicked="$emit('reply-clicked', $event)"></comment-reply>
     </div>
     <div v-if="showReplyForm" class="reply-form">
       <textarea v-model="newReply" placeholder="Write your answer..." class="reply-textarea"></textarea>
       <div class="reply-actions">
         <button @click="cancelReply" class="cancel-reply-button">Cancel</button>
-        <button @click="submitReply" :style="{ backgroundColor: iconColor(currentUser.farbe) }" class="submit-reply-button"
-          ref="replyFormElement">Reply</button>
+        <button @click="submitReply" :style="{ backgroundColor: iconColor(currentUser.farbe) }"
+          class="submit-reply-button" ref="replyFormElement">Reply</button>
       </div>
     </div>
     <!--Antwortbox-->
@@ -78,16 +79,19 @@ export default {
     },
     reply: { // Füge das 'reply'-Prop hinzu
       type: Object,
-    
+
     },
     topic: {
-      
+
 
     },
     commentId: {
 
     },
-path: {
+    path: {
+
+    },
+    commentobjekt: {
 
     },
 
@@ -96,15 +100,18 @@ path: {
 
   setup(props) {
     const displaycommentcount = computed(() => store.state.displayedCommentCount);
+    
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     // Zugriff auf den currentUser aus dem Vuex-Store
     const router = useRouter();
     const currentUser = computed(() => store.state.currentUser);
     const reply = computed(() => props.reply);
-    const comment = computed(() => reply.value.commentobjekt);
-    const commentIndex = computed(() => comment.value.commentIndex+1);
+  const comment = computed(() => reply.value.commentobjekt);
+  const commentIndex = computed(() => comment.value.commentIndex+1);
     const replyIndex = computed(() => comment.value.replies.length);
     const nestedIndex = computed(() => reply.value.replies.length);
+
+
 
     console.log("comment.value.path")
     if (reply.value.path && props.depth > 1) {
@@ -115,15 +122,18 @@ path: {
       reply.value.path = path.value;
     }
 
+
+
     console.log("comment.value.path")
     if (!reply.value.path && props.depth <= 1) {
-      console.log("Path wird gesetzt");
+
       const path = computed(() => {
-        return `${reply.value.commentobjekt.path}/${replyIndex.value}`;
+        return `${reply.value.commentobjekt.path}/${replyIndex.value - 1}`;
       });
       reply.value.path = path.value;
     }
    
+
     const saveCommentDataToStore = () => {
       console
       store.dispatch('commentundreply', { comment: comment, reply: reply.value });
@@ -138,17 +148,19 @@ path: {
       if (commentIndex.value == 0) {
         commentIndex.value = comment.value.commentIndex
       }
-        
+
 
       if (props.depth > 1) {
-         if (commentIndex.value > displaycommentcount.value)
-              if (props.depth > 2) {
-          comment.value.expandReplies = false;
-        }
-        
+        if (commentIndex.value > displaycommentcount.value)
+          if (props.depth > 2) {
+            comment.value.expandReplies = false;
+          }
+
         saveCommentDataToStore();
         setTimeout(() => {
           
+       
+
         console.log(comment.value.commentType);
         router.push({
           name: 'nested-reply-page', // Der Name der Route (stellen Sie sicher, dass Sie diesen Namen in Ihrer Route-Definition haben)
@@ -157,29 +169,30 @@ path: {
             commentId: comment.value.id || props.commentId, // Falls commentId nicht vorhanden ist, setzen Sie ihn auf null (optional)
             replyId: props.reply.id, // Falls replyId nicht vorhanden ist, setzen Sie ihn auf null (optional)
 
-          },
-        });
+            },
+          });
         }, 50);
       }
       else {
         console.log(commentIndex.value)
         console.log(displaycommentcount.value)
   
+       
         console.log(differenz);
-       comment.value.expandReplies = true;
+        comment.value.expandReplies = true;
 
         if (commentIndex.value > displaycommentcount.value) {
           store.commit('incrementDisplayedCommentCount', differenz + puffer);
         }
         console.log(commentIndex.value);
-              if (comment.value.commentType === 'pro') {
+        if (comment.value.commentType === 'pro') {
           store.state.selectedTab = 'pro';
           store.state.selectedTabColor = 'green';
         } else {
           store.state.selectedTab = 'contra';
           store.state.selectedTabColor = 'red';
         }
-                setTimeout(() => {
+        setTimeout(() => {
           router.push({
             name: 'topic-ganze-seite', // Der Name der Route (stellen Sie sicher, dass Sie diesen Namen in Ihrer Route-Definition haben)
             params: {
@@ -190,19 +203,34 @@ path: {
             },
           });
         }, 20);
-      }
-    };
 
+
+
+
+      }
+
+
+     
+
+
+
+    };
+/*eslint-disable*/
     return {
       iconColor,
       currentUser,
       goToTopic,
       comment,
+      topicsSuche,
+      replySuche,
+      commentSuche,
+      nestedReplySuche,
+      replydepth,
 
       // Mache den currentUser verfügbar
     };
   },
-
+/*eslint-enable*/
   data() {
     return {
       showReplyForm: false,
@@ -288,6 +316,7 @@ path: {
 
     // Funktion zum Einreichen einer Antwort auf diese Antwort
     submitReply() {
+      console.log(this.reply.commentobjekt)
       const newReply = {
         topicId: this.topic,
         id: uuidv4(),
@@ -298,15 +327,16 @@ path: {
         downvotes: 0,
         createdAt: new Date(),// Initialisiere die Votes für die Antwort
         commentIndex: this.commentIndex + 1,
+        commentobjekt : this.reply.commentobjekt,
       };
-      this.currentUser.nestedReplies = newReply.id;
       // Fügt die neue Antwort zu den Antworten dieser Antwort hinzu
       /* eslint-disable */
       if (!this.reply.replies) {
         this.reply.replies = [];
       }
-      this.reply.replies.push(newReply);
 
+      this.reply.replies.push(newReply);
+      this.reply.expandReplies = true;
       // Setzt das Antwort-Formular zurück
       this.newReply = "";
       this.showReplyForm = false;
@@ -329,7 +359,14 @@ path: {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+.month {
+  font-size: 11px;
+  padding-left: 10px;
+  border-left: none;
+}
+
+
 .comment-reply {
   border-left: 1px solid #ccc;
 
@@ -339,7 +376,7 @@ path: {
   .profile-info {
     display: flex;
     align-items: center;
-    padding-left: 0.3em;
+    padding-left: 7px;
 
   }
 
@@ -427,11 +464,7 @@ path: {
     /* Adjusted padding for nested replies */
   }
 
-  .expand-button {
-    border: none;
-    background: none;
-    cursor: pointer;
-  }
+
 
   .buttons-container {
     display: flex;
@@ -448,7 +481,7 @@ path: {
     display: flex;
     align-items: center;
     gap: 5px;
-    padding-left: 0px;
+    padding-left: 10px;
   }
 
   .action-button:hover {

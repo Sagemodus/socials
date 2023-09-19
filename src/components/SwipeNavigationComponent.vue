@@ -78,6 +78,7 @@ export default {
   overflow-x: auto;
   padding: 10px;
   background: #ffffff;
+      border-bottom: 1px solid #e1e4e8;
 }
 
 .tabs-inner {

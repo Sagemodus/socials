@@ -4,7 +4,9 @@
       <div class="header-comment">
         <img :src="comment?.author?.profileImage" alt="Profilbild" class="profile-image" />
         <h5 class="username">{{ comment?.author?.name }}</h5>
-        <p>{{ $store.getters.formattedCreatedAt(comment?.createdAt) }}</p>
+        <div class="month" >
+          <p>{{ $store.getters.formattedCreatedAt(comment?.createdAt) }}</p>
+        </div>
       </div>
     </div>
     <div class="comment-content" @click="handleRouterLinkClick(comment)">{{ comment.text }}</div>
@@ -63,9 +65,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { mapGetters } from 'vuex';
 import CommentReply from './CommentReply.vue';
 import { iconColor } from './farben';
-import { useStore } from 'vuex';
-import { computed, toRef, ref } from 'vue';
-import { useRouter } from 'vue-router'; // Import useRouter from Vue Router
+import { useStore } from 'vuex'; // Importiere das useStore-Hook
+import { computed, onBeforeMount, onBeforeUnmount, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { ref } from 'vue';
+
 
 export default {
   components: {
@@ -90,8 +94,9 @@ export default {
   setup(props) {
     const commentId = ref(props.comment.id);
     const comment = computed(() => props.comment);
-    const store = useStore();
-    const router = useRouter(); // Use useRouter from Vue Router
+    const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
+    const router = useRouter();
+    // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
     const selectedTab = computed(() => store.state.selectedTab);
     const displaycommentcount = computed(() => store.state.displayedCommentCount + 1);
@@ -224,10 +229,10 @@ export default {
 
     // Funktion zum Einreichen einer Antwort
     submitReply(comment) {
-      console.log(this.getUserProfile);
+      console.log(this.comment);
 
       // Initialisiere commentIndex
-
+      
 
       const newReply2 = {
         topicId: comment.topicId,
@@ -237,7 +242,7 @@ export default {
         upvotes: 0,
         downvotes: 0,
         createdAt: new Date(),
-        commentobjekt: comment,
+        commentobjekt: this.comment,
         commentIndex: this.commentIndex, // Setze commentIndex basierend auf der Tab-Auswahl
       };
 
@@ -245,7 +250,7 @@ export default {
         comment.replies = [];
       }
 
-      newReply2.author.createdReplies.push(newReply2.id);
+       comment.expandReplies = true;
       comment.replies.push(newReply2);
 
       this.newReply = "";
@@ -289,7 +294,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss" >
 .reply-form {
   margin-top: 10px;
 
@@ -325,8 +330,11 @@ export default {
   }
 }
 
+
+
+
+
 .comment-box {
-  padding-top: 10px;
   padding-bottom: 10px;
   border-bottom: 1px solid #e1e4e8;
   font-family: Verdana, Geneva, sans-serif;
@@ -348,21 +356,25 @@ export default {
 
     .comment-content {
       flex-grow: 1; // Nimmt den gesamten verfügbaren Platz ein
+
       .comment-text {
         font-size: 12px;
         color: #1c1c1c;
       }
     }
+
+
+
   }
 
   .profile-image {
     border-radius: 50%;
     max-width: 90%;
+
   }
 
   .actions {
     display: flex;
-    justify-content: space-evenly;
     align-items: center;
     gap: 10px;
   }
@@ -413,6 +425,7 @@ export default {
           font-weight: bold;
           color: #333;
         }
+
         .comment-content {
           .comment-text {
             font-size: 12px;
@@ -433,6 +446,7 @@ export default {
     /* Die Höhe des Buttons festlegen */
     font-size: 1.5rem;
   }
+
 
   .reply-form {
     margin-top: 10px;
@@ -465,17 +479,13 @@ export default {
     flex-wrap: wrap;
   }
 
-  .nested-reply {
-    margin-left: 15px;
-    /* Größere Einrückung für verschachtelte Kommentare */
-    border-left: 2px solid #ddd;
-    /* Unterschiedliche Farbe für den linken Strich */
-    padding-left: 10px;
-    /* Zusätzliche Einrückung für den Inhalt */
-  }
 
 }
 .comment-box h5 {
-  font-size: 14px;
+  font-size: 13px;
+}
+
+.month{
+  font-size: 11px;
 }
 </style>

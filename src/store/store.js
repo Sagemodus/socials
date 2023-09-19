@@ -271,7 +271,6 @@ export default createStore({
         topicsaves: [],
         nestedReplies: [],
         createdReplies: [],
-
         joinedAt: "28.08.2023",
         email: "dejan.pantos@maschene.com",
         bio: "King of the street",

@@ -69,7 +69,7 @@ import { useStore } from 'vuex'; // Importiere das useStore-Hook
 import { computed, onBeforeMount, onBeforeUnmount, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+
 
 
 export default {
@@ -94,8 +94,6 @@ export default {
   
   setup(props) {
     const commentId = ref(props.comment.id);
-
-    const router = useRouter();
     const comment = computed(() => props.comment);
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     const router = useRouter();

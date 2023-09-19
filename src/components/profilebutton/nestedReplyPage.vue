@@ -51,9 +51,7 @@ export default {
     });
 
 
-    console.log(comment.commentIndex);
-    console.log(reply);
-    console.log(topic.value);
+
 
     let topicsSuche = [];
     let commentSuche = [];
@@ -72,9 +70,7 @@ export default {
       const ids = parseId(path); // Verwende die parseId Funktion, um die IDs zu extrahieren
       const anzahleindexes = Object.keys(ids).length -2;
 
-      console.log(anzahleindexes);
-      console.log(path);
-      console.log(ids);
+
 
       let pathZurSuche = "";
 
@@ -105,7 +101,6 @@ export default {
         }
 
       }
-      console.log(pathZurSuche);  
 
       // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
       let nestedreply = eval(pathZurSuche);

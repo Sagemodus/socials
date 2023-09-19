@@ -2,7 +2,7 @@
 <template>
   <div class="comment-reply" v-if="reply">
     <div class="profile-info">
-      <img :src="reply?.author?.profileImage" alt="Profilbild" class="profile-image" />
+      <img :src="reply?.author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile"/>
       <h5 class="profile-name">{{ reply?.author?.name }}</h5>
       <div class="month">
         <p>{{ $store.getters.formattedCreatedAt(reply.createdAt) }}</p>
@@ -111,15 +111,126 @@ export default {
     const replyIndex = computed(() => comment.value.replies.length);
     const nestedIndex = computed(() => reply.value.replies.length);
 
+    let topicsSuche = [];
+    let commentSuche = [];
+    let replySuche = [];
+    let nestedReplySuche = [];
+    const commentelement = 2;
+    const replyelement = 3;
+    const topicselement = 1;
+    const replydepth = props.depth;
+    const topics = store.state.topics;
 
 
-    console.log("comment.value.path")
-    if (reply.value.path && props.depth > 1) {
-      console.log("Path wird gesetzt");
-      const path = computed(() => {
-        return `${reply.value.path}/${nestedIndex.value}`;
-      });
-      reply.value.path = path.value;
+    const parseId = (element) => {
+      const parts = element.split('/').filter(part => part !== ''); // Entferne leere Teile
+      const ids = {
+        topicIndex: parts[0],
+        type: parts[1].split('_')[0],
+        commentIndex: parts[1].split('_')[1],
+      };
+
+      // Füge alle weiteren Teile als replyIndex hinzu
+      for (let i = 2; i < parts.length; i++) {
+        ids['replyIndex' + (i - 1)] = parts[i];
+      }
+
+      return ids;
+    }
+
+    const goToProfile = () => {
+      console.log("klickt")
+      console.log(currentUser.value)
+      console.log()
+      if (currentUser.value == reply.value.author) {
+        router.push(`/profil/${reply.value.author.id}`);
+      }
+      else {
+        router.push(`/profile/${reply.value.author.id}`);
+      }
+
+    }
+
+    const getelement = (path) => {
+
+
+
+      // Schleife durch die Pfade
+
+      const ids = parseId(path); // Verwende die parseId Funktion, um die IDs zu extrahieren
+      const anzahleindexes = Object.keys(ids).length - 1;
+
+
+
+      let pathZurSuche = "";
+
+      for (let i = 0; i < anzahleindexes; i++) {
+        // Schleife durch die IDs
+        if (i === 0) {
+          pathZurSuche = `topics[${ids.topicIndex}]`;
+
+        }
+        else if (i === 1) {
+          if (ids.type === 'pro') {
+            pathZurSuche += `.proComments[${ids.commentIndex}]`;
+          }
+          else if (ids.type === 'contra') {
+            pathZurSuche += `.contraComments[${ids.commentIndex}]`;
+
+          }
+        }
+        else if (i === 2) {
+          pathZurSuche += `.replies[${ids.replyIndex1}]`;
+
+        }
+
+        else if (i > 2) {
+          let läufer = 2;
+          pathZurSuche += `.replies[${ids['replyIndex' + läufer]}]`;
+          läufer++
+        }
+
+      }
+
+      // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
+      let nestedreply = eval(pathZurSuche);
+      if (anzahleindexes === 1) {
+        topicsSuche.push(nestedreply);
+      } else if (anzahleindexes === 2) {
+        commentSuche.push(nestedreply);
+      } else if (anzahleindexes === 3) {
+        replySuche.push(nestedreply);
+      } else if (anzahleindexes > 3) {
+        nestedReplySuche.push(nestedreply);
+      }
+
+
+
+
+
+    }
+
+
+
+    if (!reply.depth) {
+      reply.value.depth = props.depth;
+    }
+
+    if (!reply.value.replies) {
+      reply.value.replies = [];
+    }
+
+    if (!reply.value.path && props.depth >= 2) {
+
+      getelement(props.path);
+
+      // Verwende "nestedReplySuche", wenn es Werte gibt, andernfalls "replySuche"
+      const replySearch = nestedReplySuche.length > 0 ? nestedReplySuche : replySuche;
+
+      // Aktualisiere den Pfad basierend auf der Länge der Antworten
+      reply.value.path = `${props.path}/${replySearch[0]?.replies.length - 1}`;
+      reply.value.author.nestedReplies.push(reply.value.path);
+
     }
 
 
@@ -141,7 +252,6 @@ export default {
     saveCommentDataToStore();
 
     const goToTopic = (topicId) => {
-      console.log(comment.value);
       const differenz = commentIndex.value - displaycommentcount.value;
       const puffer = 3;
 
@@ -161,19 +271,23 @@ export default {
           
        
 
-        console.log(comment.value.commentType);
-        router.push({
-          name: 'nested-reply-page', // Der Name der Route (stellen Sie sicher, dass Sie diesen Namen in Ihrer Route-Definition haben)
-          params: {
-            id: topicId,
-            commentId: comment.value.id || props.commentId, // Falls commentId nicht vorhanden ist, setzen Sie ihn auf null (optional)
-            replyId: props.reply.id, // Falls replyId nicht vorhanden ist, setzen Sie ihn auf null (optional)
+
+
+
+          router.push({
+            name: 'nested-reply-page', // Der Name der Route (stellen Sie sicher, dass Sie diesen Namen in Ihrer Route-Definition haben)
+            params: {
+              id: topicId,
+              commentId: comment.value.id || props.commentId, // Falls commentId nicht vorhanden ist, setzen Sie ihn auf null (optional)
+              replyId: props.reply.id, // Falls replyId nicht vorhanden ist, setzen Sie ihn auf null (optional)
+
 
             },
           });
         }, 50);
       }
       else {
+
         console.log(commentIndex.value)
         console.log(displaycommentcount.value)
   
@@ -184,7 +298,7 @@ export default {
         if (commentIndex.value > displaycommentcount.value) {
           store.commit('incrementDisplayedCommentCount', differenz + puffer);
         }
-        console.log(commentIndex.value);
+
         if (comment.value.commentType === 'pro') {
           store.state.selectedTab = 'pro';
           store.state.selectedTabColor = 'green';
@@ -226,6 +340,8 @@ export default {
       commentSuche,
       nestedReplySuche,
       replydepth,
+      goToProfile,
+      
 
       // Mache den currentUser verfügbar
     };
@@ -282,8 +398,6 @@ export default {
     },
 
     upvoteReplyAction(replyId, currentUserId, topicId, commentId) {
-      console.log(commentId)
-      console.log("ausgelösd")
       this.$store.dispatch('upvoteReply', { replyId, currentUserId, topicId, commentId });
       this.$nextTick(() => {
         this.animateButton(this.$refs.upvoteButton);
@@ -291,7 +405,6 @@ export default {
     },
 
     downvoteReplyAction(replyId, currentUserId, topicId, commentId) {
-      console.log("ausgelösd")
       this.$store.dispatch('downvoteReply', { replyId, currentUserId, topicId, commentId });
       this.$nextTick(() => {
         this.animateButton(this.$refs.downvoteButton);
@@ -316,7 +429,6 @@ export default {
 
     // Funktion zum Einreichen einer Antwort auf diese Antwort
     submitReply() {
-      console.log(this.reply.commentobjekt)
       const newReply = {
         topicId: this.topic,
         id: uuidv4(),

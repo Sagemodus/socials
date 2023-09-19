@@ -128,13 +128,13 @@
       <template #votes>
         <div>
           <div v-for="topic in TopicUpVotes" :key="topic.id" :id="topic.id">
-            <TopicBox :key="topic.id" :id="topic.id" />
+            <TopicBox :key="topic.id" :id="topic.id" :disableelements ="true"  />
           </div>
 
         </div>
         <div>
           <div v-for="topic in TopicDownVotes" :key="topic.id" :id="topic.id">
-            <TopicBox :key="topic.id" :id="topic.id" />
+            <TopicBox :key="topic.id" :id="topic.id" :disableelements ="true"/>
           </div>
 
         </div>
@@ -194,13 +194,11 @@ export default {
       router.push(`/bookmarksaves/${userId}`)
     }
     const nestedRepliesPaths = computed(() => {
-      console.log(currentUser.value);
       return currentUser.value.nestedReplies.map(reply => reply);
     });
 
 
     const parseId = (element) => {
-            console.log(element)
       const parts = element.split('/').filter(part => part !== ''); // Entferne leere Teile
       const ids = {
         topicIndex: parts[0],
@@ -264,7 +262,6 @@ export default {
           }
 
         }
-           console.log(pathZurSuche);
         // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
         let nestedreply = eval(pathZurSuche);
         if (anzahleindexes === 1) {

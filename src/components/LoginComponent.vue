@@ -40,16 +40,42 @@ export default {
     };
   },
   methods: {
-    fetchMessage() {
-      axios.get('http://localhost:3000/api/message') // Replace with your backend URL
-        .then((response) => {
-          this.message = response.data.message;
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-    },
-  },
+
+    login() {
+  try {
+    // login user
+    if (this.username === "" || this.password === "") {
+      alert("Please fill out the fields");
+      return;
+    }
+    signInWithEmailAndPassword(getAuth(), this.username, this.password) // Use this.username instead of this.email
+    .then(() => {
+      this.$router.push('/feed'); // Use this.$router.push instead of this.router.push
+      this.$emit('loggedIn');
+    })
+    .catch((error) => {
+  switch (error.code) {
+    case "auth/invalid-email":
+      this.errorMsg = "The Email that was provided either doesn't exist or is wrong";
+      break;
+    case "auth/user-not-found":
+      this.errorMsg = "No account with that email was found";
+      break;
+    case "auth/wrong-password":
+      this.errorMsg = "The password you provided is not correct";
+      break;
+    default:
+      this.errorMsg = "Email or password was incorrect";
+      break;
+  }
+})
+  } catch (error) {
+    console.error(error);
+  }
+},
+
+  }
+
 };
 </script>
 

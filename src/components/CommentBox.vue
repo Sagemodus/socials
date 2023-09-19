@@ -2,7 +2,7 @@
   <div class="comment-box" :id="commentId">
     <div class="user-info">
       <div class="header-comment">
-        <img :src="comment?.author?.profileImage" alt="Profilbild" class="profile-image" />
+        <img :src="comment?.author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile"/>
         <h5 class="username">{{ comment?.author?.name }}</h5>
         <div class="month" >
           <p>{{ $store.getters.formattedCreatedAt(comment?.createdAt) }}</p>
@@ -69,6 +69,7 @@ import { useStore } from 'vuex'; // Importiere das useStore-Hook
 import { computed, onBeforeMount, onBeforeUnmount, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 
 export default {
@@ -93,6 +94,8 @@ export default {
   
   setup(props) {
     const commentId = ref(props.comment.id);
+
+    const router = useRouter();
     const comment = computed(() => props.comment);
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     const router = useRouter();
@@ -105,7 +108,23 @@ export default {
     const findCommentIndex = (commentId, commentsArray) => {
       return commentsArray.findIndex(comment => comment.id === commentId);
     };
-    
+
+
+       const goToProfile = () => {
+      console.log("klickt")
+      console.log(currentUser.value)
+      console.log()
+      if (currentUser.value == comment.value.author) {
+        router.push(`/profil/${comment.value.author.id}`);
+      }
+      else {
+        router.push(`/profile/${comment.value.author.id}`);
+      }
+
+    }
+
+
+    // Je nach props.comment. das entsprechende Array durchsuchen
     const commentArrayToSearch = computed(() => {
       if (props.comment.commentType === 'pro') {
         return topicobjekt.proComments;
@@ -119,6 +138,16 @@ export default {
     const commentIndex = computed(() => {
       return findCommentIndex(props.comment.id, commentArrayToSearch.value);
     });
+
+
+    if (!comment.value.path) {
+
+      const path = computed(() => {
+      return `${topicobjekt.path}/${props.comment.commentType}_${commentIndex.value}`;
+      });
+      comment.value.path = path.value;
+    }
+
     
     if (!comment.value.path) {
   console.log("Path wird gesetzt");
@@ -145,6 +174,9 @@ export default {
       topicobjekt,
       commentIndex,
       commentId,
+
+      goToProfile,
+
     };
   },
   
@@ -176,8 +208,10 @@ export default {
     },
   },
   methods: {
+
+
+
     handleRouterLinkClick(comment) {
-      console.log("Geklickt")
 
       const differenz = this.commentIndex - this.displaycommentcount;
       const puffer = 3;
@@ -186,7 +220,7 @@ export default {
         this.$store.commit('incrementDisplayedCommentCount', differenz + puffer);
       }
 
-      console.log(comment.commentType);
+
 
       if (comment.commentType === 'pro') {
         this.$store.state.selectedTab = 'pro';
@@ -195,7 +229,7 @@ export default {
         this.$store.state.selectedTab = 'contra';
         this.$store.state.selectedTabColor = 'red';
       }
-      console.log(this.$store.state.selectedTab + " selected");
+
       setTimeout(() => {
         this.$router.push({
           name: 'topic-ganze-seite',
@@ -229,7 +263,6 @@ export default {
 
     // Funktion zum Einreichen einer Antwort
     submitReply(comment) {
-      console.log(this.comment);
 
       // Initialisiere commentIndex
       

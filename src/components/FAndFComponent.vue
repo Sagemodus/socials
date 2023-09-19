@@ -25,7 +25,7 @@
   <!-- Popup-Fenster -->
   <div v-if="dialogVisible" class="popup-overlay">
     <div class="popup-content">
-      <h2>Filtering</h2>
+      <h5>Filtering</h5>
 
       <!-- Suchleiste (Input) mit ausgewählten Kategorien -->
       <input type="text" v-model="searchText" placeholder="Search categories" />

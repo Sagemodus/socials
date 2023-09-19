@@ -26,11 +26,8 @@ body {
   padding: 0;
 }
 
-#app p {
+#app p, span, h5,h4,h3,h2,h1  {
   font-family: Arial, Helvetica, sans-serif;
-}
-#app h5{
-font-family: Arial, Helvetica, sans-serif;
 }
 
 .navbar-fixed {
@@ -59,7 +56,7 @@ font-family: Arial, Helvetica, sans-serif;
 }
 
 #app .topic-text {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 16px;
 
 
@@ -67,7 +64,7 @@ font-family: Arial, Helvetica, sans-serif;
 }
 
 #app .comment-text {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 12px;
   margin-bottom: 0px;
   padding-left: 60px;
@@ -77,7 +74,7 @@ font-family: Arial, Helvetica, sans-serif;
 }
 
 #app .antwort-text {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 12px;
   margin-top: 5px;
   margin-top: 0px;

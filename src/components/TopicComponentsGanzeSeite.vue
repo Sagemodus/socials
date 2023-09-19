@@ -6,7 +6,6 @@
       <button @click="updateTabAndColor('contra')" :class="{ 'active-tab': selectedTab === 'contra' }">Contra</button>
     </div>
   </div>
-  <button @click="scrollToElement">Fokus auf Kommentar setzen</button>
   <div class="topic-container">
     <!-- Laden und Anzeigen von Themen -->
     <div v-if="topic" class="topic-ganzeseite">

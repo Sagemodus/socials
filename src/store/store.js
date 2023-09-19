@@ -32,7 +32,6 @@ function updatePercentages(topic) {
   topic.downvotePercentage = ((topic.downvotes / totalVotes) * 100).toFixed(2);
 }
 
-
 function searchCommentInArray(comments, commentId) {
   for (const currentComment of comments) {
     if (currentComment.id === commentId) {
@@ -170,15 +169,7 @@ function generateComments(count, users, topicId, commentType, path = "") {
   return sortedComments;
 }
 
-function generateTopics(count, users) {
-  const categories = [
-    { main: "Sport", sub: "Fussball" },
-    { main: "Technologie", sub: "Programmierung" },
-    { main: "Unterhaltung", sub: "Film" },
-    { main: "Technologie", sub: "Gaming" },
-    // Weitere Kategorien hinzufügen...
-  ];
-
+function generateTopics(count, users, categories) {
   const topics = [];
   for (let i = 0; i < count; i++) {
     const id = faker.datatype.uuid();
@@ -247,6 +238,13 @@ function searchReplyInCommentAndReplies(comment, targetReplyId) {
 
 export default createStore({
   state() {
+    const categories = [
+      { main: "Sport", sub: "Fussball" },
+      { main: "Technologie", sub: "Programmierung" },
+      { main: "Unterhaltung", sub: "Film" },
+      { main: "Technologie", sub: "Gaming" },
+      // Weitere Kategorien hinzufügen...
+    ];
     const loggedin = "true";
     const users = [
       {
@@ -267,9 +265,13 @@ export default createStore({
         followers: [18, 25, 27], // Liste der Follower des Benutzerspro
         notifications: [], // Benachrichtigungen für den Benutzer
         messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
+        topicsaves: ["/0"],
         nestedReplies: [],
         createdReplies: [],
+        filterSettings: {
+          // Andere Einstellungen
+          categories: [], // Ein leeres Array für ausgewählte Kategorien
+        },
 
         joinedAt: "28.08.2023",
         email: "dejan.pantos@maschene.com",
@@ -294,9 +296,13 @@ export default createStore({
         followers: [18, 25, 27], // Liste der Follower des Benutzerspro
         notifications: [], // Benachrichtigungen für den Benutzer
         messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
+        topicsaves: ["/0"],
         nestedReplies: [],
 
+        filterSettings: {
+          // Andere Einstellungen
+          categories: [], // Ein leeres Array für ausgewählte Kategorien
+        },
         joinedAt: "28.08.2023",
         email: "dejan.pantos@maschene.com",
         bio: "King of the street",
@@ -320,15 +326,18 @@ export default createStore({
         followers: [18, 25, 27], // Liste der Follower des Benutzerspro
         notifications: [], // Benachrichtigungen für den Benutzer
         messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
+        topicsaves: ["/0"],
         nestedReplies: [],
-
+        filterSettings: {
+          // Andere Einstellungen
+          categories: [], // Ein leeres Array für ausgewählte Kategorien
+        },
         joinedAt: "28.08.2023",
         email: "dejan.pantos@maschene.com",
         bio: "King of the street",
       },
       {
-        id: 3,
+        id: 4,
         name: "Vegeta",
         profileImage: generateFakeProfileImage("Vegeta"),
         farbe: "4",
@@ -346,9 +355,12 @@ export default createStore({
         followers: [18, 25, 27], // Liste der Follower des Benutzerspro
         notifications: [], // Benachrichtigungen für den Benutzer
         messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
+        topicsaves: ["/0"],
         nestedReplies: [],
-
+        filterSettings: {
+          // Andere Einstellungen
+          categories: [], // Ein leeres Array für ausgewählte Kategorien
+        },
         joinedAt: "28.08.2023",
         email: "dejan.pantos@maschene.com",
         bio: "King of the street",
@@ -356,7 +368,7 @@ export default createStore({
     ];
 
     return {
-      topics: generateTopics(2, users),
+      topics: generateTopics(5, users, categories),
       users,
       currentUser: users[0],
       loggedin,
@@ -367,10 +379,15 @@ export default createStore({
       comment: null, // Comment object
       reply: null, // Reply object
       commentReplyAnzeige: 5,
+      categories,
     };
   },
 
   mutations: {
+    updateCurrentUser(state, payload) {
+      state.currentUser = { ...state.currentUser, ...payload };
+    },
+
     ADD_NOTIFICATION(state, notification) {
       state.notifications.push(notification);
     },
@@ -379,9 +396,7 @@ export default createStore({
       state.displayedCommentCount = 3; // Set it to the desired initial value
     },
     incrementDisplayedCommentCount(state, incrementAmount) {
-      console.log(state.displayedCommentCount + "bevor");
       state.displayedCommentCount += incrementAmount;
-      console.log(state.displayedCommentCount + "nach");
     },
 
     // Login mutation
@@ -665,7 +680,7 @@ export default createStore({
         } else {
           // Thema ist bereits gespeichert, also entfernen
           state.currentUser.topicsaves.splice(index, 1);
-          console.log("Thema erfolgreich entfernt.");
+          ("Thema erfolgreich entfernt.");
         }
       }
     },
@@ -673,14 +688,16 @@ export default createStore({
     SET_SELECTED_TAB(state, tab) {
       state.selectedTab = tab;
     },
-    comment_und_reply(state, { comment, reply }) {
+    comment_und_reply2(state, { comment, reply }) {
+      console.log("kolleg2");
       state.comment = comment;
       state.reply = reply;
     },
   },
+
   actions: {
     commentundreply({ commit }, { comment, reply }) {
-      commit("comment_und_reply", { comment, reply });
+      commit("comment_und_reply2", { comment, reply });
     },
 
     addNotification({ commit }, notification) {

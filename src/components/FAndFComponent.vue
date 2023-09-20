@@ -1,34 +1,41 @@
 <template>
+
   <!-- Sortieren nach Dropdown -->
   <div class="sortieren-filtern">
 
     <div class="sortieren">
-      <label for="sort-select">Sort by:</label>
-      <select id="sort-select" v-model="sortBy">
+      <select id="sort-select" v-model="sortBy"  >
         <option value="recent">Recent</option>
         <option value="popular">Popular</option>
       </select>
     </div>
 
-    <div class="filter-zahnrad">
-      <button @click="openSearchPopup">
-        <font-awesome-icon icon="cog" />
+    <div class="zahnrad">
+      <button @click="openSearchPopup" class="filter-zahnrad">
+        <font-awesome-icon icon="cog"  :style="{ color: iconColor(currentUser.farbe) }"/>
       </button>
 
     </div>
   </div>
 
 
-  <!-- Button zum Öffnen des Popups -->
+   
+
+
+
+
+
+  
+  
 
 
   <!-- Popup-Fenster -->
   <div v-if="dialogVisible" class="popup-overlay">
     <div class="popup-content">
-      <h5>Filtering</h5>
 
-      <!-- Suchleiste (Input) mit ausgewählten Kategorien -->
-      <input type="text" v-model="searchText" placeholder="Search categories" />
+       <div class="oberer-teil">
+       <h5 class="filter-title">Filtering</h5>
+             <input type="text" v-model="searchText" placeholder="Search categories"  />
       <div class="selected-categories">
         <div v-for="selectedCategory in selectedCategories" :key="`${selectedCategory.main}-${selectedCategory.sub}`"
           class="selected-category">
@@ -38,22 +45,35 @@
         </div>
       </div>
 
-      <!-- Liste der gefilterten Kategorien -->
-      <ul v-if="showCategories" class="filter-categories">
+<ul v-if="showCategories" class="filter-categories">
         <li v-for="(category, index) in filteredCategories" :key="index" @click="toggleCategorySelection(category)"
           class="filter-category">
           <span>{{ category.main }} - {{ category.sub }}</span>
           <div v-if="isCategorySelected(category)" class="category-selected">✔</div>
         </li>
       </ul>
+
+       </div>
+
+    <div class="unterer-teil">
+      
+      <div class="buttons-close-save">
       <button @click="closeSearchPopup" class="close-button">Close</button>
       <button @click="saveSearchPopup" class="save-button">Save</button>
+      </div>
+
+     </div>
+
+      <!-- Liste der gefilterten Kategorien -->
+
+
     </div>
   </div>
 
   <!-- Loop durch die Daten und erstelle TopicBox-Komponenten für jedes passende Thema -->
   <TopicBox v-for="topic in sortedTopics" :key="topic.id" :id="topic.id" />
 </template>
+
 
 <script>
 import { computed, ref, watch } from 'vue';
@@ -190,6 +210,9 @@ export default {
       showCategories,
       selectedCategory,
       filteredCategories,
+      currentUser,
+      iconColor,
+      
     };
   },
 };
@@ -201,8 +224,11 @@ export default {
 
 <style scoped>
 
-.filter-category{
-  border: ;
+
+.buttons-close-save {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
 }
 .sortieren-filtern {
   display: flex;
@@ -212,11 +238,15 @@ export default {
 
 /* Stile für das Popup und das Overlay */
 .selected-categories {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 5px;
-  padding-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 5px;
+    padding-bottom: 20px;
+    flex-direction: row;
+    justify-content: center;
+    max-width: 100%;
+    margin-top: 15px;
 }
 
 .selected-category {
@@ -227,10 +257,16 @@ export default {
   display: flex;
   align-items: center;
   margin-right: 5px;
+      max-width: 48%;
 }
+li span{
+  
+    max-width: 80%;
 
+}
 .selected-category span {
   margin-right: 5px;
+  font-size: 10px;
   /* Abstand zwischen Text und X */
 }
 
@@ -271,31 +307,33 @@ export default {
   z-index: 999;
 }
 
-.popup-content {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
-  max-width: 400px;
-  /* Maximale Breite des Popups */
-  overflow-y: auto;
-  /* Hinzugefügt, um eine Scroll-Leiste hinzuzufügen */
-  max-height: 70vh;
-  /* Maximal erlaubte Höhe des Popups mit Scroll-Leiste */
+.popup-content[data-v-d2c6f850][data-v-d2c6f850] {
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+    min-width: 80%;
+    min-height: 70%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    max-width: 90%;
+    max-height: 90%;
 }
-
 /* Stile für die Filterkategorien */
 .filter-categories {
   list-style: none;
   padding: 0;
+  max-height: 250px; /* Maximale Höhe anpassen */
+  overflow-y: auto; /* Scroll-Leiste anzeigen, wenn der Inhalt die maximale Höhe überschreitet */
 }
 
 .filter-category {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    cursor: pointer;
 }
 
 .filter-category span {
@@ -320,8 +358,51 @@ export default {
   transition: background-color 0.3s ease;
 }
 
+.close-button {
+  margin-right: 10px; /* Fügt einen Abstand zwischen den Schaltflächen hinzu */
+}
+
+
 .close-button:hover,
 .save-button:hover {
   background-color: var(--iconColor);
   /* Farbwechsel bei Hover */
-}</style>
+}
+button.filter-zahnrad {
+    background-color: transparent;
+    border: none;
+    font-size: 20px;
+}
+.sortieren[data-v-d2c6f850] {
+    min-width: 90%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+select#sort-select {
+    min-width: 50%;
+    border: black;
+      outline: none;
+      background-color: transparent;
+}
+input[type="text"] {
+    outline: none;
+    min-width: 85%;
+}
+
+h5.filter-title {
+    margin-bottom: 10px;
+    margin-top: 10px;
+    font-size: 18px;
+}
+
+.unterer-teil {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ändert die Hintergrundfarbe der ausgewählten Optionen im Dropdown-Menü */
+
+</style>

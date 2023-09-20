@@ -74,10 +74,7 @@ export default {
   flex: 1;
   padding: 10px;
 }
-.comment-textarea {
-  resize: vertical;
 
-}
 .comment-input-container {
   display: flex;
   justify-content: space-between;
@@ -86,7 +83,7 @@ export default {
   border-radius: 30px;
   padding: 8px;
   position: fixed;
-  bottom: 55px;
+  bottom: 44px;
  left: 0;
  right:0;
  background-color: white;
@@ -98,8 +95,8 @@ export default {
   max-height: 200px;
 width: 100%;
   border: none;
-
-  resize: none;
+  resize: vertical;
+   outline: none;
 }
 
 .comment-button {

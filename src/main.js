@@ -10,7 +10,6 @@ import router from './router'
 import './firebase/init'; // Import and initialize Firebase before creating the app
 import store from './store/store'
 import Swal from 'sweetalert2';
-import firebase from 'firebase/app'; // Importiere Firebase
 import 'firebase/analytics'; // Importiere Firebase Analytics
 import './firebase/init'; // Import and initialize Firebase before creating the app
 

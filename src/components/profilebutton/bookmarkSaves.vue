@@ -27,8 +27,9 @@ export default {
         const store = useStore();
         const route = useRoute();
         const userId = route.params.userId;
+       /*eslint-disable*/ 
         const topics = store.state.topics
-        
+        /*eslint-enable*/
         
         const bookmarkPathArray = computed(() => {
 

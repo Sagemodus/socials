@@ -149,6 +149,7 @@
   </div>
 </template>
 <script>
+/* eslint-disable no-unused-vars */
 import { useStore } from 'vuex';
 import { computed } from 'vue';
 import { iconColor } from '../farben';
@@ -541,8 +542,7 @@ img {
   position: absolute;
   top: 100%;
   /* Direkt unter dem Button positionieren */
-
-
+  z-index: 999; /* Hier können Sie den gewünschten z-index-Wert einstellen */
 }
 
 .dropdown-menu {

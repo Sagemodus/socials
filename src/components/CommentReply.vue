@@ -9,19 +9,11 @@
       </div>
     </div>
     <p class="antwort-text" @click='goToTopic(reply.topicId)'>{{ reply?.text }}</p>
-
-
-
     <div class="buttons-container">
-
-
-
-
       <!-- Antwort-Button anzeigen, um auf diese Antwort zu antworten -->
       <button v-if="!showReplyForm && depth < 5" @click="openReplyForm" class="action-button">
         <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" :icon="['fas', 'commenting']" class="icon" />
       </button>
-
       <!-- Upvote Button -->
       <button @click="upvoteReplyAction(reply.id, currentUser.id, topic, commentId)" class="action-button"
         ref="upvoteButton">
@@ -29,9 +21,6 @@
           :style="{ color: iconColor(currentUser.farbe) }" />
         <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.upvotes }}</p>
       </button>
-
-
-
       <!-- Downvote Button -->
       <button @click="downvoteReplyAction(reply.id, currentUser.id, topic, commentId)" class="action-button"
         ref="downvoteButton">
@@ -39,8 +28,7 @@
           :style="{ color: iconColor(currentUser.farbe) }" />
         <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.downvotes }}</p>
       </button>
-
-
+<!-- eslint-disable-->
       <button v-if="reply && !showReplyForm && reply.replies && reply.replies.length > 0"
         @click="reply.expandReplies = !reply.expandReplies" :class="['action-button', depth >= 5 ? 'disabled' : '']">
         <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-if="!reply.expandReplies"
@@ -48,16 +36,13 @@
         <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-else :icon="['fas', 'angle-up']" />
         <p :style="{ color: iconColor(currentUser.farbe) }">{{ replyCount + ' Replies' }}</p>
       </button>
-
+<!--eslint-enable-->
       <!--Aufklapp Button-->
       <router-link :style="{ color: iconColor(currentUser.farbe) }" v-if="reply && depth === 5 && reply.id"
         :to="`/reply/${reply.id}`" class="more-link">
         Show more..
       </router-link>
     </div>
-
-
-
 
     <!-- Anzeige der Antworten auf diese Antwort -->
     <div v-if="reply.expandReplies && reply && reply.replies && reply.replies.length > 0" class="replies-section">
@@ -74,8 +59,6 @@
       </div>
     </div>
     <!--Antwortbox-->
-
-
   </div>
 </template>
  
@@ -84,7 +67,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { mapGetters, mapActions } from 'vuex';
 import { iconColor } from './farben';
 import { useStore } from 'vuex';
-import { computed, onMounted } from 'vue';
+/* eslint-disable no-unused-vars */
+import { computed, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 
 export default {
@@ -116,16 +100,17 @@ export default {
 
   setup(props) {
     const displaycommentcount = computed(() => store.state.displayedCommentCount);
-
+    
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     // Zugriff auf den currentUser aus dem Vuex-Store
     const router = useRouter();
     const currentUser = computed(() => store.state.currentUser);
     const reply = computed(() => props.reply);
-    const comment = computed(() => reply.value.commentobjekt);
-    const commentIndex = computed(() => reply.value.commentIndex + 1);
+  const comment = computed(() => reply.value.commentobjekt);
+  const commentIndex = computed(() => comment.value.commentIndex+1);
     const replyIndex = computed(() => comment.value.replies.length);
     const nestedIndex = computed(() => reply.value.replies.length);
+
     let topicsSuche = [];
     let commentSuche = [];
     let replySuche = [];
@@ -168,10 +153,7 @@ export default {
 
     const getelement = (path) => {
 
-      topicsSuche.value = [];
-      commentSuche.value = [];
-      replySuche.value = [];
-      nestedReplySuche.value = [];
+
 
       // Schleife durch die Pfade
 
@@ -249,14 +231,11 @@ export default {
       reply.value.path = `${props.path}/${replySearch[0]?.replies.length - 1}`;
       reply.value.author.nestedReplies.push(reply.value.path);
 
-
     }
 
 
 
-
-
-
+    console.log("comment.value.path")
     if (!reply.value.path && props.depth <= 1) {
 
       const path = computed(() => {
@@ -264,20 +243,7 @@ export default {
       });
       reply.value.path = path.value;
     }
-
-
-
-
-  
-      
-      
-
-
-  
-
-    
-  
-
+   
 
     const saveCommentDataToStore = () => {
       console
@@ -302,6 +268,9 @@ export default {
 
         saveCommentDataToStore();
         setTimeout(() => {
+          
+       
+
 
 
 
@@ -312,14 +281,18 @@ export default {
               commentId: comment.value.id || props.commentId, // Falls commentId nicht vorhanden ist, setzen Sie ihn auf null (optional)
               replyId: props.reply.id, // Falls replyId nicht vorhanden ist, setzen Sie ihn auf null (optional)
 
+
             },
           });
         }, 50);
       }
       else {
 
-
-
+        console.log(commentIndex.value)
+        console.log(displaycommentcount.value)
+  
+       
+        console.log(differenz);
         comment.value.expandReplies = true;
 
         if (commentIndex.value > displaycommentcount.value) {
@@ -351,12 +324,12 @@ export default {
       }
 
 
-
+     
 
 
 
     };
-
+/*eslint-disable*/
     return {
       iconColor,
       currentUser,
@@ -373,7 +346,7 @@ export default {
       // Mache den currentUser verfügbar
     };
   },
-
+/*eslint-enable*/
   data() {
     return {
       showReplyForm: false,
@@ -469,6 +442,7 @@ export default {
         commentobjekt : this.reply.commentobjekt,
       };
       // Fügt die neue Antwort zu den Antworten dieser Antwort hinzu
+      /* eslint-disable */
       if (!this.reply.replies) {
         this.reply.replies = [];
       }
@@ -484,6 +458,7 @@ export default {
         this.$emit('reply-clicked', this.reply.id);
       }
     },
+    /* eslint-enable*/
 
 
     // Funktion zum Abbrechen der Antwort auf diese Antwort

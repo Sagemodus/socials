@@ -1,3 +1,4 @@
+<!--
 <template>
   <div class="login-container">
     <div class="form-container">
@@ -20,22 +21,26 @@
     </div>
   </div>
 </template>
+-->
+
+<template>
+  <div>
+    <button @click="fetchMessage">Fetch Message from Backend</button>
+    <p>{{ message }}</p>
+  </div>
+</template>
 
 <script>
-import { signInWithEmailAndPassword, getAuth } from 'firebase/auth';
+import axios from 'axios';
 
 export default {
   data() {
-  return {
-    username: '',
-    password: '',
-    isConnected: false,
-    connectionStatus: '',
-    errorMsg: '', // Add this line to define the errorMsg property
-  };
-},
-
+    return {
+      message: '',
+    };
+  },
   methods: {
+
     login() {
   try {
     // login user
@@ -70,6 +75,7 @@ export default {
 },
 
   }
+
 };
 </script>
 

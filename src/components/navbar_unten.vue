@@ -1,19 +1,30 @@
 <template>
   <div class="nav-bar">
     <router-link to="/feed" :class="{ 'selected': $route.path === '/feed' }" :style="{ color: $route.path === '/feed' ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
-      <font-awesome-icon :icon="['fas', 'home']" class="icon"/>
+     <span class="material-symbols-outlined">
+  home
+  </span>
+
     </router-link>
     <router-link to="/search" :class="{ 'selected': $route.path === '/search' }" :style="{ color: $route.path === '/search' ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
-      <font-awesome-icon :icon="['fas', 'search']" class="icon"/>
+     <span class="material-symbols-outlined">
+  search
+  </span>
     </router-link>
     <router-link to="/notifications" :class="{ 'selected': $route.path === '/notifications' }" :style="{ color: $route.path === '/notifications' ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
-      <font-awesome-icon :icon="['fas', 'bell']" class="icon"/>
+  <span class="material-symbols-outlined">
+  notifications
+  </span>
     </router-link>
     <router-link to="/messages" :class="{ 'selected': $route.path === '/messages' }" :style="{ color: $route.path === '/messages' ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
-      <font-awesome-icon :icon="['fas', 'envelope']" class="icon"/>
+  <span class="material-symbols-outlined">
+  chat_bubble
+  </span>
     </router-link>
   <router-link :to="`/profil/${currentUserId}`" :class="{ 'selected': $route.path === `/profil/${currentUserId}` }" :style="{ color: $route.path === `/profil/${currentUserId}` ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
-    <font-awesome-icon :icon="['fas', 'user']" class="icon"/>
+  <span class="material-symbols-outlined">
+  account_circle
+  </span>
   </router-link>
   </div>
 </template>
@@ -49,6 +60,18 @@ export default {
 </script>
 
 <style scoped>
+
+.material-symbols-outlined {
+  font-variation-settings:
+  'FILL' 0,
+  'wght' 400,
+  'GRAD' 0,
+  'opsz' 20;
+font-size: 30px;
+}
+
+
+
 .nav-bar {
   display: flex;
   justify-content: space-evenly;

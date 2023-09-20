@@ -342,6 +342,7 @@ export default {
     padding: 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    outline: none;
   }
 
   .reply-actions {

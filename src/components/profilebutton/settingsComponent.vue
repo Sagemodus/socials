@@ -541,8 +541,7 @@ img {
   position: absolute;
   top: 100%;
   /* Direkt unter dem Button positionieren */
-
-
+  z-index: 999; /* Hier können Sie den gewünschten z-index-Wert einstellen */
 }
 
 .dropdown-menu {

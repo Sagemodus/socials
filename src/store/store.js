@@ -238,20 +238,48 @@ function searchReplyInCommentAndReplies(comment, targetReplyId) {
 
 export default createStore({
   state() {
-    const categories = [
-      { main: "Sport", sub: "Fussball" },
-      { main: "Technologie", sub: "Programmierung" },
-      { main: "Unterhaltung", sub: "Film" },
-      { main: "Technologie", sub: "Gaming" },
-      // Weitere Kategorien hinzufügen...
-    ];
+const categories = [
+  { main: "Sport", sub: "Fussball" },
+  { main: "Technologie", sub: "Programmierung" },
+  { main: "Unterhaltung", sub: "Film" },
+  { main: "Technologie", sub: "Gaming" },
+  { main: "Reisen", sub: "Abenteuer" },
+  { main: "Kunst", sub: "Malerei" },
+  { main: "Gesundheit", sub: "Fitness" },
+  { main: "Musik", sub: "Rock" },
+  { main: "Essen", sub: "Italienisch" },
+  { main: "Wissenschaft", sub: "Astronomie" },
+  { main: "Bücher", sub: "Fantasy" },
+  { main: "Auto", sub: "Elektrofahrzeuge" },
+  { main: "Mode", sub: "Schuhe" },
+  { main: "Reisen", sub: "Strandurlaub" },
+  { main: "Gesundheit", sub: "Meditation" },
+  { main: "Musik", sub: "Klassik" },
+  { main: "Sport", sub: "Basketball" },
+  { main: "Technologie", sub: "Künstliche Intelligenz" },
+  { main: "Bücher", sub: "Science Fiction" },
+  { main: "Auto", sub: "Luxusautos" },
+  { main: "Mode", sub: "Accessoires" },
+  { main: "Reisen", sub: "Wandern" },
+  { main: "Gesundheit", sub: "Yoga" },
+  { main: "Musik", sub: "Hip-Hop" },
+  { main: "Sport", sub: "Tennis" },
+  { main: "Technologie", sub: "Blockchain" },
+  { main: "Bücher", sub: "Krimi" },
+  { main: "Auto", sub: "Oldtimer" },
+  { main: "Mode", sub: "Hüte" },
+  { main: "Reisen", sub: "Städtereisen" },
+  { main: "Gesundheit", sub: "Ernährung" },
+  { main: "Musik", sub: "Pop" },
+  // Weitere Kategorien hinzufügen...
+];
     const loggedin = "true";
     const users = [
       {
         id: 1,
         name: "Dejan Pantos",
         profileImage: generateFakeProfileImage("Dejan Pantos"),
-        farbe: "4",
+        farbe: "1",
         tweets: [0], // Liste der Tweets des Benutzers
         procreated: [],
         contracreated: [],
@@ -391,7 +419,6 @@ export default createStore({
     ADD_NOTIFICATION(state, notification) {
       state.notifications.push(notification);
     },
-  },
 
     resetDisplayedCommentCount(state) {
       state.displayedCommentCount = 3; // Set it to the desired initial value
@@ -400,244 +427,276 @@ export default createStore({
       state.displayedCommentCount += incrementAmount;
     },
 
-  resetDisplayedCommentCount(state) {
-    state.displayedCommentCount = 3; // Set it to the desired initial value
-  },
-  incrementDisplayedCommentCount(state, incrementAmount) {
-    state.displayedCommentCount += incrementAmount;
-  },
+    // Login mutation
+    setSessionId(state, sessionId) {
+      state.sessionId = sessionId;
+    },
 
-  // Login mutation
-  setSessionId(state, sessionId) {
-    state.sessionId = sessionId;
-  },
+    SET_SELECTED_TAB_COLOR(state, color) {
+      state.selectedTabColor = color;
+    },
 
-  SET_SELECTED_TAB_COLOR(state, color) {
-    state.selectedTabColor = color;
-  },
-
-  UPDATE_TOPIC_PERCENTAGES(state, { topicId }) {
-    const topic = state.topics.find((topic) => topic.id === topicId);
-    if (topic) {
-      const totalVotes = topic.upvotes + topic.downvotes;
-      topic.likePercentage =
-        totalVotes === 0 ? 0 : Math.round((topic.upvotes / totalVotes) * 100);
-      topic.dislikePercentage =
-        totalVotes === 0 ? 0 : Math.round((topic.downvotes / totalVotes) * 100);
-    }
-  },
-
-  UPVOTE_COMMENT(state, { commentId, currentUserId, topicId }) {
-    const userId = currentUserId;
-    const topic = state.topics.find((topic) => topic.id === topicId);
-    const comment =
-      topic.proComments.find((comment) => comment.id === commentId) ||
-      topic.contraComments.find((topic) => topic.id === commentId);
-    if (comment) {
-      const user = state.users.find((user) => user.id === userId);
-      if (user) {
-        if (user.haslikedcomment.includes(commentId)) {
-          // Wenn der Kommentar bereits geliked wurde, entferne den Like
-          comment.upvotes -= 1;
-          user.haslikedcomment = user.haslikedcomment.filter(
-            (id) => id !== commentId
-          );
-        } else {
-          // Wenn der Kommentar noch nicht geliked wurde, füge den Like hinzu
-          if (user.hasdislikedcomment.includes(commentId)) {
-            // Wenn der Benutzer den Kommentar bereits disliket hat, entferne den Dislike
-            comment.downvotes -= 1;
-            user.hasdislikedcomment = user.hasdislikedcomment.filter(
-              (id) => id !== commentId
-            );
-          }
-          comment.upvotes += 1;
-          user.haslikedcomment.push(commentId);
-
-          // Entferne den Dislike, falls vorhanden
-        }
+    UPDATE_TOPIC_PERCENTAGES(state, { topicId }) {
+      const topic = state.topics.find((topic) => topic.id === topicId);
+      if (topic) {
+        const totalVotes = topic.upvotes + topic.downvotes;
+        topic.likePercentage =
+          totalVotes === 0 ? 0 : Math.round((topic.upvotes / totalVotes) * 100);
+        topic.dislikePercentage =
+          totalVotes === 0
+            ? 0
+            : Math.round((topic.downvotes / totalVotes) * 100);
       }
-    }
-  },
+    },
 
-  DOWNVOTE_COMMENT(state, { commentId, currentUserId, topicId }) {
-    const userId = currentUserId;
-    const topic = state.topics.find((topic) => topic.id === topicId);
-    const comment =
-      topic.proComments.find((comment) => comment.id === commentId) ||
-      topic.contraComments.find((topic) => topic.id === commentId);
-
-    if (comment) {
-      const user = state.users.find((user) => user.id === userId);
-      if (user) {
-        if (user.hasdislikedcomment.includes(commentId)) {
-          // Wenn der Kommentar bereits disliket wurde, entferne den Dislike
-          comment.downvotes -= 1;
-          user.hasdislikedcomment = user.hasdislikedcomment.filter(
-            (id) => id !== commentId
-          );
-        } else {
-          // Wenn der Kommentar noch nicht disliket wurde, füge den Dislike hinzu
+    UPVOTE_COMMENT(state, { commentId, currentUserId, topicId }) {
+      const userId = currentUserId;
+      const topic = state.topics.find((topic) => topic.id === topicId);
+      const comment =
+        topic.proComments.find((comment) => comment.id === commentId) ||
+        topic.contraComments.find((topic) => topic.id === commentId);
+      if (comment) {
+        const user = state.users.find((user) => user.id === userId);
+        if (user) {
           if (user.haslikedcomment.includes(commentId)) {
-            // Wenn der Benutzer den Kommentar bereits geliked hat, entferne den Like
+            // Wenn der Kommentar bereits geliked wurde, entferne den Like
             comment.upvotes -= 1;
             user.haslikedcomment = user.haslikedcomment.filter(
               (id) => id !== commentId
             );
+          } else {
+            // Wenn der Kommentar noch nicht geliked wurde, füge den Like hinzu
+            if (user.hasdislikedcomment.includes(commentId)) {
+              // Wenn der Benutzer den Kommentar bereits disliket hat, entferne den Dislike
+              comment.downvotes -= 1;
+              user.hasdislikedcomment = user.hasdislikedcomment.filter(
+                (id) => id !== commentId
+              );
+            }
+            comment.upvotes += 1;
+            user.haslikedcomment.push(commentId);
+
+            // Entferne den Dislike, falls vorhanden
           }
-          comment.downvotes += 1;
-          user.hasdislikedcomment.push(commentId);
         }
       }
-    }
-  },
+    },
 
-  UPVOTE_REPLY(state, { replyId, currentUserId, topicId, commentId }) {
-    const topic = state.topics.find((topic) => topic.id === topicId);
-    const comment =
-      topic.proComments.find((comment) => comment.id === commentId) ||
-      topic.contraComments.find((comment) => comment.id === commentId);
+    DOWNVOTE_COMMENT(state, { commentId, currentUserId, topicId }) {
+      const userId = currentUserId;
+      const topic = state.topics.find((topic) => topic.id === topicId);
+      const comment =
+        topic.proComments.find((comment) => comment.id === commentId) ||
+        topic.contraComments.find((topic) => topic.id === commentId);
 
-    let reply = null;
-
-    if (comment) {
-      reply = searchReplyInCommentAndReplies(comment, replyId);
-    } else {
-      const topicComments = topic.proComments.concat(topic.contraComments);
-      for (const topicComment of topicComments) {
-        reply = searchReplyInCommentAndReplies(topicComment, replyId);
-        if (reply) {
-          break;
+      if (comment) {
+        const user = state.users.find((user) => user.id === userId);
+        if (user) {
+          if (user.hasdislikedcomment.includes(commentId)) {
+            // Wenn der Kommentar bereits disliket wurde, entferne den Dislike
+            comment.downvotes -= 1;
+            user.hasdislikedcomment = user.hasdislikedcomment.filter(
+              (id) => id !== commentId
+            );
+          } else {
+            // Wenn der Kommentar noch nicht disliket wurde, füge den Dislike hinzu
+            if (user.haslikedcomment.includes(commentId)) {
+              // Wenn der Benutzer den Kommentar bereits geliked hat, entferne den Like
+              comment.upvotes -= 1;
+              user.haslikedcomment = user.haslikedcomment.filter(
+                (id) => id !== commentId
+              );
+            }
+            comment.downvotes += 1;
+            user.hasdislikedcomment.push(commentId);
+          }
         }
       }
-    }
+    },
 
-    const user = state.users.find((user) => user.id === currentUserId);
+    UPVOTE_REPLY(state, { replyId, currentUserId, topicId, commentId }) {
+      const topic = state.topics.find((topic) => topic.id === topicId);
+      const comment =
+        topic.proComments.find((comment) => comment.id === commentId) ||
+        topic.contraComments.find((comment) => comment.id === commentId);
 
-    if (reply && user) {
-      if (!user.haslikedreply.includes(replyId)) {
-        // Add the like
-        reply.upvotes += 1;
-        user.haslikedreply.push(replyId);
+      let reply = null;
 
-        // Remove the dislike, if present
-        if (user.hasdislikedreply.includes(replyId)) {
-          reply.downvotes -= 1;
-          user.hasdislikedreply = user.hasdislikedreply.filter(
-            (id) => id !== replyId
-          );
-        }
+      if (comment) {
+        reply = searchReplyInCommentAndReplies(comment, replyId);
       } else {
-        // Remove the like
-        reply.upvotes -= 1;
-        user.haslikedreply = user.haslikedreply.filter((id) => id !== replyId);
-      }
-    }
-  },
-
-  // Hilfsfunktion, um in Kommentaren und verschachtelten Antworten zu suchen
-
-  DOWNVOTE_REPLY(state, { replyId, currentUserId, topicId, commentId }) {
-    const topic = state.topics.find((topic) => topic.id === topicId);
-    const comment =
-      topic.proComments.find((comment) => comment.id === commentId) ||
-      topic.contraComments.find((comment) => comment.id === commentId);
-
-    let reply = null;
-
-    if (comment) {
-      reply = searchReplyInCommentAndReplies(comment, replyId);
-    } else {
-      const topicComments = topic.proComments.concat(topic.contraComments);
-      for (const topicComment of topicComments) {
-        reply = searchReplyInCommentAndReplies(topicComment, replyId);
-        if (reply) {
-          break;
+        const topicComments = topic.proComments.concat(topic.contraComments);
+        for (const topicComment of topicComments) {
+          reply = searchReplyInCommentAndReplies(topicComment, replyId);
+          if (reply) {
+            break;
+          }
         }
       }
-    }
 
-    const user = state.users.find((user) => user.id === currentUserId);
+      const user = state.users.find((user) => user.id === currentUserId);
 
-    if (reply && user) {
-      if (!user.hasdislikedreply.includes(replyId)) {
-        // Add the dislike
-        reply.downvotes += 1;
-        user.hasdislikedreply.push(replyId);
+      if (reply && user) {
+        if (!user.haslikedreply.includes(replyId)) {
+          // Add the like
+          reply.upvotes += 1;
+          user.haslikedreply.push(replyId);
 
-        // Remove the like, if present
-        if (user.haslikedreply.includes(replyId)) {
+          // Remove the dislike, if present
+          if (user.hasdislikedreply.includes(replyId)) {
+            reply.downvotes -= 1;
+            user.hasdislikedreply = user.hasdislikedreply.filter(
+              (id) => id !== replyId
+            );
+          }
+        } else {
+          // Remove the like
           reply.upvotes -= 1;
           user.haslikedreply = user.haslikedreply.filter(
             (id) => id !== replyId
           );
         }
-      } else {
-        // Remove the dislike
-        reply.downvotes -= 1;
-        user.hasdislikedreply = user.hasdislikedreply.filter(
-          (id) => id !== replyId
-        );
       }
-    }
-  },
+    },
 
-  TOGGLE_LIKE(state, { topicId, userId }) {
-    const topic = state.topics.find((topic) => topic.id === topicId);
+    // Hilfsfunktion, um in Kommentaren und verschachtelten Antworten zu suchen
 
-    if (topic) {
-      const user = state.users.find((user) => user.id === userId);
-      if (user) {
-        if (!user.haslikedtopic.includes(topicId)) {
-          // Füge den Like hinzu
-          topic.upvotes += 1;
-          user.haslikedtopic.push(topicId);
+    DOWNVOTE_REPLY(state, { replyId, currentUserId, topicId, commentId }) {
+      const topic = state.topics.find((topic) => topic.id === topicId);
+      const comment =
+        topic.proComments.find((comment) => comment.id === commentId) ||
+        topic.contraComments.find((comment) => comment.id === commentId);
 
-          // Entferne den Dislike (falls vorhanden)
-          if (user.hasdislikedtopic.includes(topicId)) {
-            topic.downvotes -= 1;
-            user.hasdislikedtopic = user.hasdislikedtopic.filter(
-              (id) => id !== topicId
+      let reply = null;
+
+      if (comment) {
+        reply = searchReplyInCommentAndReplies(comment, replyId);
+      } else {
+        const topicComments = topic.proComments.concat(topic.contraComments);
+        for (const topicComment of topicComments) {
+          reply = searchReplyInCommentAndReplies(topicComment, replyId);
+          if (reply) {
+            break;
+          }
+        }
+      }
+
+      const user = state.users.find((user) => user.id === currentUserId);
+
+      if (reply && user) {
+        if (!user.hasdislikedreply.includes(replyId)) {
+          // Add the dislike
+          reply.downvotes += 1;
+          user.hasdislikedreply.push(replyId);
+
+          // Remove the like, if present
+          if (user.haslikedreply.includes(replyId)) {
+            reply.upvotes -= 1;
+            user.haslikedreply = user.haslikedreply.filter(
+              (id) => id !== replyId
             );
           }
         } else {
-          // Entferne den Like
-          topic.upvotes -= 1;
-          user.haslikedtopic = user.haslikedtopic.filter(
-            (id) => id !== topicId
+          // Remove the dislike
+          reply.downvotes -= 1;
+          user.hasdislikedreply = user.hasdislikedreply.filter(
+            (id) => id !== replyId
           );
         }
-
-        updatePercentages(topic); // Aktualisiere Prozentsätze
       }
-    }
-  },
+    },
 
-  TOGGLE_DISLIKE(state, { topicId, userId }) {
-    const topic = state.topics.find((topic) => topic.id === topicId);
+    TOGGLE_LIKE(state, { topicId, userId }) {
+      const topic = state.topics.find((topic) => topic.id === topicId);
 
-    if (topic) {
-      const user = state.users.find((user) => user.id === userId);
-      if (user) {
-        if (!user.hasdislikedtopic.includes(topicId)) {
-          // Füge den Dislike hinzu
-          topic.downvotes += 1;
-          user.hasdislikedtopic.push(topicId);
+      if (topic) {
+        const user = state.users.find((user) => user.id === userId);
+        if (user) {
+          if (!user.haslikedtopic.includes(topicId)) {
+            // Füge den Like hinzu
+            topic.upvotes += 1;
+            user.haslikedtopic.push(topicId);
 
-          // Entferne den Like (falls vorhanden)
-          if (user.haslikedtopic.includes(topicId)) {
+            // Entferne den Dislike (falls vorhanden)
+            if (user.hasdislikedtopic.includes(topicId)) {
+              topic.downvotes -= 1;
+              user.hasdislikedtopic = user.hasdislikedtopic.filter(
+                (id) => id !== topicId
+              );
+            }
+          } else {
+            // Entferne den Like
             topic.upvotes -= 1;
             user.haslikedtopic = user.haslikedtopic.filter(
               (id) => id !== topicId
             );
           }
-        } else {
-          // Entferne den Dislike
-          topic.downvotes -= 1;
-          user.hasdislikedtopic = user.hasdislikedtopic.filter(
-            (id) => id !== topicId
-          );
+
+          updatePercentages(topic); // Aktualisiere Prozentsätze
         }
+      }
+    },
+
+    TOGGLE_DISLIKE(state, { topicId, userId }) {
+      const topic = state.topics.find((topic) => topic.id === topicId);
+
+      if (topic) {
+        const user = state.users.find((user) => user.id === userId);
+        if (user) {
+          if (!user.hasdislikedtopic.includes(topicId)) {
+            // Füge den Dislike hinzu
+            topic.downvotes += 1;
+            user.hasdislikedtopic.push(topicId);
+
+            // Entferne den Like (falls vorhanden)
+            if (user.haslikedtopic.includes(topicId)) {
+              topic.upvotes -= 1;
+              user.haslikedtopic = user.haslikedtopic.filter(
+                (id) => id !== topicId
+              );
+            }
+          } else {
+            // Entferne den Dislike
+            topic.downvotes -= 1;
+            user.hasdislikedtopic = user.hasdislikedtopic.filter(
+              (id) => id !== topicId
+            );
+          }
+
+          updatePercentages(topic); // Prozentwerte aktualisieren
+        }
+      }
+    },
+
+    // Kommentare
+    ADD_COMMENT_TO_TOPIC(state, { topicId, comment, selectedTab }) {
+      const topic = state.topics.find((topic) => topic.id === topicId);
+      if (topic) {
+        if (comment.text.trim() !== "") {
+          // Initialize the Vote properties for the new comment
+          comment.upvotes = 0;
+          comment.downvotes = 0;
+
+          if (selectedTab === "contra") {
+            comment.commentType = "contra"; // Richtiges Property verwenden
+            topic.contraComments.push(comment);
+            comment.author.contracreated.push(comment.id);
+          } else {
+            comment.commentType = "pro";
+            topic.proComments.push(comment);
+            comment.author.procreated.push(comment.id);
+          }
+        } else {
+          // Show a SweetAlert message if the comment is empty
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "The comment cannot be empty.",
+            confirmButtonText: "OK",
+          });
+        }
+      }
+    },
 
     ADD_TOPIC_TO_SAVES(state, topicPath) {
       if (state.currentUser) {
@@ -663,7 +722,6 @@ export default createStore({
       state.reply = reply;
     },
   },
-
   actions: {
     commentundreply({ commit }, { comment, reply }) {
       commit("comment_und_reply2", { comment, reply });

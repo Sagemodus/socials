@@ -73,7 +73,8 @@ function generateReplies(
   users,
   newComment,
   isNested = false,
-  Commentpath = ""
+  Commentpath = "",
+  pId
 ) {
   const replies = [];
 
@@ -97,12 +98,14 @@ function generateReplies(
         users,
         newComment,
         true,
-        Commentpath
+        Commentpath,
+        id
       ),
       Commentpath: Commentpath,
       expandReplies: false,
-      commentobjekt: newComment,
+      commentobjektId: newComment.id,
       replytype,
+      parent: pId,
     };
 
     replies.push(newReply);
@@ -133,6 +136,7 @@ function generateComments(count, users, topicId, commentType, path = "") {
       commentType,
       expandReplies: false,
       showelement: true,
+      parent: topicId,
     };
 
     comments.push(newComment);
@@ -162,7 +166,8 @@ function generateComments(count, users, topicId, commentType, path = "") {
       users,
       comment,
       false,
-      newPath
+      newPath,
+      comment.id
     );
     comment.replies = numberReplies(comment.replies);
   });
@@ -239,41 +244,41 @@ function searchReplyInCommentAndReplies(comment, targetReplyId) {
 
 export default createStore({
   state() {
-const categories = [
-  { main: "Sport", sub: "Fussball" },
-  { main: "Technologie", sub: "Programmierung" },
-  { main: "Unterhaltung", sub: "Film" },
-  { main: "Technologie", sub: "Gaming" },
-  { main: "Reisen", sub: "Abenteuer" },
-  { main: "Kunst", sub: "Malerei" },
-  { main: "Gesundheit", sub: "Fitness" },
-  { main: "Musik", sub: "Rock" },
-  { main: "Essen", sub: "Italienisch" },
-  { main: "Wissenschaft", sub: "Astronomie" },
-  { main: "Bücher", sub: "Fantasy" },
-  { main: "Auto", sub: "Elektrofahrzeuge" },
-  { main: "Mode", sub: "Schuhe" },
-  { main: "Reisen", sub: "Strandurlaub" },
-  { main: "Gesundheit", sub: "Meditation" },
-  { main: "Musik", sub: "Klassik" },
-  { main: "Sport", sub: "Basketball" },
-  { main: "Technologie", sub: "Künstliche Intelligenz" },
-  { main: "Bücher", sub: "Science Fiction" },
-  { main: "Auto", sub: "Luxusautos" },
-  { main: "Mode", sub: "Accessoires" },
-  { main: "Reisen", sub: "Wandern" },
-  { main: "Gesundheit", sub: "Yoga" },
-  { main: "Musik", sub: "Hip-Hop" },
-  { main: "Sport", sub: "Tennis" },
-  { main: "Technologie", sub: "Blockchain" },
-  { main: "Bücher", sub: "Krimi" },
-  { main: "Auto", sub: "Oldtimer" },
-  { main: "Mode", sub: "Hüte" },
-  { main: "Reisen", sub: "Städtereisen" },
-  { main: "Gesundheit", sub: "Ernährung" },
-  { main: "Musik", sub: "Pop" },
-  // Weitere Kategorien hinzufügen...
-];
+    const categories = [
+      { main: "Sport", sub: "Fussball" },
+      { main: "Technologie", sub: "Programmierung" },
+      { main: "Unterhaltung", sub: "Film" },
+      { main: "Technologie", sub: "Gaming" },
+      { main: "Reisen", sub: "Abenteuer" },
+      { main: "Kunst", sub: "Malerei" },
+      { main: "Gesundheit", sub: "Fitness" },
+      { main: "Musik", sub: "Rock" },
+      { main: "Essen", sub: "Italienisch" },
+      { main: "Wissenschaft", sub: "Astronomie" },
+      { main: "Bücher", sub: "Fantasy" },
+      { main: "Auto", sub: "Elektrofahrzeuge" },
+      { main: "Mode", sub: "Schuhe" },
+      { main: "Reisen", sub: "Strandurlaub" },
+      { main: "Gesundheit", sub: "Meditation" },
+      { main: "Musik", sub: "Klassik" },
+      { main: "Sport", sub: "Basketball" },
+      { main: "Technologie", sub: "Künstliche Intelligenz" },
+      { main: "Bücher", sub: "Science Fiction" },
+      { main: "Auto", sub: "Luxusautos" },
+      { main: "Mode", sub: "Accessoires" },
+      { main: "Reisen", sub: "Wandern" },
+      { main: "Gesundheit", sub: "Yoga" },
+      { main: "Musik", sub: "Hip-Hop" },
+      { main: "Sport", sub: "Tennis" },
+      { main: "Technologie", sub: "Blockchain" },
+      { main: "Bücher", sub: "Krimi" },
+      { main: "Auto", sub: "Oldtimer" },
+      { main: "Mode", sub: "Hüte" },
+      { main: "Reisen", sub: "Städtereisen" },
+      { main: "Gesundheit", sub: "Ernährung" },
+      { main: "Musik", sub: "Pop" },
+      // Weitere Kategorien hinzufügen...
+    ];
     const loggedin = "true";
     const users = [
       {

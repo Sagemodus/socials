@@ -2,9 +2,9 @@
   <div class="comment-box" :id="commentId">
     <div class="user-info">
       <div class="header-comment">
-        <img :src="comment?.author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile"/>
+        <img :src="comment?.author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile" />
         <h5 class="username">{{ comment?.author?.name }}</h5>
-        <div class="month" >
+        <div class="month">
           <p>{{ $store.getters.formattedCreatedAt(comment?.createdAt) }}</p>
         </div>
       </div>
@@ -36,7 +36,8 @@
           <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-if="!comment.expandReplies"
             :icon="['fas', 'angle-down']" />
           <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-else :icon="['fas', 'angle-up']" />
-          <span :style="{ color: iconColor(currentUser.farbe) }" v-if="replyCount > 0">{{ replyCount + ' Replies' }}</span>
+          <span :style="{ color: iconColor(currentUser.farbe) }" v-if="replyCount > 0">{{ replyCount + ' Replies'
+          }}</span>
         </button>
         <!--eslint-ensable-->
       </div>
@@ -52,8 +53,8 @@
 
     <div v-if="comment.expandReplies" class="replies-section">
       <comment-reply v-for="reply in comment.replies" :key="reply.id" :reply="reply" :depth="1" :topic="topic"
-        :commentId="comment.id" :commentobjekt="comment" :commentIndex="commentIndex" @reply-clicked="onReplyClicked"
-        :id="reply.id"></comment-reply>
+        :commentId="comment.id" :commentobjektId="commentObjekt.id" :commentIndex="commentIndex"
+        @reply-clicked="onReplyClicked" :id="reply.id"></comment-reply>
     </div>
   </div>
 </template>
@@ -68,15 +69,15 @@ import { iconColor } from './farben';
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
 import { computed, onBeforeMount, onBeforeUnmount, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import dayjs from 'dayjs';
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
 
 
 export default {
   components: {
     CommentReply,
   },
-  
+
   props: {
     comment: {
       type: Object,
@@ -91,11 +92,12 @@ export default {
       default: 'true',
     },
   },
-  
+
   setup(props) {
     const commentId = ref(props.comment.id);
+    const commentobjektId = computed(() => props.comment.id);
+    const commentObjekt = computed(() => store.getters.getCommentById(commentobjektId.value));
 
-    const router = useRouter();
     const comment = computed(() => props.comment);
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     const router = useRouter();
@@ -104,13 +106,13 @@ export default {
     const selectedTab = computed(() => store.state.selectedTab);
     const displaycommentcount = computed(() => store.state.displayedCommentCount + 1);
     const topicobjekt = store.getters.getTopicById(props.topic);
-    
+
     const findCommentIndex = (commentId, commentsArray) => {
       return commentsArray.findIndex(comment => comment.id === commentId);
     };
 
 
-       const goToProfile = () => {
+    const goToProfile = () => {
       console.log("klickt")
       console.log(currentUser.value)
       console.log()
@@ -134,7 +136,7 @@ export default {
         return [];
       }
     });
-    
+
     const commentIndex = computed(() => {
       return findCommentIndex(props.comment.id, commentArrayToSearch.value);
     });
@@ -143,28 +145,28 @@ export default {
     if (!comment.value.path) {
 
       const path = computed(() => {
-      return `${topicobjekt.path}/${props.comment.commentType}_${commentIndex.value}`;
+        return `${topicobjekt.path}/${props.comment.commentType}_${commentIndex.value}`;
       });
       comment.value.path = path.value;
     }
 
-    
+
     if (!comment.value.path) {
-  console.log("Path wird gesetzt");
-  console.log(topicobjekt.path);
-  const path = computed(() => {
-    return `${topicobjekt.path}/${props.comment.commentType}_${commentIndex.value}`;
-  });
-  // Create a copy of the comment prop
-  const updatedComment = { ...comment.value }; // Create a copy of the computed comment
-  // Modify the copy
-  updatedComment.path = path.value;
-  // Use the modified copy in your component
-  comment.value = updatedComment;
-}
+      console.log("Path wird gesetzt");
+      console.log(topicobjekt.path);
+      const path = computed(() => {
+        return `${topicobjekt.path}/${props.comment.commentType}_${commentIndex.value}`;
+      });
+      // Create a copy of the comment prop
+      const updatedComment = { ...comment.value }; // Create a copy of the computed comment
+      // Modify the copy
+      updatedComment.path = path.value;
+      // Use the modified copy in your component
+      comment.value = updatedComment;
+    }
 
 
-    
+
     return {
       iconColor,
       currentUser,
@@ -174,23 +176,23 @@ export default {
       topicobjekt,
       commentIndex,
       commentId,
-
+      commentObjekt,
       goToProfile,
 
     };
   },
-  
+
   data() {
     return {
       showReplyForm: false,
       newReply: "",
     };
   },
-  
+
   computed: {
     ...mapGetters(['getUserProfile']),
     ...mapGetters(['getTopicById']),
-    
+
     visibleReplies() {
       // Return the first 'maxDisplayedReplies' number of replies to display
       return this.comment.replies ? this.comment.replies.slice(0, this.maxDisplayedReplies) : [];
@@ -265,7 +267,7 @@ export default {
     submitReply(comment) {
 
       // Initialisiere commentIndex
-      
+
 
       const newReply2 = {
         topicId: comment.topicId,
@@ -274,16 +276,18 @@ export default {
         author: this.getUserProfile,
         upvotes: 0,
         downvotes: 0,
-        createdAt: new Date(),
-        commentobjekt: this.comment,
+        createdAt: dayjs(),
+        commentobjektId: this.comment.id,
         commentIndex: this.commentIndex, // Setze commentIndex basierend auf der Tab-Auswahl
+        parentId: this.comment.id,
+
       };
 
       if (!comment.replies) {
         comment.replies = [];
       }
 
-       comment.expandReplies = true;
+      comment.expandReplies = true;
       comment.replies.push(newReply2);
 
       this.newReply = "";
@@ -345,6 +349,7 @@ export default {
     display: flex;
     justify-content: space-evenly;
     margin-top: 10px;
+
     .cancel-reply-button,
     .submit-reply-button {
       padding: 5px 10px;
@@ -374,6 +379,7 @@ export default {
   font-family: Verdana, Geneva, sans-serif;
   padding-left: 1vh;
   border-left: 2px solid #ccc;
+
   &:last-child {
     border-bottom: none;
   }
@@ -432,6 +438,7 @@ export default {
 
     &:hover {
       color: #0079d3;
+
       .icon {
         color: #0079d3;
       }
@@ -440,11 +447,13 @@ export default {
     .replies-section {
       margin-top: 20px;
       padding-left: 20px;
+
       .comment-reply {
         margin-bottom: 10px;
         border-left: 2px solid #ccc;
         padding-left: 15px;
         transition: background-color 0.3s, border-color 0.3s;
+
         &:hover {
           background-color: rgba(0, 0, 0, 0.05);
           border-color: #0079d3;
@@ -495,11 +504,13 @@ export default {
       justify-content: space-between;
       /* Zentrieren des Inhalts horizontal */
       margin-top: 10px;
+
       button {
         margin-left: 10px;
       }
     }
   }
+
   .replies-section {
     margin-top: 20px;
   }
@@ -515,11 +526,12 @@ export default {
 
 
 }
+
 .comment-box h5 {
   font-size: 13px;
 }
 
-.month{
+.month {
   font-size: 11px;
 }
 </style>

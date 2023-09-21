@@ -1,4 +1,8 @@
-<!--
+<template>
+  <p>hallo</p>
+</template>
+
+<!-- 
 <template>
   <div class="login-container">
     <div class="form-container">
@@ -17,20 +21,20 @@
           <p><a href="#">Forgot your password?</a></p>
         </div>
         <button type="submit">Login</button>
-      </form>
+    </form>
     </div>
   </div>
 </template>
 -->
 
-<template>
+<!-- <template>
   <div>
     <button @click="fetchMessage">Fetch Message from Backend</button>
     <p>{{ message }}</p>
   </div>
-</template>
-
-<script>
+</template> -->
+<!--  -->
+<!-- <script>
 import axios from 'axios';
 
 export default {
@@ -77,7 +81,7 @@ export default {
   }
 
 };
-</script>
+</script> --> 
 
 <style>
 .login-container {

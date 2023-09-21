@@ -1,11 +1,8 @@
 <template>
   <div>
+    <button @click="szene"></button>
     <!-- Loop through the data and create TopicBox components for each topic -->
-    <TopicBox
-      v-for="topic in sortedTopics.slice()"
-      :key="topic.id"
-      :id="topic.id"
-    />
+    <TopicBox v-for="topic in sortedTopics.slice()" :key="topic.id" :id="topic.id" />
   </div>
 </template>
 
@@ -13,8 +10,60 @@
 
 import { mapState } from 'vuex';
 import TopicBox from './TopicBox'; // Make sure to adjust the path accordingly
+import axios from "axios";
+import { useStore } from 'vuex';
+import { computed } from 'vue';
 
 export default {
+
+  setup() {
+    const store = useStore();
+    const topics = computed(() => {
+      return store.state.topics
+
+    });
+
+   
+
+   
+
+    const szene = () => {
+      const topicList = topics.value; // Holen Sie die Liste der Topics
+
+      // Iterieren Sie durch jedes Element in der Topic-Liste
+      for (let i = 0; i < topicList.length; i++) {
+        const topicData = topicList[i]; // Holen Sie das aktuelle Topic-Objekt
+        addTopicsToDatabase(topicData); // Rufen Sie die Funktion auf, um das Topic in die Datenbank einzufügen
+      }
+    };
+   
+
+
+    async function addTopicsToDatabase(topicsData) {
+
+
+
+      try {
+        // Senden Sie das gesamte Topics-Array an Ihre API-Route
+        await axios.post("/api/addTopics", topicsData);
+
+        console.log("Topics erfolgreich in die Datenbank gespeichert");
+      } catch (error) {
+        console.error("Fehler beim Speichern der Topics in die Datenbank:", error);
+        // Hier können Sie geeignete Fehlermeldungen oder Aktionen hinzufügen
+      }
+    }
+
+
+    return {
+      addTopicsToDatabase,
+      topics,
+      szene
+    }
+  },
+
+
+
   components: {
     TopicBox,
   },

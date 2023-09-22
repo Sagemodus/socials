@@ -29,23 +29,26 @@ export default {
 
     const szene = () => {
       const topicList = topics.value; // Holen Sie die Liste der Topics
-
+console.log(topicList)
       // Iterieren Sie durch jedes Element in der Topic-Liste
       for (let i = 0; i < topicList.length; i++) {
         const topicData = topicList[i]; // Holen Sie das aktuelle Topic-Objekt
+        console.log(topicData)
         addTopicsToDatabase(topicData); // Rufen Sie die Funktion auf, um das Topic in die Datenbank einzufügen
       }
     };
    
 
 
-    async function addTopicsToDatabase(topicsData) {
+    async function addTopicsToDatabase(topicData) {
 
 
 
       try {
+
+        console.log(topicData + "amk")
         // Senden Sie das gesamte Topics-Array an Ihre API-Route
-        await axios.post("/api/addTopics", topicsData);
+        await axios.post("http://localhost:3000/api/addTopics", topicData);
 
         console.log("Topics erfolgreich in die Datenbank gespeichert");
       } catch (error) {

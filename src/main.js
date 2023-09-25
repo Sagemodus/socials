@@ -14,8 +14,11 @@ import 'firebase/analytics'; // Importiere Firebase Analytics
 import './firebase/init'; // Import and initialize Firebase before creating the app
 
 
+      await store.dispatch("fetchTopics");
+      
 
 
+await store.dispatch("fetchUsers");
 library.add(fas)
 library.add(far)
 

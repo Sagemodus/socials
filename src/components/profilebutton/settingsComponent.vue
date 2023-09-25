@@ -105,7 +105,7 @@
               :reply="reply"
               :depth="1"
               :topic="reply.topicId"
-              :commentId="reply.commentobjekt.id"
+              :commentId="reply.commentobjektId"
               :commentobjekt="reply.commentobjekt"
              :commentIndex="reply.commentIndex"
             :id ="reply.id"
@@ -117,8 +117,8 @@
                 :reply="reply"
                 :depth="2"
                 :topic="reply.topicId"
-                :commentId="reply.commentobjekt.id"
-                :commentobjekt="reply.commentobjekt"
+                :commentId="reply.commentobjektId"
+                :commentobjektId="reply.commentobjektId"
                :commentIndex="reply.commentIndex"
               :id ="reply.id"
             ></comment-reply>
@@ -159,6 +159,7 @@ import CommentBox from '../CommentBox.vue'
 import CommentReply from '../CommentReply.vue'
 import TopicBox from '../TopicBox.vue'; // Hier importiere TopicBox
 import { useRoute, useRouter } from 'vue-router';
+import {  onMounted } from "vue";
 
 export default {
   components: {
@@ -172,7 +173,10 @@ export default {
     const route = useRoute();
     const store = useStore();
     const state = store.state;
-    const topics = state.topics;
+     const topics = store.state.topics;
+
+    // Laden Sie die Daten beim Komponentenstart
+
     const userId = route.params.currentUserId;
     const router = useRouter();
     
@@ -262,6 +266,7 @@ export default {
           }
 
         }
+        console.log(pathZurSuche)
         // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
         let nestedreply = eval(pathZurSuche);
         if (anzahleindexes === 1) {
@@ -542,8 +547,7 @@ img {
   position: absolute;
   top: 100%;
   /* Direkt unter dem Button positionieren */
-
-
+  z-index: 999; /* Hier können Sie den gewünschten z-index-Wert einstellen */
 }
 
 .dropdown-menu {

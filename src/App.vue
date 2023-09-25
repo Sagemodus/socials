@@ -1,5 +1,6 @@
 <template>
   <div>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <navbar class="navbar-fixed" />
     <div id="app">
       <router-view />
@@ -42,16 +43,17 @@ body {
   justify-content: space-between;
   align-items: center;
   padding-bottom: 5px;
-  height: 50px;
+  padding-top: 5px;
 }
 
 #app {
-
+font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #000000;
   margin-bottom: 60px;
+
   /* Platz für die Navbar reservieren */
 }
 

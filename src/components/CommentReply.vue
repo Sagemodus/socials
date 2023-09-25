@@ -47,7 +47,7 @@
     <!-- Anzeige der Antworten auf diese Antwort -->
     <div v-if="reply.expandReplies && reply && reply.replies && reply.replies.length > 0" class="replies-section">
       <comment-reply v-for="nestedReply in reply.replies" :key="nestedReply.id" :reply="nestedReply" :path="reply.path"
-        :depth="depth + 1" :topic="topic" :commentId="reply.id" :commentobjekt="comment?.value"
+        :depth="depth + 1" :topic="topic" :commentId="reply.id" :commentobjektId="commentId"
         @reply-clicked="$emit('reply-clicked', $event)"></comment-reply>
     </div>
     <div v-if="showReplyForm" class="reply-form">
@@ -70,7 +70,7 @@ import { useStore } from 'vuex';
 /* eslint-disable no-unused-vars */
 import { computed, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
-
+import dayjs from 'dayjs';
 export default {
   props: {
     depth: {
@@ -91,7 +91,7 @@ export default {
     path: {
 
     },
-    commentobjekt: {
+    commentobjektId: {
 
     },
 
@@ -106,7 +106,17 @@ export default {
     const router = useRouter();
     const currentUser = computed(() => store.state.currentUser);
     const reply = computed(() => props.reply);
-  const comment = computed(() => reply.value.commentobjekt);
+
+
+
+    const commentobjektId = computed(() => props.reply.commentobjektId);
+    const commentObjekt = computed(() => store.getters.getCommentById(commentobjektId.value));
+    
+    // Verwenden Sie die Vuex Getter-Funktion, um das Kommentarobjekt basierend auf der ID abzurufen
+    const comment = computed(() => store.getters.getCommentById(commentobjektId.value));
+
+
+    
   const commentIndex = computed(() => comment.value.commentIndex+1);
     const replyIndex = computed(() => comment.value.replies.length);
     const nestedIndex = computed(() => reply.value.replies.length);
@@ -121,7 +131,6 @@ export default {
     /*eslint-disable */
     const replydepth = props.depth;
     const topics = store.state.topics;
-    /*eslint-enable*/
 
     const parseId = (element) => {
       const parts = element.split('/').filter(part => part !== ''); // Entferne leere Teile
@@ -240,7 +249,7 @@ export default {
     if (!reply.value.path && props.depth <= 1) {
 
       const path = computed(() => {
-        return `${reply.value.commentobjekt.path}/${replyIndex.value - 1}`;
+        return `${comment.value.path}/${replyIndex.value - 1}`;
       });
       reply.value.path = path.value;
     }
@@ -325,7 +334,6 @@ export default {
       }
 
 
-     
 
 
 
@@ -342,7 +350,7 @@ export default {
       nestedReplySuche,
       replydepth,
       goToProfile,
-      
+      commentObjekt,
 
       // Mache den currentUser verfügbar
     };
@@ -370,6 +378,7 @@ export default {
     hasDislikedReply() {
       return this.currentUser.hasdislikedreply.includes(this.reply.id);
     },
+    
 
   },
 
@@ -438,9 +447,10 @@ export default {
         replies: [],
         upvotes: 0,
         downvotes: 0,
-        createdAt: new Date(),// Initialisiere die Votes für die Antwort
+        createdAt: dayjs(),// Initialisiere die Votes für die Antwort
         commentIndex: this.commentIndex + 1,
-        commentobjekt : this.reply.commentobjekt,
+        commentobjektId: this.commentId,
+        parentId:this.reply.id,
       };
       // Fügt die neue Antwort zu den Antworten dieser Antwort hinzu
       /* eslint-disable */

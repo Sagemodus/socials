@@ -57,6 +57,7 @@ import { useStore } from 'vuex';
 import { computed, watchEffect } from 'vue';
 import { ref, onMounted, onBeforeUnmount, } from 'vue';
 import dayjs from 'dayjs';
+import { useRoute } from 'vue-router';
 
 import { onUnmounted } from 'vue';
 
@@ -244,6 +245,7 @@ export default {
         upvotes: 0,
         downvotes: 0,
         createdAt: dayjs(), // Aktuelle Zeit hinzufügen
+        parentId: this.topic.id,
          // Pfad zum Kommentar hinzufügen
       };
 

@@ -24,10 +24,8 @@
     </div>
   </div>
 </template>
-<script>
-</script>
   
-<!-- <script>
+<script>
 import axios from 'axios'; // Import Axios for making API requests
 
 export default {
@@ -40,6 +38,9 @@ export default {
     };
   },
   methods: {
+
+
+
     register() {
       // Check if passwords match
       if (this.password !== this.confirmPassword) {
@@ -65,7 +66,7 @@ export default {
     }
   }
 };
-</script> -->
+</script>
   
   <style>
   .login-container {

@@ -328,7 +328,7 @@ export default createStore({
         bio: "King of the street",
       },
       {
-        id: 3,
+        id: 4,
         name: "Vegeta",
         profileImage: generateFakeProfileImage("Vegeta"),
         farbe: "4",

@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json()); // Add this line to parse JSON requests
 
 // MongoDB connection URL
-const uri = 'mongodb://localhost:27017';
+const uri = 'mongodb://localhost:27017/social';
 
 // Initialize MongoDB client
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });

@@ -222,7 +222,6 @@ export default {
 
 
     updateTabAndColor(tab) {
-
       this.$store.dispatch('selectTab', tab); // Action aufrufen
       this.$store.dispatch('updateSelectedTabColor'); // Action aufrufen
     },

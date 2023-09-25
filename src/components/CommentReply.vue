@@ -128,6 +128,7 @@ export default {
     const commentelement = 2;
     const replyelement = 3;
     const topicselement = 1;
+    /*eslint-disable */
     const replydepth = props.depth;
     const topics = store.state.topics;
 
@@ -220,11 +221,11 @@ export default {
     }
 
 
-
+    /*eslint-disable*/
     if (!reply.depth) {
       reply.value.depth = props.depth;
     }
-
+/*eslint-enable */
     if (!reply.value.replies) {
       reply.value.replies = [];
     }

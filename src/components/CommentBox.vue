@@ -73,6 +73,7 @@ import dayjs from 'dayjs';
 import { ref } from 'vue';
 
 
+
 export default {
   components: {
     CommentReply,
@@ -95,9 +96,9 @@ export default {
 
   setup(props) {
     const commentId = ref(props.comment.id);
+
     const commentobjektId = computed(() => props.comment.id);
     const commentObjekt = computed(() => store.getters.getCommentById(commentobjektId.value));
-
     const comment = computed(() => props.comment);
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     const router = useRouter();

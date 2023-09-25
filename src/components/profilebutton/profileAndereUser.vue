@@ -109,6 +109,7 @@ export default {
         const route = useRoute();
         const store = useStore();
         const state = store.state;
+        // eslint-disable-next-line no-unused-vars
         const topics = state.topics;
         const userId = route.params.currentUserId;
         const router = useRouter();

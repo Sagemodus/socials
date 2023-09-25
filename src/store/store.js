@@ -4,6 +4,8 @@ import { v4 as uuidv4 } from "uuid";
 import Swal from "sweetalert2";
 import faker from "faker";
 import dayjs from "dayjs";
+import axios from "axios";
+
 /* eslint-disable no-unused-vars */
 
 export function formatCreatedAt(createdAt) {
@@ -68,166 +70,6 @@ function generateFakeProfileImage(name) {
   return `https://fakeimg.pl/50x50/?text=${name[0]}&font=lobster`;
 }
 
-function generateReplies(
-  count,
-  topicId,
-  users,
-  newComment,
-  isNested = false,
-  Commentpath = ""
-) {
-  const replies = [];
-
-  for (let i = 0; i < count; i++) {
-    const replytype = isNested ? "nested" : "reply";
-
-    const id = faker.datatype.uuid();
-    const author =
-      users[faker.datatype.number({ min: 0, max: users.length - 1 })];
-    const newReply = {
-      id,
-      topicId,
-      text: faker.lorem.paragraphs(),
-      author,
-      upvotes: faker.datatype.number(),
-      downvotes: faker.datatype.number(),
-      createdAt: faker.date.past(),
-      replies: generateReplies(
-        count - 1,
-        topicId,
-        users,
-        newComment,
-        true,
-        Commentpath
-      ),
-      Commentpath: Commentpath,
-      expandReplies: false,
-      commentobjekt: newComment,
-      replytype,
-    };
-
-    replies.push(newReply);
-
-    if (replytype === "reply") {
-      author.createdReplies.push(newReply.id);
-    }
-  }
-
-  replies.sort((a, b) => a.createdAt - b.createdAt);
-  return replies;
-}
-
-function generateComments(count, users, topicId, commentType, path = "") {
-  const comments = [];
-  for (let i = 0; i < count; i++) {
-    const id = faker.datatype.uuid();
-    const author =
-      users[faker.datatype.number({ min: 0, max: users.length - 1 })];
-    const newComment = {
-      id,
-      topicId,
-      text: faker.lorem.paragraph(),
-      author,
-      upvotes: faker.datatype.number(),
-      downvotes: faker.datatype.number(),
-      createdAt: faker.date.past(),
-      commentType,
-      expandReplies: false,
-      showelement: true,
-    };
-
-    comments.push(newComment);
-    if (commentType === "pro") {
-      author.procreated.push(newComment.id);
-    } else {
-      author.contracreated.push(newComment.id);
-    }
-  }
-
-  comments.sort((a, b) => b.upvotes - a.upvotes);
-  const top3 = comments.slice(0, 3);
-  const rest = comments.slice(3);
-
-  rest.sort((a, b) => a.createdAt - b.createdAt);
-
-  const sortedComments = top3.concat(rest);
-
-  sortedComments.forEach((comment, index) => {
-    comment.commentIndex = index;
-    const newPath = `${path}/${commentType}_${comment.commentIndex}`;
-    comment.path = newPath;
-
-    comment.replies = generateReplies(
-      2,
-      topicId,
-      users,
-      comment,
-      false,
-      newPath
-    );
-    comment.replies = numberReplies(comment.replies);
-  });
-
-  return sortedComments;
-}
-
-function generateTopics(count, users) {
-  const categories = [
-    { main: "Sport", sub: "Fussball" },
-    { main: "Technologie", sub: "Programmierung" },
-    { main: "Unterhaltung", sub: "Film" },
-    { main: "Technologie", sub: "Gaming" },
-    // Weitere Kategorien hinzufügen...
-  ];
-
-  const topics = [];
-  for (let i = 0; i < count; i++) {
-    const id = faker.datatype.uuid();
-    const category = faker.random.arrayElement(categories);
-    const author =
-      users[faker.datatype.number({ min: 0, max: users.length - 1 })];
-    const newPath = `/${i}`;
-
-    const newTopic = {
-      id,
-      text: faker.lorem.paragraph(),
-      author: author,
-      createdAt: faker.date.past(),
-      upvotes: faker.datatype.number({ min: 0, max: 100 }),
-      downvotes: faker.datatype.number({ min: 0, max: 100 }),
-      category: category,
-      proComments: [],
-      contraComments: [],
-      path: newPath,
-    };
-
-    const totalVotes = newTopic.upvotes + newTopic.downvotes;
-    const upvotePercentage = (newTopic.upvotes / totalVotes) * 100;
-    const downvotePercentage = (newTopic.downvotes / totalVotes) * 100;
-
-    newTopic.upvotePercentage = upvotePercentage.toFixed(2);
-    newTopic.downvotePercentage = downvotePercentage.toFixed(2);
-
-    newTopic.proComments = generateComments(
-      10,
-      users,
-      newTopic.id,
-      "pro",
-      newPath
-    );
-    newTopic.contraComments = generateComments(
-      10,
-      users,
-      newTopic.id,
-      "contra",
-      newPath
-    );
-
-    topics.push(newTopic);
-  }
-  return topics;
-}
-
 function searchReplyInCommentAndReplies(comment, targetReplyId) {
   if (comment.id === targetReplyId) {
     return comment;
@@ -254,7 +96,7 @@ export default createStore({
         id: 1,
         name: "Dejan Pantos",
         profileImage: generateFakeProfileImage("Dejan Pantos"),
-        farbe: "4",
+        farbe: "1",
         tweets: [0], // Liste der Tweets des Benutzers
         procreated: [],
         contracreated: [],
@@ -356,8 +198,6 @@ export default createStore({
     ];
 
     return {
-      topics: generateTopics(2, users),
-      users,
       currentUser: users[0],
       loggedin,
       selectedTab: "pro",
@@ -470,13 +310,6 @@ export default createStore({
         }
       }
     },
-
-    UPVOTE_REPLY(state, { replyId, currentUserId, topicId, commentId }) {
-      const topic = state.topics.find((topic) => topic.id === topicId);
-      const comment =
-        topic.proComments.find((comment) => comment.id === commentId) ||
-        topic.contraComments.find((comment) => comment.id === commentId);
-
       let reply = null;
 
       if (comment) {
@@ -679,6 +512,27 @@ export default createStore({
     },
   },
   actions: {
+    async fetchUsers({ commit }) {
+      try {
+        const response = await axios.get("http://localhost:3000/api/users");
+        const users = response.data;
+        console.log(users)
+        commit("setUsers", users);
+      } catch (error) {
+        console.error("Fehler beim Abrufen der Daten:", error);
+      }
+    },
+
+    async fetchTopics({ commit }) {
+      try {
+        const response = await axios.get("http://localhost:3000/api/topics");
+        const topics = response.data;
+        commit("setTopics", topics);
+      } catch (error) {
+        console.error("Fehler beim Abrufen der Daten:", error);
+      }
+    },
+
     commentundreply({ commit }, { comment, reply }) {
       commit("comment_und_reply", { comment, reply });
     },

@@ -24,8 +24,10 @@
     </div>
   </div>
 </template>
-  
 <script>
+</script>
+  
+<!-- <script>
 import axios from 'axios'; // Import Axios for making API requests
 
 export default {
@@ -63,7 +65,7 @@ export default {
     }
   }
 };
-</script>
+</script> -->
   
   <style>
   .login-container {

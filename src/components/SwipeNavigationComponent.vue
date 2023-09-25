@@ -25,7 +25,7 @@ export default {
     const currentUser = computed(() => store.state.currentUser);
     const tabs = reactive([
       { name: 'Public', path: '/public' },
-      { name: 'F&F', path: '/fandf' },
+      { name: 'Personal', path: '/fandf' },
  
     ]);
 

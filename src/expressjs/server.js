@@ -1,12 +1,9 @@
-
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors"); // Importieren Sie das cors-Modul
 const app = express();
 const port = process.env.PORT || 3000;
 const bodyParser = require("body-parser");
-
 
 app.use(cors());
 
@@ -110,7 +107,6 @@ const Topic = mongoose.model(
   })
 );
 
-
 const User = mongoose.model(
   "User",
   new mongoose.Schema({
@@ -141,33 +137,28 @@ const User = mongoose.model(
   })
 );
 
+app.post("/api/addUsers", async (req, res) => {
+  try {
+    const userData = req.body; // Die Topics-Daten kommen im Anforderungskörper als Array von Objekten
+    // Hier können Sie die gesendeten Daten anzeigen
 
+    // Iterieren Sie durch jedes Element in den Topics-Daten
 
-    app.post("/api/addUsers", async (req, res) => {
-      try {
-        const userData = req.body; // Die Topics-Daten kommen im Anforderungskörper als Array von Objekten
-        // Hier können Sie die gesendeten Daten anzeigen
+    // Erstellen Sie ein neues Topic-Dokument und speichern Sie es in der Datenbank
+    const user = new User(userData);
+    await user.save();
 
-        // Iterieren Sie durch jedes Element in den Topics-Daten
-
-        // Erstellen Sie ein neues Topic-Dokument und speichern Sie es in der Datenbank
-        const user = new User(userData);
-        await user.save();
-
-        console.log("Topics erfolgreich in die Datenbank gespeichert");
-        res
-          .status(200)
-          .send({ message: "Topics erfolgreich in die Datenbank gespeichert" });
-      } catch (error) {
-        console.error(
-          "Fehler beim Speichern der Topics in die Datenbank:",
-          error
-        );
-        res.status(500).send({
-          message: "Fehler beim Speichern der Topics in die Datenbank",
-        });
-      }
+    console.log("Topics erfolgreich in die Datenbank gespeichert");
+    res
+      .status(200)
+      .send({ message: "Topics erfolgreich in die Datenbank gespeichert" });
+  } catch (error) {
+    console.error("Fehler beim Speichern der Topics in die Datenbank:", error);
+    res.status(500).send({
+      message: "Fehler beim Speichern der Topics in die Datenbank",
     });
+  }
+});
 
 app.get("/api/topics/:topicId", async (req, res) => {
   const topicId = req.params.topicId;
@@ -179,7 +170,7 @@ app.get("/api/topics/:topicId", async (req, res) => {
     if (!topic) {
       return res.status(404).json({ error: "Thema nicht gefunden" });
     }
-console.log("funktioniert homie")
+    console.log("funktioniert homie");
     res.json(topic);
   } catch (error) {
     console.error("Fehler beim Abrufen des Themas:", error);
@@ -187,78 +178,63 @@ console.log("funktioniert homie")
   }
 });
 
-
-
 // Definieren Sie die API-Route zum Hinzufügen von Topics
-    app.post("/api/addTopics", async (req, res) => {
-      try {
-        const topicsData = req.body; // Die Topics-Daten kommen im Anforderungskörper als Array von Objekten
-// Hier können Sie die gesendeten Daten anzeigen
+app.post("/api/addTopics", async (req, res) => {
+  try {
+    const topicsData = req.body; // Die Topics-Daten kommen im Anforderungskörper als Array von Objekten
+    // Hier können Sie die gesendeten Daten anzeigen
 
-        // Iterieren Sie durch jedes Element in den Topics-Daten
+    // Iterieren Sie durch jedes Element in den Topics-Daten
 
+    // Erstellen Sie ein neues Topic-Dokument und speichern Sie es in der Datenbank
+    const topic = new Topic(topicsData);
+    await topic.save();
 
-          // Erstellen Sie ein neues Topic-Dokument und speichern Sie es in der Datenbank
-          const topic = new Topic(topicsData);
-          await topic.save();
-      
-
-        console.log("Topics erfolgreich in die Datenbank gespeichert");
-        res
-          .status(200)
-          .send({ message: "Topics erfolgreich in die Datenbank gespeichert" });
-      } catch (error) {
-        console.error(
-          "Fehler beim Speichern der Topics in die Datenbank:",
-          error
-        );
-        res
-          .status(500)
-          .send({
-            message: "Fehler beim Speichern der Topics in die Datenbank",
-          });
-      }
+    console.log("Topics erfolgreich in die Datenbank gespeichert");
+    res
+      .status(200)
+      .send({ message: "Topics erfolgreich in die Datenbank gespeichert" });
+  } catch (error) {
+    console.error("Fehler beim Speichern der Topics in die Datenbank:", error);
+    res.status(500).send({
+      message: "Fehler beim Speichern der Topics in die Datenbank",
     });
+  }
+});
 
-    app.get("/api/topics", async (req, res) => {
-      try {
-        const topics = await Topic.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
+app.get("/api/topics", async (req, res) => {
+  try {
+    const topics = await Topic.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
 
-        res.json(topics); // Senden Sie die Daten als JSON an den Client
-      } catch (error) {
-        console.error(
-          "Fehler beim Abrufen der Daten aus der Datenbank:",
-          error
-        );
-        res
-          .status(500)
-          .json({ message: "Fehler beim Abrufen der Daten aus der Datenbank" });
-      }
-    });
+    res.json(topics); // Senden Sie die Daten als JSON an den Client
+  } catch (error) {
+    console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
+    res
+      .status(500)
+      .json({ message: "Fehler beim Abrufen der Daten aus der Datenbank" });
+  }
+});
 
- app.get("/api/users", async (req, res) => {
-   try {
-     const users = await User.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
 
-     console.log(users+ " bruder")
-     res.json(users); // Senden Sie die Daten als JSON an den Client
-   } catch (error) {
-     console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
-     res
-       .status(500)
-       .json({ message: "Fehler beim Abrufen der Daten aus der Datenbank" });
-   }
- });
-
-
-
+    console.log(users + " bruder");
+    res.json(users); // Senden Sie die Daten als JSON an den Client
+  } catch (error) {
+    console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
+    res
+      .status(500)
+      .json({ message: "Fehler beim Abrufen der Daten aus der Datenbank" });
+  }
+});
 
 app.post("/api/addComment", async (req, res) => {
-  const { topicId, comment } = req.body;
-
+  const { comment } = req.body;
+  console.log(comment + " kure");
   try {
     // Suchen Sie das Thema in der Datenbank anhand seiner ID
-    const topic = await Topic.findOne({ id: topicId });
+    const topic = await Topic.findOne({ id: comment.topicId});
 
     if (!topic) {
       return res.status(404).json({ error: "Thema nicht gefunden" });
@@ -277,10 +253,6 @@ app.post("/api/addComment", async (req, res) => {
     res.status(500).json({ error: "Interner Serverfehler" });
   }
 });
-
-
-
-
 
 app.get("/test", (req, res) => {
   res.send("Express.js-Server läuft!");

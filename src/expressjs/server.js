@@ -32,7 +32,6 @@ const Topic = mongoose.model(
     contraComments: [
       {
         author: Object,
-        commentIndex: Number,
         commentType: String,
         createdAt: Date,
         downvotes: Number,
@@ -44,7 +43,7 @@ const Topic = mongoose.model(
             Commentpath: String,
             author: Object,
             authorPath: Number,
-            commentIndex: Number,
+            commentobjekt: Object,
             createdAt: Date,
             downvotes: Number,
             expandReplies: Boolean,
@@ -83,7 +82,7 @@ const Topic = mongoose.model(
             Commentpath: String,
             author: Object,
             authorPath: Number,
-            commentIndex: Number,
+            commentobjekt: Object,
             createdAt: Date,
             downvotes: Number,
             expandReplies: Boolean,
@@ -138,6 +137,7 @@ const User = mongoose.model(
   })
 );
 
+
 app.post("/api/addUsers", async (req, res) => {
   try {
     const userData = req.body; // Die Topics-Daten kommen im Anforderungskörper als Array von Objekten
@@ -162,23 +162,29 @@ app.post("/api/addUsers", async (req, res) => {
 });
 
 
-app.get("/api/topics/:topicId", async (req, res) => {
-  const topicId = req.params.topicId;
-
+app.post("/api/users/register", async (req, res) => {
   try {
-    // Suchen Sie das Thema in der Datenbank anhand seiner ID
-    const topic = await Topic.findOne({ id: topicId });
+    const userData = req.body;
 
-    if (!topic) {
-      return res.status(404).json({ error: "Thema nicht gefunden" });
-    }
-    console.log("funktioniert homie");
-    res.json(topic);
+    // Generate a salt and hash the user's password
+    const saltRounds = 10; // Number of salt rounds
+    const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
+
+    // Replace the plain password with the hashed password
+    userData.password = hashedPassword;
+
+    // Create a new user document with the hashed password
+    const user = new User(userData);
+    await user.save();
+
+    console.log("User successfully registered");
+    res.status(200).send({ message: "User successfully registered" });
   } catch (error) {
-    console.error("Fehler beim Abrufen des Themas:", error);
-    res.status(500).json({ error: "Interner Serverfehler" });
+    console.error("Error registering user:", error);
+    res.status(500).send({ message: "Error registering user" });
   }
 });
+
 
 // Definieren Sie die API-Route zum Hinzufügen von Topics
 app.post("/api/addTopics", async (req, res) => {
@@ -231,6 +237,7 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
+
 app.post("/api/addComment", async (req, res) => {
   const { comment } = req.body;
   console.log(comment + " kure");
@@ -256,12 +263,13 @@ app.post("/api/addComment", async (req, res) => {
   }
 });
 
+
 app.get("/test", (req, res) => {
   res.send("Express.js-Server läuft!");
 });
 
 app.get("/", (req, res) => {
-  res.send("Expresss.js-Server startseite!");
+  res.send("Expresss.js-Server startseiteè!");
 });
 
 app.listen(port, () => {

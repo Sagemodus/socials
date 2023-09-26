@@ -161,6 +161,7 @@ export default createStore({
 
   mutations: {
     setUsers(state, users) {
+
       state.users = users;
       state.currentUser = users[0];
     },

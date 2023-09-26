@@ -12,10 +12,7 @@ import Swal from 'sweetalert2';
 import Vuex from "vuex";
 
 
-
-      await store.dispatch("fetchTopics");
-      
-
+await store.dispatch("fetchTopics");
 
 await store.dispatch("fetchUsers");
 library.add(fas)

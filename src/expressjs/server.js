@@ -144,6 +144,15 @@ const User = mongoose.model(
 app.post("/api/users/register", async (req, res) => {
   try {
     const userData = req.body;
+
+    // Generate a salt and hash the user's password
+    const saltRounds = 10; // Number of salt rounds
+    const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
+
+    // Replace the plain password with the hashed password
+    userData.password = hashedPassword;
+
+    // Create a new user document with the hashed password
     const user = new User(userData);
     await user.save();
 

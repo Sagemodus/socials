@@ -161,12 +161,14 @@ export default {
 
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     const router = useRouter();
-   
+
+    console.log(props.id)
    
     const topic = computed(() => store.getters.getTopicById(props.id));
     // Zugriff auf den currentUser aus dem Vuex-Store
 
-     const author = computed(() => store.getters.getUserById(topic.value.author))
+    const author = store.getters.getUserById(topic.value.author);
+    console.log(topic)
     const currentUser = computed(() => store.state.currentUser);
 
     const selectedTab = computed(() => store.state.selectedTab);

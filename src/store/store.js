@@ -1,10 +1,12 @@
 // store.js
+/* eslint-disable */
+
 import { createStore } from "vuex";
 import { v4 as uuidv4 } from "uuid";
 import Swal from "sweetalert2";
-import faker from "faker";
 import dayjs from "dayjs";
 import axios from "axios";
+import Auth from '../expressjs/auth';
 
 /* eslint-disable no-unused-vars */
 
@@ -101,6 +103,9 @@ function searchReplyInCommentAndReplies(comment, targetReplyId) {
 }
 
 export default createStore({
+  modules:{
+    Auth
+  },
   state() {
     const categories = [
       { main: "Sport", sub: "Fussball" },
@@ -142,7 +147,6 @@ export default createStore({
     return {
       topics: [],
       users: [],
-
       loggedin,
       selectedTab: "pro",
       selectedTabColor: "green",
@@ -158,7 +162,6 @@ export default createStore({
   mutations: {
     setUsers(state, users) {
       state.users = users;
-      state.currentUser = users[0];
     },
 
     setTopics(state, topics) {

@@ -2,6 +2,7 @@
 
 const express = require("express");
 const mongoose = require("mongoose");
+const bcrypt = require('bcrypt');
 const cors = require("cors"); // Importieren Sie das cors-Modul
 const app = express();
 const port = process.env.PORT || 3000;
@@ -141,33 +142,29 @@ const User = mongoose.model(
   })
 );
 
+app.post("/api/register", async (req, res) => {
+  try {
+    const userData = req.body;
+    const saltRounds = 10; // Number of salt rounds for bcrypt
 
-
-    app.post("/api/addUsers", async (req, res) => {
-      try {
-        const userData = req.body; // Die Topics-Daten kommen im Anforderungskörper als Array von Objekten
-        // Hier können Sie die gesendeten Daten anzeigen
-
-        // Iterieren Sie durch jedes Element in den Topics-Daten
-
-        // Erstellen Sie ein neues Topic-Dokument und speichern Sie es in der Datenbank
-        const user = new User(userData);
-        await user.save();
-
-        console.log("Topics erfolgreich in die Datenbank gespeichert");
-        res
-          .status(200)
-          .send({ message: "Topics erfolgreich in die Datenbank gespeichert" });
-      } catch (error) {
-        console.error(
-          "Fehler beim Speichern der Topics in die Datenbank:",
-          error
-        );
-        res.status(500).send({
-          message: "Fehler beim Speichern der Topics in die Datenbank",
-        });
+    // Hash the user's password
+    bcrypt.hash(userData.password, saltRounds, async (err, hashedPassword) => {
+      if (err) {
+        console.error("Error hashing password:", err);
+        return res.status(500).send({ message: "Error hashing password" });
       }
+
+      // Replace the user's plaintext password with the hashed password
+      userData.password = hashedPassword;
+
+      // Create a new user document with the hashed password
+      const user = new User(userData);
+      await user.save();
+
+      console.log("User successfully registered");
+      res.status(200).send({ message: "User successfully registered" });
     });
+
 
 app.get("/api/topics/:topicId", async (req, res) => {
   const topicId = req.params.topicId;
@@ -186,6 +183,7 @@ console.log("funktioniert homie")
     res.status(500).json({ error: "Interner Serverfehler" });
   }
 });
+
 
 
 
@@ -240,7 +238,6 @@ console.log("funktioniert homie")
    try {
      const users = await User.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
 
-     console.log(users+ " bruder")
      res.json(users); // Senden Sie die Daten als JSON an den Client
    } catch (error) {
      console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
@@ -287,7 +284,7 @@ app.get("/test", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Willkommen auf der Startseidtpppe!");
+  res.send("Expresss.js-Server startseite!");
 });
 
 app.listen(port, () => {

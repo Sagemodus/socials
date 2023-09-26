@@ -1,150 +1,104 @@
 <template>
-  <p>hallo</p>
-</template>
-
-<!-- 
-<template>
-  <div class="login-container">
-    <div class="form-container">
-      <h1>Login</h1>
-      <form @submit="login">
-        <div class="input-group">
-          <label for="username">Username:</label>
-          <input type="text" id="username" v-model="username" required>
+  <div>
+    <h2>Login</h2>
+    <div class="row">
+      <div class="card mx-auto">
+        <div class="card-header text-white bg-primary">
+          <h4>Login</h4>
         </div>
-        <div class="input-group">
-          <label for="password">Password:</label>
-          <input type="password" id="password" v-model="password" required>
+        <div class="card-body">
+          <form @submit.prevent="loginUser">
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input
+                id="username"
+                type="text"
+                placeholder="Username"
+                name="username"
+                v-model="username"
+                class="form-control"
+              >
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                class="form-control"
+                placeholder="Password"
+                name="password"
+                id="password"
+                v-model="password"
+              >
+            </div>
+            <input type="submit" class="btn btn-primary" value="Login">
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <router-link to="/register" class="card-link">Need and account?</router-link>
+          </form>
         </div>
-        <div class="additional-links">
-          <p>Don't have an account? <a href="#">Register one</a></p>
-          <p><a href="#">Forgot your password?</a></p>
-        </div>
-        <button type="submit">Login</button>
-    </form>
+      </div>
     </div>
   </div>
 </template>
--->
 
-<!-- <template>
-  <div>
-    <button @click="fetchMessage">Fetch Message from Backend</button>
-    <p>{{ message }}</p>
-  </div>
-</template> -->
-<!--  -->
-<!-- <script>
-import axios from 'axios';
-
+<script>
+import { mapActions } from "vuex";
 export default {
   data() {
     return {
-      message: '',
+      username: "",
+      password: ""
     };
   },
   methods: {
-
-    login() {
-  try {
-    // login user
-    if (this.username === "" || this.password === "") {
-      alert("Please fill out the fields");
-      return;
+    ...mapActions(["login"]),
+    loginUser() {
+      let user = {
+        username: this.username,
+        password: this.password
+      };
+      this.login(user)
+        .then(res => {
+          if (res.data.success) {
+            this.$router.push("/profile");
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        });
     }
-    signInWithEmailAndPassword(getAuth(), this.username, this.password) // Use this.username instead of this.email
-    .then(() => {
-      this.$router.push('/feed'); // Use this.$router.push instead of this.router.push
-      this.$emit('loggedIn');
-    })
-    .catch((error) => {
-  switch (error.code) {
-    case "auth/invalid-email":
-      this.errorMsg = "The Email that was provided either doesn't exist or is wrong";
-      break;
-    case "auth/user-not-found":
-      this.errorMsg = "No account with that email was found";
-      break;
-    case "auth/wrong-password":
-      this.errorMsg = "The password you provided is not correct";
-      break;
-    default:
-      this.errorMsg = "Email or password was incorrect";
-      break;
   }
-})
-  } catch (error) {
-    console.error(error);
-  }
-},
-
-  }
-
 };
-</script> --> 
+</script>
 
-<style>
-.login-container {
+<style scoped>
+.login {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #F9F9F9;
 }
 
-.form-container {
-  background-color: #FFFFFF;
-  border-bottom: 1px solid #CCCCCC;
-  padding: 20px;
+.login-title {
   text-align: center;
 }
 
-h1 {
-  margin-bottom: 20px;
+.login-card {
+  width: 60%;
 }
 
-.input-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
+.card {
+  border-radius: 0;
 }
 
-label {
-  display: block;
-  margin-bottom: 5px;
+.btn {
+  border-radius: 0;
 }
 
-input[type="text"],
-input[type="password"] {
-  width: 100%;
-  padding: 5px;
-  border: none;
-  border-bottom: 1px solid #CCCCCC;
-  outline: none;
+.form-control {
+  border-radius: 0;
 }
 
-.additional-links {
-  margin-top: 20px;
-}
-
-.additional-links p {
-  margin-bottom: 10px;
-}
-
-.additional-links a {
-  color: grey
-}
-
-button {
-  padding: 10px 20px;
-  background-color: #ECECEC;
-  color: #000000;
-  border-radius:10px;
-  border: none;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #D1D1D1;
+.registration-form {
+  padding: 20px;
 }
 </style>

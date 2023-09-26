@@ -9,6 +9,7 @@ import App from './App.vue'
 import router from './router'
 import store from './store/store'
 import Swal from 'sweetalert2';
+import Vuex from "vuex";
 
 
 
@@ -22,6 +23,7 @@ library.add(far)
 
 
 const app = createApp(App)
+app.use(Vuex);
 app.use(router)
 app.component('font-awesome-icon', FontAwesomeIcon)
 app.use(store)

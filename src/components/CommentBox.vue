@@ -2,8 +2,8 @@
   <div class="comment-box" :id="commentId">
     <div class="user-info">
       <div class="header-comment">
-        <img :src="comment?.author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile" />
-        <h5 class="username">{{ comment?.author?.name }}</h5>
+        <img :src="author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile" />
+        <h5 class="username">{{ author?.name }}</h5>
         <div class="month">
           <p>{{ $store.getters.formattedCreatedAt(comment?.createdAt) }}</p>
         </div>
@@ -53,7 +53,7 @@
 
     <div v-if="comment.expandReplies" class="replies-section">
       <comment-reply v-for="reply in comment.replies" :key="reply.id" :reply="reply" :depth="1" :topic="topic"
-        :commentId="comment.id" :commentobjektId="commentObjekt.id" :commentIndex="commentIndex"
+        :commentId="comment.id"  :commentIndex="commentIndex"
         @reply-clicked="onReplyClicked" :id="reply.id"></comment-reply>
     </div>
   </div>
@@ -96,9 +96,9 @@ export default {
 
   setup(props) {
     const commentId = ref(props.comment.id);
+   
 
-    const commentobjektId = computed(() => props.comment.id);
-    const commentObjekt = computed(() => store.getters.getCommentById(commentobjektId.value));
+
     const comment = computed(() => props.comment);
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     const router = useRouter();
@@ -108,6 +108,8 @@ export default {
     const displaycommentcount = computed(() => store.state.displayedCommentCount + 1);
     const topicobjekt = store.getters.getTopicById(props.topic);
 
+    const author = computed(() => store.getters.getUserById(props.comment.author))
+
     const findCommentIndex = (commentId, commentsArray) => {
       return commentsArray.findIndex(comment => comment.id === commentId);
     };
@@ -116,12 +118,12 @@ export default {
     const goToProfile = () => {
       console.log("klickt")
       console.log(currentUser.value)
-      console.log()
-      if (currentUser.value == comment.value.author) {
-        router.push(`/profil/${comment.value.author.id}`);
+      console.log(currentUser.value.id === comment.value.author)
+      if (currentUser.value.id === comment.value.author) {
+        router.push(`/profil/${comment.value.author}`);
       }
       else {
-        router.push(`/profile/${comment.value.author.id}`);
+        router.push(`/profile/${comment.value.author}`);
       }
 
     }
@@ -177,8 +179,9 @@ export default {
       topicobjekt,
       commentIndex,
       commentId,
-      commentObjekt,
       goToProfile,
+      author,
+
 
     };
   },
@@ -216,6 +219,7 @@ export default {
 
     handleRouterLinkClick(comment) {
 
+      comment.commentIndex = this.commentIndex
       const differenz = this.commentIndex - this.displaycommentcount;
       const puffer = 3;
 
@@ -233,7 +237,7 @@ export default {
         this.$store.state.selectedTabColor = 'red';
       }
 
-      setTimeout(() => {
+     
         this.$router.push({
           name: 'topic-ganze-seite',
           params: {
@@ -242,7 +246,7 @@ export default {
           }
         });
 
-      }, 100);
+  
 
 
     },
@@ -274,11 +278,10 @@ export default {
         topicId: comment.topicId,
         id: uuidv4(),
         text: this.newReply,
-        author: this.getUserProfile,
+        author: this.currentUser.id,
         upvotes: 0,
         downvotes: 0,
         createdAt: dayjs(),
-        commentobjektId: this.comment.id,
         commentIndex: this.commentIndex, // Setze commentIndex basierend auf der Tab-Auswahl
         parentId: this.comment.id,
 

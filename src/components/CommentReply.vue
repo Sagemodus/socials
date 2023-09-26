@@ -2,8 +2,8 @@
 <template>
   <div class="comment-reply" v-if="reply">
     <div class="profile-info">
-      <img :src="reply?.author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile"/>
-      <h5 class="profile-name">{{ reply?.author?.name }}</h5>
+      <img :src="author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile"/>
+      <h5 class="profile-name">{{ author?.name }}</h5>
       <div class="month">
         <p>{{ $store.getters.formattedCreatedAt(reply.createdAt) }}</p>
       </div>
@@ -47,7 +47,7 @@
     <!-- Anzeige der Antworten auf diese Antwort -->
     <div v-if="reply.expandReplies && reply && reply.replies && reply.replies.length > 0" class="replies-section">
       <comment-reply v-for="nestedReply in reply.replies" :key="nestedReply.id" :reply="nestedReply" :path="reply.path"
-        :depth="depth + 1" :topic="topic" :commentId="reply.id" :commentobjektId="commentId"
+        :depth="depth + 1" :topic="topic" :commentId="reply.id" 
         @reply-clicked="$emit('reply-clicked', $event)"></comment-reply>
     </div>
     <div v-if="showReplyForm" class="reply-form">
@@ -91,9 +91,7 @@ export default {
     path: {
 
     },
-    commentobjektId: {
 
-    },
 
   },
 
@@ -107,15 +105,14 @@ export default {
     const currentUser = computed(() => store.state.currentUser);
     const reply = computed(() => props.reply);
 
+const author = computed(() => store.getters.getUserById(reply.value.author))
 
-
-    const commentobjektId = computed(() => props.reply.commentobjektId);
-    const commentObjekt = computed(() => store.getters.getCommentById(commentobjektId.value));
+    
     
     // Verwenden Sie die Vuex Getter-Funktion, um das Kommentarobjekt basierend auf der ID abzurufen
-    const comment = computed(() => store.getters.getCommentById(commentobjektId.value));
+    const comment = computed(() => getComment(reply.value.Commentpath));
 
-
+const commentObjekt = computed(() => comment);
     
   const commentIndex = computed(() => comment.value.commentIndex+1);
     const replyIndex = computed(() => comment.value.replies.length);
@@ -153,10 +150,10 @@ export default {
       console.log(currentUser.value)
       console.log()
       if (currentUser.value == reply.value.author) {
-        router.push(`/profil/${reply.value.author.id}`);
+        router.push(`/profil/${reply.value.author}`);
       }
       else {
-        router.push(`/profile/${reply.value.author.id}`);
+        router.push(`/profile/${reply.value.author}`);
       }
 
     }
@@ -219,6 +216,53 @@ export default {
 
 
     }
+       const getComment = (path) => {
+
+
+
+      // Schleife durch die Pfade
+
+console.log(path + " comment")
+
+      const ids = parseId(path); // Verwende die parseId Funktion, um die IDs zu extrahieren
+      const anzahleindexes = Object.keys(ids).length - 1;
+
+
+
+      let pathZurSuche = "";
+
+      for (let i = 0; i < anzahleindexes; i++) {
+        // Schleife durch die IDs
+        if (i === 0) {
+          pathZurSuche = `topics[${ids.topicIndex}]`;
+
+        }
+        else if (i === 1) {
+          if (ids.type === 'pro') {
+            pathZurSuche += `.proComments[${ids.commentIndex}]`;
+          }
+          else if (ids.type === 'contra') {
+            pathZurSuche += `.contraComments[${ids.commentIndex}]`;
+
+          }
+        }
+        else if (i === 2) {
+          pathZurSuche += `.replies[${ids.replyIndex1}]`;
+
+        }
+
+        else if (i > 2) {
+          let läufer = 2;
+          pathZurSuche += `.replies[${ids['replyIndex' + läufer]}]`;
+          läufer++
+        }
+
+      }
+
+      // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
+     return eval(pathZurSuche);
+ 
+    }
 
 
     /*eslint-disable*/
@@ -239,7 +283,7 @@ export default {
 
       // Aktualisiere den Pfad basierend auf der Länge der Antworten
       reply.value.path = `${props.path}/${replySearch[0]?.replies.length - 1}`;
-      reply.value.author.nestedReplies.push(reply.value.path);
+      author.value.nestedReplies.push(reply.value.path);
 
     }
 
@@ -351,6 +395,7 @@ export default {
       replydepth,
       goToProfile,
       commentObjekt,
+      author,
 
       // Mache den currentUser verfügbar
     };
@@ -443,13 +488,12 @@ export default {
         topicId: this.topic,
         id: uuidv4(),
         text: this.newReply,
-        author: this.currentUser, // Aktueller Benutzer
+        author: this.currentUser.id, // Aktueller Benutzer
         replies: [],
         upvotes: 0,
         downvotes: 0,
         createdAt: dayjs(),// Initialisiere die Votes für die Antwort
         commentIndex: this.commentIndex + 1,
-        commentobjektId: this.commentId,
         parentId:this.reply.id,
       };
       // Fügt die neue Antwort zu den Antworten dieser Antwort hinzu

@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const bcrypt = require('bcrypt');
 const cors = require("cors"); // Importieren Sie das cors-Modul
 const app = express();
 const port = process.env.PORT || 3000;
@@ -160,6 +161,7 @@ app.post("/api/addUsers", async (req, res) => {
   }
 });
 
+
 app.get("/api/topics/:topicId", async (req, res) => {
   const topicId = req.params.topicId;
 
@@ -259,7 +261,7 @@ app.get("/test", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Willkommen auf der Startseidtpppe!");
+  res.send("Expresss.js-Server startseite!");
 });
 
 app.listen(port, () => {

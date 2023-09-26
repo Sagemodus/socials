@@ -11,9 +11,13 @@ import store from './store/store'
 import Swal from 'sweetalert2';
 import Vuex from "vuex";
 
-await store.dispatch("fetchTopics");
-await store.dispatch("fetchUsers");
 
+
+      await store.dispatch("fetchTopics");
+      
+
+
+await store.dispatch("fetchUsers");
 library.add(fas)
 library.add(far)
 

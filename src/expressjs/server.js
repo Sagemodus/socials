@@ -1,6 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 const cors = require("cors"); // Importieren Sie das cors-Modul
 const app = express();
 const port = process.env.PORT || 3000;
@@ -161,7 +161,6 @@ app.post("/api/addUsers", async (req, res) => {
   }
 });
 
-
 app.get("/api/topics/:topicId", async (req, res) => {
   const topicId = req.params.topicId;
 
@@ -172,7 +171,6 @@ app.get("/api/topics/:topicId", async (req, res) => {
     if (!topic) {
       return res.status(404).json({ error: "Thema nicht gefunden" });
     }
-    console.log("funktioniert homie");
     res.json(topic);
   } catch (error) {
     console.error("Fehler beim Abrufen des Themas:", error);
@@ -221,7 +219,6 @@ app.get("/api/users", async (req, res) => {
   try {
     const users = await User.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
 
-    console.log(users + " bruder");
     res.json(users); // Senden Sie die Daten als JSON an den Client
   } catch (error) {
     console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
@@ -232,18 +229,22 @@ app.get("/api/users", async (req, res) => {
 });
 
 app.post("/api/addComment", async (req, res) => {
-  const { comment } = req.body;
-  console.log(comment + " kure");
-  try {
-    // Suchen Sie das Thema in der Datenbank anhand seiner ID
-    const topic = await Topic.findOne({ id: comment.topicId});
+  const comment = req.body;
 
+  try {
+    console.log(comment.topicId);
+
+    const topic = await Topic.findOne({ id: comment.topicId });
     if (!topic) {
       return res.status(404).json({ error: "Thema nicht gefunden" });
     }
 
+
     // Fügen Sie den neuen Kommentar zum Thema hinzu
-    topic.comments.push(comment);
+  
+        topic.proComments.push(comment);
+  
+  
 
     // Speichern Sie das aktualisierte Thema in der Datenbank
     await topic.save();

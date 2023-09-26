@@ -149,6 +149,7 @@ import CommentBox from './CommentBox';
 import { useRouter } from 'vue-router';
 
 
+
 export default {
   components: {
     CommentBox,
@@ -168,7 +169,7 @@ export default {
     // Zugriff auf den currentUser aus dem Vuex-Store
 
     const author = store.getters.getUserById(topic.value.author);
-    console.log(topic)
+    console.log(topic.value)
     const currentUser = computed(() => store.state.currentUser);
 
     const selectedTab = computed(() => store.state.selectedTab);

@@ -103,8 +103,8 @@ function searchReplyInCommentAndReplies(comment, targetReplyId) {
 }
 
 export default createStore({
-  modules:{
-    Auth
+  modules: {
+    Auth,
   },
   state() {
     const categories = [
@@ -429,25 +429,25 @@ export default createStore({
     ADD_COMMENT_TO_TOPIC(state, { author, topicId, comment, selectedTab }) {
       const user = author;
       const users = state.users;
-      console.log(state.topics)
-      console.log(topicId)
+      console.log(state.topics);
+      console.log(topicId);
 
       const topic = state.topics.find((topic) => topic.id === topicId);
       if (topic) {
-        console.log(topic)
+        console.log(topic);
         if (comment.text.trim() !== "") {
           // Initialize the Vote properties for the new comment
           comment.upvotes = 0;
           comment.downvotes = 0;
 
           if (selectedTab === "contra") {
-            console.log("contra")
+            console.log("contra");
             comment.commentType = "contra"; // Richtiges Property verwenden
             topic.contraComments.push(comment);
             console.log("push");
             user.contracreated.push(comment.id);
           } else {
-            console.log("pro")
+            console.log("pro");
             comment.commentType = "pro";
             topic.proComments.push(comment);
             user.procreated.push(comment.id);
@@ -462,7 +462,7 @@ export default createStore({
           });
         }
       }
-      console.log("nid gfunde amk")
+      console.log("nid gfunde amk");
     },
 
     ADD_TOPIC_TO_SAVES(state, topicPath) {
@@ -496,7 +496,7 @@ export default createStore({
 
       if (existingTopicIndex !== -1) {
         // Vue 3: Direkte Aktualisierung eines Elements im Array
-        console.log("hade laaan")
+        console.log("hade laaan");
         state.topics[existingTopicIndex] = topicData;
       } else {
         state.topics.push(topicData);
@@ -563,12 +563,12 @@ export default createStore({
 
     async fetchTopic({ commit }, topicId) {
       try {
-        console.log(topicId)
+        console.log(topicId);
         const response = await axios.get(
           `http://localhost:3000/api/topics/${topicId}`
         );
         const topicData = response.data;
-        console.log(topicData)
+        console.log(topicData);
         commit("SET_SINGLE_TOPIC", topicData);
       } catch (error) {
         console.error("Fehler beim Abrufen des Themas:", error);
@@ -577,9 +577,12 @@ export default createStore({
     },
 
     async addCommentToTopic(
-      { commit }, author, topicId, comment, selectedTab) {
-        commit("ADD_COMMENT_TO_TOPIC", author, topicId, comment, selectedTab);
-
+      { commit },
+      { author, topicId, comment, selectedTab }
+    ) {
+      commit("ADD_COMMENT_TO_TOPIC", { author, topicId, comment, selectedTab });
+      console.log(comment + " store");
+      await axios.post("http://localhost:3000/api/addComment", comment);
     },
   },
   getters: {

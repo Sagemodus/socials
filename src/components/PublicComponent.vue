@@ -1,6 +1,7 @@
 <template>
   <div>
-    <button @click="szene2"></button>
+    <button @click="szene">Topics</button>
+    <button @click="szene2"> Users</button>
     <!-- Loop through the data and create TopicBox components for each topic -->
     <TopicBox v-for="topic in sortedTopics.slice()" :key="topic.id" :id="topic.id" />
   </div>
@@ -65,11 +66,11 @@ const users = store.state.topics;
    
 
     const szene = () => {
-      const topicList = topics.value; // Holen Sie die Liste der Topics
+      const topicList = store.state.topics; // Holen Sie die Liste der Topics
 console.log(topicList)
       // Iterieren Sie durch jedes Element in der Topic-Liste
       for (let i = 0; i < topicList.length; i++) {
-        const topicData = topicList[i]; // Holen Sie das aktuelle Topic-Objekt
+        const topicData = topics[i]; // Holen Sie das aktuelle Topic-Objekt
         console.log(topicData)
         addTopicsToDatabase(topicData); // Rufen Sie die Funktion auf, um das Topic in die Datenbank einzufügen
       }

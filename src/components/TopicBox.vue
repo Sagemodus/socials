@@ -4,14 +4,14 @@
   <div v-if="topic" class="topic-box" :style="{ border: getBorderColor() }">
     <div class="author-info">
       <div class="left-content">
-        <div class="profilbild" @click="goToProfile(topic.author.id)">
-          <img :src="topic.author.profileImage" alt="Author Profile Image" class="author-image" />
+        <div class="profilbild" @click="goToProfile(topic.author)">
+          <img :src="author.profileImage" alt="Author Profile Image" class="author-image" />
         </div>
         <div class="author">
 
         </div>
         <div class="author-category">
-          <span class="author-name" style="line-height: 0.8;">{{ topic.author.name }} </span>
+          <span class="author-name" style="line-height: 0.8;">{{ author.name }} </span>
           <p style=" font-size: 11px;" class="topic-text">{{ ' ' + topic.category.sub }}</p>
         </div>
 
@@ -159,13 +159,14 @@ export default {
 
 
 
-
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     const router = useRouter();
-
+   
    
     const topic = computed(() => store.getters.getTopicById(props.id));
     // Zugriff auf den currentUser aus dem Vuex-Store
+
+     const author = computed(() => store.getters.getUserById(topic.value.author))
     const currentUser = computed(() => store.state.currentUser);
 
     const selectedTab = computed(() => store.state.selectedTab);
@@ -187,11 +188,11 @@ export default {
       console.log("klickt")
       console.log(currentUser.value)
       console.log ()
-      if (currentUser.value == topic.value.author) {
-        router.push(`/profil/${topic.value.author.id}`);
+      if (currentUser.value.id == topic.value.author) {
+        router.push(`/profil/${topic.value.author}`);
       }
       else {
-      router.push(`/profile/${topic.value.author.id}`);
+      router.push(`/profile/${topic.value.author}`);
       }
 
     }
@@ -210,6 +211,7 @@ export default {
       onMounted,
       goToProfile,
       topic,
+      author,
     };
   },
 

@@ -105,8 +105,7 @@
               :reply="reply"
               :depth="1"
               :topic="reply.topicId"
-              :commentId="reply.commentobjektId"
-              :commentobjekt="reply.commentobjekt"
+
              :commentIndex="reply.commentIndex"
             :id ="reply.id"
           ></comment-reply>
@@ -117,8 +116,7 @@
                 :reply="reply"
                 :depth="2"
                 :topic="reply.topicId"
-                :commentId="reply.commentobjektId"
-                :commentobjektId="reply.commentobjektId"
+
                :commentIndex="reply.commentIndex"
               :id ="reply.id"
             ></comment-reply>

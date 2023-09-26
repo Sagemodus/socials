@@ -28,6 +28,19 @@ export function formatCreatedAt(createdAt) {
     return `${Math.floor(diff / (365 * 24 * 60))}y`;
   }
 }
+const MAX_COMMENT_POSITION = 100;
+
+
+function isCommentPositionAvailable(state, topicId, selectedTab) {
+  const topic = state.topics.find((topic) => topic.id === topicId);
+  if (topic) {
+    const commentsArray =
+      selectedTab === "contra" ? topic.contraComments : topic.proComments;
+    return commentsArray.length < MAX_COMMENT_POSITION; // MAX_COMMENT_POSITION ist die maximale Anzahl von Kommentaren
+  }
+  return false;
+}
+
 
 function updatePercentages(topic) {
   const totalVotes = topic.upvotes + topic.downvotes;
@@ -125,131 +138,11 @@ export default createStore({
       // Weitere Kategorien hinzufügen...
     ];
     const loggedin = "true";
-    const users = [
-      {
-        id: 1,
-        name: "Dejan Pantos",
-        profileImage: generateFakeProfileImage("Dejan Pantos"),
-        farbe: "1",
-        tweets: [0], // Liste der Tweets des Benutzers
-        procreated: [],
-        contracreated: [],
-        haslikedcomment: [],
-        hasdislikedcomment: [],
-        haslikedreply: [],
-        hasdislikedreply: [],
-        haslikedtopic: [],
-        hasdislikedtopic: [],
-        following: [15, 16],
-        followers: [18, 25, 27], // Liste der Follower des Benutzerspro
-        notifications: [], // Benachrichtigungen für den Benutzer
-        messages: [], // Privatnachrichten des Benutzers
-        topicsaves: ["/0"],
-        nestedReplies: [],
-        createdReplies: [],
-        filterSettings: {
-          // Andere Einstellungen
-          categories: [], // Ein leeres Array für ausgewählte Kategorien
-        },
-
-        joinedAt: "28.08.2023",
-        email: "dejan.pantos@maschene.com",
-        bio: "King of the street",
-      },
-      {
-        id: 2,
-        name: "Lionel Messi",
-        profileImage: generateFakeProfileImage("Lionel Messi"),
-        farbe: "4",
-        tweets: [], // Liste der Tweets des Benutzers1
-        createdReplies: [],
-        procreated: [],
-        contracreated: [],
-        haslikedcomment: [],
-        hasdislikedcomment: [],
-        haslikedreply: [],
-        hasdislikedreply: [],
-        haslikedtopic: [],
-        hasdislikedtopic: [],
-        following: [15, 16],
-        followers: [18, 25, 27], // Liste der Follower des Benutzerspro
-        notifications: [], // Benachrichtigungen für den Benutzer
-        messages: [], // Privatnachrichten des Benutzers
-        topicsaves: ["/0"],
-        nestedReplies: [],
-
-        filterSettings: {
-          // Andere Einstellungen
-          categories: [], // Ein leeres Array für ausgewählte Kategorien
-        },
-        joinedAt: "28.08.2023",
-        email: "dejan.pantos@maschene.com",
-        bio: "King of the street",
-      },
-      {
-        id: 3,
-        name: "Son Goku",
-        profileImage: generateFakeProfileImage("Son Goku"),
-        farbe: "4",
-        tweets: [], // Liste der Tweets des Benutzers1
-        createdReplies: [],
-        procreated: [],
-        contracreated: [],
-        haslikedcomment: [],
-        hasdislikedcomment: [],
-        haslikedreply: [],
-        hasdislikedreply: [],
-        haslikedtopic: [],
-        hasdislikedtopic: [],
-        following: [15, 16],
-        followers: [18, 25, 27], // Liste der Follower des Benutzerspro
-        notifications: [], // Benachrichtigungen für den Benutzer
-        messages: [], // Privatnachrichten des Benutzers
-        topicsaves: ["/0"],
-        nestedReplies: [],
-        filterSettings: {
-          // Andere Einstellungen
-          categories: [], // Ein leeres Array für ausgewählte Kategorien
-        },
-        joinedAt: "28.08.2023",
-        email: "dejan.pantos@maschene.com",
-        bio: "King of the street",
-      },
-      {
-        id: 4,
-        name: "Vegeta",
-        profileImage: generateFakeProfileImage("Vegeta"),
-        farbe: "4",
-        tweets: [], // Liste der Tweets des Benutzers1
-        createdReplies: [],
-        procreated: [],
-        contracreated: [],
-        haslikedcomment: [],
-        hasdislikedcomment: [],
-        haslikedreply: [],
-        hasdislikedreply: [],
-        haslikedtopic: [],
-        hasdislikedtopic: [],
-        following: [15, 16],
-        followers: [18, 25, 27], // Liste der Follower des Benutzerspro
-        notifications: [], // Benachrichtigungen für den Benutzer
-        messages: [], // Privatnachrichten des Benutzers
-        topicsaves: ["/0"],
-        nestedReplies: [],
-        filterSettings: {
-          // Andere Einstellungen
-          categories: [], // Ein leeres Array für ausgewählte Kategorien
-        },
-        joinedAt: "28.08.2023",
-        email: "dejan.pantos@maschene.com",
-        bio: "King of the street",
-      },
-    ];
 
     return {
       topics: [],
       users: [],
-      currentUser: users[0],
+
       loggedin,
       selectedTab: "pro",
       selectedTabColor: "green",
@@ -265,6 +158,7 @@ export default createStore({
   mutations: {
     setUsers(state, users) {
       state.users = users;
+      state.currentUser = users[0];
     },
 
     setTopics(state, topics) {
@@ -528,22 +422,31 @@ export default createStore({
     },
 
     // Kommentare
-    ADD_COMMENT_TO_TOPIC(state, { topicId, comment, selectedTab }) {
+    ADD_COMMENT_TO_TOPIC(state, { author, topicId, comment, selectedTab }) {
+      const user = author;
+      const users = state.users;
+      console.log(state.topics)
+      console.log(topicId)
+
       const topic = state.topics.find((topic) => topic.id === topicId);
       if (topic) {
+        console.log(topic)
         if (comment.text.trim() !== "") {
           // Initialize the Vote properties for the new comment
           comment.upvotes = 0;
           comment.downvotes = 0;
 
           if (selectedTab === "contra") {
+            console.log("contra")
             comment.commentType = "contra"; // Richtiges Property verwenden
             topic.contraComments.push(comment);
-            comment.author.contracreated.push(comment.id);
+            console.log("push");
+            user.contracreated.push(comment.id);
           } else {
+            console.log("pro")
             comment.commentType = "pro";
             topic.proComments.push(comment);
-            comment.author.procreated.push(comment.id);
+            user.procreated.push(comment.id);
           }
         } else {
           // Show a SweetAlert message if the comment is empty
@@ -555,6 +458,7 @@ export default createStore({
           });
         }
       }
+      console.log("nid gfunde amk")
     },
 
     ADD_TOPIC_TO_SAVES(state, topicPath) {
@@ -580,13 +484,27 @@ export default createStore({
       state.comment = comment;
       state.reply = reply;
     },
+
+    SET_SINGLE_TOPIC(state, topicData) {
+      const existingTopicIndex = state.topics.findIndex(
+        (topic) => topic.id === topicData.id
+      );
+
+      if (existingTopicIndex !== -1) {
+        // Vue 3: Direkte Aktualisierung eines Elements im Array
+        console.log("hade laaan")
+        state.topics[existingTopicIndex] = topicData;
+      } else {
+        state.topics.push(topicData);
+      }
+    },
   },
   actions: {
     async fetchUsers({ commit }) {
       try {
         const response = await axios.get("http://localhost:3000/api/users");
         const users = response.data;
-        console.log(users)
+        console.log(users);
         commit("setUsers", users);
       } catch (error) {
         console.error("Fehler beim Abrufen der Daten:", error);
@@ -638,31 +556,26 @@ export default createStore({
     downvoteReply({ commit }, { replyId, currentUserId, topicId, commentId }) {
       commit("DOWNVOTE_REPLY", { replyId, currentUserId, topicId, commentId });
     },
-    addCommentToTopic({ commit }, { topicId, comment, selectedTab }) {
-      const updatedComment = { ...comment, id: uuidv4() }; // Zuweisung einer eindeutigen ID
-      commit("ADD_COMMENT_TO_TOPIC", {
-        topicId,
-        comment: updatedComment,
-        selectedTab,
-      });
+
+    async fetchTopic({ commit }, topicId) {
+      try {
+        console.log(topicId)
+        const response = await axios.get(
+          `http://localhost:3000/api/topics/${topicId}`
+        );
+        const topicData = response.data;
+        console.log(topicData)
+        commit("SET_SINGLE_TOPIC", topicData);
+      } catch (error) {
+        console.error("Fehler beim Abrufen des Themas:", error);
+        throw error;
+      }
     },
 
-    fetchComments({ state, commit }) {
-      if (
-        state.topics.every(
-          (topic) =>
-            topic.proComments.length > 0 || topic.contraComments.length > 0
-        )
-      ) {
-        return;
-      }
+    async addCommentToTopic(
+      { commit }, author, topicId, comment, selectedTab) {
+        commit("ADD_COMMENT_TO_TOPIC", author, topicId, comment, selectedTab);
 
-      for (const topic of state.topics) {
-        if (topic.comments.length === 0) {
-          const comments = generateComments(3, state.users);
-          commit("ADD_COMMENTS_TO_TOPIC", { topicId: topic.id, comments });
-        }
-      }
     },
   },
   getters: {
@@ -681,6 +594,11 @@ export default createStore({
     getTopicById: (state) => (id) => {
       return state.topics.find((topic) => topic.id === id);
     },
+
+    getUserById: (state) => (id) => {
+      return state.users.find((user) => user.id === id);
+    },
+
     getUserProfile: (state) => {
       return state.users[0];
     },

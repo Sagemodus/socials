@@ -8,10 +8,11 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import App from './App.vue'
 import router from './router'
 import './firebase/init'; // Import and initialize Firebase before creating the app
-import store from './store/store'
+import store from './store/store.js'
 import Swal from 'sweetalert2';
 import 'firebase/analytics'; // Importiere Firebase Analytics
 import './firebase/init'; // Import and initialize Firebase before creating the app
+import Vuex from "vuex";
 
 
       await store.dispatch("fetchTopics");
@@ -24,6 +25,7 @@ library.add(far)
 
 
 const app = createApp(App)
+app.use(Vuex);
 app.use(router)
 app.component('font-awesome-icon', FontAwesomeIcon)
 app.use(store)

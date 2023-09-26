@@ -34,6 +34,7 @@ const Topic = mongoose.model(
     contraComments: [
       {
         author: Object,
+        commentIndex: Number,
         commentType: String,
         createdAt: Date,
         downvotes: Number,
@@ -45,7 +46,7 @@ const Topic = mongoose.model(
             Commentpath: String,
             author: Object,
             authorPath: Number,
-            commentobjekt: Object,
+            commentIndex: Number,
             createdAt: Date,
             downvotes: Number,
             expandReplies: Boolean,
@@ -84,7 +85,7 @@ const Topic = mongoose.model(
             Commentpath: String,
             author: Object,
             authorPath: Number,
-            commentobjekt: Object,
+            commentIndex: Number,
             createdAt: Date,
             downvotes: Number,
             expandReplies: Boolean,
@@ -168,8 +169,23 @@ const User = mongoose.model(
       }
     });
 
+app.get("/api/topics/:topicId", async (req, res) => {
+  const topicId = req.params.topicId;
 
+  try {
+    // Suchen Sie das Thema in der Datenbank anhand seiner ID
+    const topic = await Topic.findOne({ id: topicId });
 
+    if (!topic) {
+      return res.status(404).json({ error: "Thema nicht gefunden" });
+    }
+console.log("funktioniert homie")
+    res.json(topic);
+  } catch (error) {
+    console.error("Fehler beim Abrufen des Themas:", error);
+    res.status(500).json({ error: "Interner Serverfehler" });
+  }
+});
 
 
 
@@ -233,6 +249,34 @@ const User = mongoose.model(
        .json({ message: "Fehler beim Abrufen der Daten aus der Datenbank" });
    }
  });
+
+
+
+
+app.post("/api/addComment", async (req, res) => {
+  const { topicId, comment } = req.body;
+
+  try {
+    // Suchen Sie das Thema in der Datenbank anhand seiner ID
+    const topic = await Topic.findOne({ id: topicId });
+
+    if (!topic) {
+      return res.status(404).json({ error: "Thema nicht gefunden" });
+    }
+
+    // Fügen Sie den neuen Kommentar zum Thema hinzu
+    topic.comments.push(comment);
+
+    // Speichern Sie das aktualisierte Thema in der Datenbank
+    await topic.save();
+
+    // Senden Sie eine Erfolgsantwort zurück
+    res.status(200).json({ message: "Kommentar erfolgreich hinzugefügt" });
+  } catch (error) {
+    console.error("Fehler beim Hinzufügen des Kommentars:", error);
+    res.status(500).json({ error: "Interner Serverfehler" });
+  }
+});
 
 
 

@@ -10,8 +10,8 @@
     <!-- Laden und Anzeigen von Themen -->
     <div v-if="topic" class="topic-ganzeseite">
       <div class="author-info">
-        <img :src="topic.author.profileImage" alt="Author Profile Image" class="author-image" />
-        <span class="author-name">{{ topic.author.name }}</span>
+        <img :src="author.profileImage" alt="Author Profile Image" class="author-image" />
+        <span class="author-name">{{ author.name }}</span>
       </div>
       <div class="topic-content" @click="goToTopic">
         <p class="topic-text">{{ topic.text }}</p>
@@ -57,6 +57,8 @@ import { useStore } from 'vuex';
 import { computed, watchEffect } from 'vue';
 import { ref, onMounted, onBeforeUnmount, } from 'vue';
 import dayjs from 'dayjs';
+import { useRoute } from 'vue-router';
+import axios from "axios";
 
 import { onUnmounted } from 'vue';
 
@@ -66,12 +68,15 @@ export default {
 /*eslint-disable*/
   setup(props) {
     /* eslint-disable no-unused-vars */
-    const route = useRoute()
+    const route = useRoute();
     const store = useStore();
+    const users = computed(() => store.state.users)
+    const topics = store.state.topics
     const topicId = computed(() => props.id);
     const commentId = props.commentId; // Kommentar-ID aus den Props extrahieren
     const replyId = props.replyId; // Antwort-ID aus den Props extrahieren
     const topic = computed(() => store.getters.getTopicById(topicId.value));
+    const author = computed(() => store.getters.getUserById(topic.value.author))
     const comment = topic.value.proComments.find(comment => comment.id === commentId);
 /*eslint-enable*/
 
@@ -173,6 +178,9 @@ export default {
       isScrolled,
       store,
       topic,
+      author,
+      topics,
+      users,
 
 
 
@@ -234,22 +242,29 @@ export default {
 
 
 
-    addComment(commentText) {
+    async addComment(commentText) {
+      const author = this.user;
       const topicId = this.topic.id;
+      await this.$store.dispatch('fetchTopic', topicId);
+
       const newComment = {
         topicId: topicId,
         id: uuidv4(),
         text: commentText,
-        author: this.user,
+        author: this.user.id,
         upvotes: 0,
         downvotes: 0,
         createdAt: dayjs(), // Aktuelle Zeit hinzufügen
+        parentId: this.topic.id,
+        
          // Pfad zum Kommentar hinzufügen
       };
 
 
       const selectedTab = this.selectedTab; // Richtiges Property verwenden
-      this.$store.dispatch('addCommentToTopic', { topicId, comment: newComment, selectedTab });
+       await axios.post("http://localhost:3000/api/addComment", newComment);
+
+      this.$store.dispatch('addCommentToTopic', { author, topicId, comment: newComment, selectedTab });
     },
   },
 

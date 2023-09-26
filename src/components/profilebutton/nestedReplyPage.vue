@@ -17,9 +17,9 @@
 
   <!-- Laden und Anzeigen von Elterelement der Antworten -->
   <CommentReply :key="replyEltern.id" :reply="replyEltern" :topic="topic.id" :commentId="comment.id"
-    :commentobjekt="comment" :commentIndex="replyEltern.commentIndex" :id="replyEltern.id"></CommentReply>
+   :commentIndex="replyEltern.commentIndex" :id="replyEltern.id"></CommentReply>
   <!-- Laden und Anzeigen von Antworten -->
-  <CommentReply :key="reply.id" :reply="reply" :topic="topic.id" :commentId="comment.id" :commentobjekt="comment"
+  <CommentReply :key="reply.id" :reply="reply" :topic="topic.id" :commentId="comment.id" 
     :commentIndex="reply.commentIndex" :id="reply.id"></CommentReply>
 </template>
 

@@ -1,9 +1,13 @@
 // store.js
+/* eslint-disable */
+
 import { createStore } from "vuex";
 import { v4 as uuidv4 } from "uuid";
 import Swal from "sweetalert2";
-import faker from "faker";
 import dayjs from "dayjs";
+import axios from "axios";
+import Auth from '../expressjs/auth';
+
 /* eslint-disable no-unused-vars */
 
 export function formatCreatedAt(createdAt) {
@@ -26,13 +30,25 @@ export function formatCreatedAt(createdAt) {
     return `${Math.floor(diff / (365 * 24 * 60))}y`;
   }
 }
+const MAX_COMMENT_POSITION = 100;
+
+
+function isCommentPositionAvailable(state, topicId, selectedTab) {
+  const topic = state.topics.find((topic) => topic.id === topicId);
+  if (topic) {
+    const commentsArray =
+      selectedTab === "contra" ? topic.contraComments : topic.proComments;
+    return commentsArray.length < MAX_COMMENT_POSITION; // MAX_COMMENT_POSITION ist die maximale Anzahl von Kommentaren
+  }
+  return false;
+}
+
 
 function updatePercentages(topic) {
   const totalVotes = topic.upvotes + topic.downvotes;
   topic.upvotePercentage = ((topic.upvotes / totalVotes) * 100).toFixed(2);
   topic.downvotePercentage = ((topic.downvotes / totalVotes) * 100).toFixed(2);
 }
-
 
 function searchCommentInArray(comments, commentId) {
   for (const currentComment of comments) {
@@ -68,166 +84,6 @@ function generateFakeProfileImage(name) {
   return `https://fakeimg.pl/50x50/?text=${name[0]}&font=lobster`;
 }
 
-function generateReplies(
-  count,
-  topicId,
-  users,
-  newComment,
-  isNested = false,
-  Commentpath = ""
-) {
-  const replies = [];
-
-  for (let i = 0; i < count; i++) {
-    const replytype = isNested ? "nested" : "reply";
-
-    const id = faker.datatype.uuid();
-    const author =
-      users[faker.datatype.number({ min: 0, max: users.length - 1 })];
-    const newReply = {
-      id,
-      topicId,
-      text: faker.lorem.paragraphs(),
-      author,
-      upvotes: faker.datatype.number(),
-      downvotes: faker.datatype.number(),
-      createdAt: faker.date.past(),
-      replies: generateReplies(
-        count - 1,
-        topicId,
-        users,
-        newComment,
-        true,
-        Commentpath
-      ),
-      Commentpath: Commentpath,
-      expandReplies: false,
-      commentobjekt: newComment,
-      replytype,
-    };
-
-    replies.push(newReply);
-
-    if (replytype === "reply") {
-      author.createdReplies.push(newReply.id);
-    }
-  }
-
-  replies.sort((a, b) => a.createdAt - b.createdAt);
-  return replies;
-}
-
-function generateComments(count, users, topicId, commentType, path = "") {
-  const comments = [];
-  for (let i = 0; i < count; i++) {
-    const id = faker.datatype.uuid();
-    const author =
-      users[faker.datatype.number({ min: 0, max: users.length - 1 })];
-    const newComment = {
-      id,
-      topicId,
-      text: faker.lorem.paragraph(),
-      author,
-      upvotes: faker.datatype.number(),
-      downvotes: faker.datatype.number(),
-      createdAt: faker.date.past(),
-      commentType,
-      expandReplies: false,
-      showelement: true,
-    };
-
-    comments.push(newComment);
-    if (commentType === "pro") {
-      author.procreated.push(newComment.id);
-    } else {
-      author.contracreated.push(newComment.id);
-    }
-  }
-
-  comments.sort((a, b) => b.upvotes - a.upvotes);
-  const top3 = comments.slice(0, 3);
-  const rest = comments.slice(3);
-
-  rest.sort((a, b) => a.createdAt - b.createdAt);
-
-  const sortedComments = top3.concat(rest);
-
-  sortedComments.forEach((comment, index) => {
-    comment.commentIndex = index;
-    const newPath = `${path}/${commentType}_${comment.commentIndex}`;
-    comment.path = newPath;
-
-    comment.replies = generateReplies(
-      2,
-      topicId,
-      users,
-      comment,
-      false,
-      newPath
-    );
-    comment.replies = numberReplies(comment.replies);
-  });
-
-  return sortedComments;
-}
-
-function generateTopics(count, users) {
-  const categories = [
-    { main: "Sport", sub: "Fussball" },
-    { main: "Technologie", sub: "Programmierung" },
-    { main: "Unterhaltung", sub: "Film" },
-    { main: "Technologie", sub: "Gaming" },
-    // Weitere Kategorien hinzufügen...
-  ];
-
-  const topics = [];
-  for (let i = 0; i < count; i++) {
-    const id = faker.datatype.uuid();
-    const category = faker.random.arrayElement(categories);
-    const author =
-      users[faker.datatype.number({ min: 0, max: users.length - 1 })];
-    const newPath = `/${i}`;
-
-    const newTopic = {
-      id,
-      text: faker.lorem.paragraph(),
-      author: author,
-      createdAt: faker.date.past(),
-      upvotes: faker.datatype.number({ min: 0, max: 100 }),
-      downvotes: faker.datatype.number({ min: 0, max: 100 }),
-      category: category,
-      proComments: [],
-      contraComments: [],
-      path: newPath,
-    };
-
-    const totalVotes = newTopic.upvotes + newTopic.downvotes;
-    const upvotePercentage = (newTopic.upvotes / totalVotes) * 100;
-    const downvotePercentage = (newTopic.downvotes / totalVotes) * 100;
-
-    newTopic.upvotePercentage = upvotePercentage.toFixed(2);
-    newTopic.downvotePercentage = downvotePercentage.toFixed(2);
-
-    newTopic.proComments = generateComments(
-      10,
-      users,
-      newTopic.id,
-      "pro",
-      newPath
-    );
-    newTopic.contraComments = generateComments(
-      10,
-      users,
-      newTopic.id,
-      "contra",
-      newPath
-    );
-
-    topics.push(newTopic);
-  }
-  return topics;
-}
-
 function searchReplyInCommentAndReplies(comment, targetReplyId) {
   if (comment.id === targetReplyId) {
     return comment;
@@ -247,118 +103,50 @@ function searchReplyInCommentAndReplies(comment, targetReplyId) {
 }
 
 export default createStore({
+  modules:{
+    Auth
+  },
   state() {
-    const loggedin = "true";
-    const users = [
-      {
-        id: 1,
-        name: "Dejan Pantos",
-        profileImage: generateFakeProfileImage("Dejan Pantos"),
-        farbe: "4",
-        tweets: [0], // Liste der Tweets des Benutzers
-        procreated: [],
-        contracreated: [],
-        haslikedcomment: [],
-        hasdislikedcomment: [],
-        haslikedreply: [],
-        hasdislikedreply: [],
-        haslikedtopic: [],
-        hasdislikedtopic: [],
-        following: [15, 16],
-        followers: [18, 25, 27], // Liste der Follower des Benutzerspro
-        notifications: [], // Benachrichtigungen für den Benutzer
-        messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
-        nestedReplies: [],
-        createdReplies: [],
-        joinedAt: "28.08.2023",
-        email: "dejan.pantos@maschene.com",
-        bio: "King of the street",
-      },
-      {
-        id: 2,
-        name: "Lionel Messi",
-        profileImage: generateFakeProfileImage("Lionel Messi"),
-        farbe: "4",
-        tweets: [], // Liste der Tweets des Benutzers1
-        createdReplies: [],
-        procreated: [],
-        contracreated: [],
-        haslikedcomment: [],
-        hasdislikedcomment: [],
-        haslikedreply: [],
-        hasdislikedreply: [],
-        haslikedtopic: [],
-        hasdislikedtopic: [],
-        following: [15, 16],
-        followers: [18, 25, 27], // Liste der Follower des Benutzerspro
-        notifications: [], // Benachrichtigungen für den Benutzer
-        messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
-        nestedReplies: [],
-
-        joinedAt: "28.08.2023",
-        email: "dejan.pantos@maschene.com",
-        bio: "King of the street",
-      },
-      {
-        id: 3,
-        name: "Son Goku",
-        profileImage: generateFakeProfileImage("Son Goku"),
-        farbe: "4",
-        tweets: [], // Liste der Tweets des Benutzers1
-        createdReplies: [],
-        procreated: [],
-        contracreated: [],
-        haslikedcomment: [],
-        hasdislikedcomment: [],
-        haslikedreply: [],
-        hasdislikedreply: [],
-        haslikedtopic: [],
-        hasdislikedtopic: [],
-        following: [15, 16],
-        followers: [18, 25, 27], // Liste der Follower des Benutzerspro
-        notifications: [], // Benachrichtigungen für den Benutzer
-        messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
-        nestedReplies: [],
-
-        joinedAt: "28.08.2023",
-        email: "dejan.pantos@maschene.com",
-        bio: "King of the street",
-      },
-      {
-        id: 4,
-        name: "Vegeta",
-        profileImage: generateFakeProfileImage("Vegeta"),
-        farbe: "4",
-        tweets: [], // Liste der Tweets des Benutzers1
-        createdReplies: [],
-        procreated: [],
-        contracreated: [],
-        haslikedcomment: [],
-        hasdislikedcomment: [],
-        haslikedreply: [],
-        hasdislikedreply: [],
-        haslikedtopic: [],
-        hasdislikedtopic: [],
-        following: [15, 16],
-        followers: [18, 25, 27], // Liste der Follower des Benutzerspro
-        notifications: [], // Benachrichtigungen für den Benutzer
-        messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
-        nestedReplies: [],
-
-        joinedAt: "28.08.2023",
-        email: "dejan.pantos@maschene.com",
-        bio: "King of the street",
-      },
+    const categories = [
+      { main: "Sport", sub: "Fussball" },
+      { main: "Technologie", sub: "Programmierung" },
+      { main: "Unterhaltung", sub: "Film" },
+      { main: "Technologie", sub: "Gaming" },
+      { main: "Reisen", sub: "Abenteuer" },
+      { main: "Kunst", sub: "Malerei" },
+      { main: "Gesundheit", sub: "Fitness" },
+      { main: "Musik", sub: "Rock" },
+      { main: "Essen", sub: "Italienisch" },
+      { main: "Wissenschaft", sub: "Astronomie" },
+      { main: "Bücher", sub: "Fantasy" },
+      { main: "Auto", sub: "Elektrofahrzeuge" },
+      { main: "Mode", sub: "Schuhe" },
+      { main: "Reisen", sub: "Strandurlaub" },
+      { main: "Gesundheit", sub: "Meditation" },
+      { main: "Musik", sub: "Klassik" },
+      { main: "Sport", sub: "Basketball" },
+      { main: "Technologie", sub: "Künstliche Intelligenz" },
+      { main: "Bücher", sub: "Science Fiction" },
+      { main: "Auto", sub: "Luxusautos" },
+      { main: "Mode", sub: "Accessoires" },
+      { main: "Reisen", sub: "Wandern" },
+      { main: "Gesundheit", sub: "Yoga" },
+      { main: "Musik", sub: "Hip-Hop" },
+      { main: "Sport", sub: "Tennis" },
+      { main: "Technologie", sub: "Blockchain" },
+      { main: "Bücher", sub: "Krimi" },
+      { main: "Auto", sub: "Oldtimer" },
+      { main: "Mode", sub: "Hüte" },
+      { main: "Reisen", sub: "Städtereisen" },
+      { main: "Gesundheit", sub: "Ernährung" },
+      { main: "Musik", sub: "Pop" },
+      // Weitere Kategorien hinzufügen...
     ];
+    const loggedin = "true";
 
     return {
-      topics: generateTopics(2, users),
-      users,
-      currentUser: users[0],
+      topics: [],
+      users: [],
       loggedin,
       selectedTab: "pro",
       selectedTabColor: "green",
@@ -367,10 +155,23 @@ export default createStore({
       comment: null, // Comment object
       reply: null, // Reply object
       commentReplyAnzeige: 5,
+      categories,
     };
   },
 
   mutations: {
+    setUsers(state, users) {
+      state.currentUser = users[0];
+    },
+
+    setTopics(state, topics) {
+      state.topics = topics;
+    },
+
+    updateCurrentUser(state, payload) {
+      state.currentUser = { ...state.currentUser, ...payload };
+    },
+
     ADD_NOTIFICATION(state, notification) {
       state.notifications.push(notification);
     },
@@ -379,9 +180,7 @@ export default createStore({
       state.displayedCommentCount = 3; // Set it to the desired initial value
     },
     incrementDisplayedCommentCount(state, incrementAmount) {
-      console.log(state.displayedCommentCount + "bevor");
       state.displayedCommentCount += incrementAmount;
-      console.log(state.displayedCommentCount + "nach");
     },
 
     // Login mutation
@@ -626,22 +425,31 @@ export default createStore({
     },
 
     // Kommentare
-    ADD_COMMENT_TO_TOPIC(state, { topicId, comment, selectedTab }) {
+    ADD_COMMENT_TO_TOPIC(state, { author, topicId, comment, selectedTab }) {
+      const user = author;
+      const users = state.users;
+      console.log(state.topics)
+      console.log(topicId)
+
       const topic = state.topics.find((topic) => topic.id === topicId);
       if (topic) {
+        console.log(topic)
         if (comment.text.trim() !== "") {
           // Initialize the Vote properties for the new comment
           comment.upvotes = 0;
           comment.downvotes = 0;
 
           if (selectedTab === "contra") {
+            console.log("contra")
             comment.commentType = "contra"; // Richtiges Property verwenden
             topic.contraComments.push(comment);
-            comment.author.contracreated.push(comment.id);
+            console.log("push");
+            user.contracreated.push(comment.id);
           } else {
+            console.log("pro")
             comment.commentType = "pro";
             topic.proComments.push(comment);
-            comment.author.procreated.push(comment.id);
+            user.procreated.push(comment.id);
           }
         } else {
           // Show a SweetAlert message if the comment is empty
@@ -653,6 +461,7 @@ export default createStore({
           });
         }
       }
+      console.log("nid gfunde amk")
     },
 
     ADD_TOPIC_TO_SAVES(state, topicPath) {
@@ -665,7 +474,7 @@ export default createStore({
         } else {
           // Thema ist bereits gespeichert, also entfernen
           state.currentUser.topicsaves.splice(index, 1);
-          console.log("Thema erfolgreich entfernt.");
+          ("Thema erfolgreich entfernt.");
         }
       }
     },
@@ -673,14 +482,50 @@ export default createStore({
     SET_SELECTED_TAB(state, tab) {
       state.selectedTab = tab;
     },
-    comment_und_reply(state, { comment, reply }) {
+    comment_und_reply2(state, { comment, reply }) {
+      console.log("kolleg2");
       state.comment = comment;
       state.reply = reply;
     },
+
+    SET_SINGLE_TOPIC(state, topicData) {
+      const existingTopicIndex = state.topics.findIndex(
+        (topic) => topic.id === topicData.id
+      );
+
+      if (existingTopicIndex !== -1) {
+        // Vue 3: Direkte Aktualisierung eines Elements im Array
+        console.log("hade laaan")
+        state.topics[existingTopicIndex] = topicData;
+      } else {
+        state.topics.push(topicData);
+      }
+    },
   },
   actions: {
+    async fetchUsers({ commit }) {
+      try {
+        const response = await axios.get("http://localhost:3000/api/users");
+        const users = response.data;
+        console.log(users);
+        commit("setUsers", users);
+      } catch (error) {
+        console.error("Fehler beim Abrufen der Daten:", error);
+      }
+    },
+
+    async fetchTopics({ commit }) {
+      try {
+        const response = await axios.get("http://localhost:3000/api/topics");
+        const topics = response.data;
+        commit("setTopics", topics);
+      } catch (error) {
+        console.error("Fehler beim Abrufen der Daten:", error);
+      }
+    },
+
     commentundreply({ commit }, { comment, reply }) {
-      commit("comment_und_reply", { comment, reply });
+      commit("comment_und_reply2", { comment, reply });
     },
 
     addNotification({ commit }, notification) {
@@ -714,31 +559,26 @@ export default createStore({
     downvoteReply({ commit }, { replyId, currentUserId, topicId, commentId }) {
       commit("DOWNVOTE_REPLY", { replyId, currentUserId, topicId, commentId });
     },
-    addCommentToTopic({ commit }, { topicId, comment, selectedTab }) {
-      const updatedComment = { ...comment, id: uuidv4() }; // Zuweisung einer eindeutigen ID
-      commit("ADD_COMMENT_TO_TOPIC", {
-        topicId,
-        comment: updatedComment,
-        selectedTab,
-      });
+
+    async fetchTopic({ commit }, topicId) {
+      try {
+        console.log(topicId)
+        const response = await axios.get(
+          `http://localhost:3000/api/topics/${topicId}`
+        );
+        const topicData = response.data;
+        console.log(topicData)
+        commit("SET_SINGLE_TOPIC", topicData);
+      } catch (error) {
+        console.error("Fehler beim Abrufen des Themas:", error);
+        throw error;
+      }
     },
 
-    fetchComments({ state, commit }) {
-      if (
-        state.topics.every(
-          (topic) =>
-            topic.proComments.length > 0 || topic.contraComments.length > 0
-        )
-      ) {
-        return;
-      }
+    async addCommentToTopic(
+      { commit }, author, topicId, comment, selectedTab) {
+        commit("ADD_COMMENT_TO_TOPIC", author, topicId, comment, selectedTab);
 
-      for (const topic of state.topics) {
-        if (topic.comments.length === 0) {
-          const comments = generateComments(3, state.users);
-          commit("ADD_COMMENTS_TO_TOPIC", { topicId: topic.id, comments });
-        }
-      }
     },
   },
   getters: {
@@ -757,6 +597,11 @@ export default createStore({
     getTopicById: (state) => (id) => {
       return state.topics.find((topic) => topic.id === id);
     },
+
+    getUserById: (state) => (id) => {
+      return state.users.find((user) => user.id === id);
+    },
+
     getUserProfile: (state) => {
       return state.users[0];
     },

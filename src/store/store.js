@@ -1,10 +1,12 @@
 // store.js
+/* eslint-disable */
+
 import { createStore } from "vuex";
 import { v4 as uuidv4 } from "uuid";
 import Swal from "sweetalert2";
-import faker from "faker";
 import dayjs from "dayjs";
 import axios from "axios";
+import Auth from '../expressjs/auth';
 
 /* eslint-disable no-unused-vars */
 
@@ -34,7 +36,6 @@ function updatePercentages(topic) {
   topic.upvotePercentage = ((topic.upvotes / totalVotes) * 100).toFixed(2);
   topic.downvotePercentage = ((topic.downvotes / totalVotes) * 100).toFixed(2);
 }
-
 
 function searchCommentInArray(comments, commentId) {
   for (const currentComment of comments) {
@@ -89,7 +90,45 @@ function searchReplyInCommentAndReplies(comment, targetReplyId) {
 }
 
 export default createStore({
+  modules:{
+    Auth
+  },
   state() {
+    const categories = [
+      { main: "Sport", sub: "Fussball" },
+      { main: "Technologie", sub: "Programmierung" },
+      { main: "Unterhaltung", sub: "Film" },
+      { main: "Technologie", sub: "Gaming" },
+      { main: "Reisen", sub: "Abenteuer" },
+      { main: "Kunst", sub: "Malerei" },
+      { main: "Gesundheit", sub: "Fitness" },
+      { main: "Musik", sub: "Rock" },
+      { main: "Essen", sub: "Italienisch" },
+      { main: "Wissenschaft", sub: "Astronomie" },
+      { main: "Bücher", sub: "Fantasy" },
+      { main: "Auto", sub: "Elektrofahrzeuge" },
+      { main: "Mode", sub: "Schuhe" },
+      { main: "Reisen", sub: "Strandurlaub" },
+      { main: "Gesundheit", sub: "Meditation" },
+      { main: "Musik", sub: "Klassik" },
+      { main: "Sport", sub: "Basketball" },
+      { main: "Technologie", sub: "Künstliche Intelligenz" },
+      { main: "Bücher", sub: "Science Fiction" },
+      { main: "Auto", sub: "Luxusautos" },
+      { main: "Mode", sub: "Accessoires" },
+      { main: "Reisen", sub: "Wandern" },
+      { main: "Gesundheit", sub: "Yoga" },
+      { main: "Musik", sub: "Hip-Hop" },
+      { main: "Sport", sub: "Tennis" },
+      { main: "Technologie", sub: "Blockchain" },
+      { main: "Bücher", sub: "Krimi" },
+      { main: "Auto", sub: "Oldtimer" },
+      { main: "Mode", sub: "Hüte" },
+      { main: "Reisen", sub: "Städtereisen" },
+      { main: "Gesundheit", sub: "Ernährung" },
+      { main: "Musik", sub: "Pop" },
+      // Weitere Kategorien hinzufügen...
+    ];
     const loggedin = "true";
     const users = [
       {
@@ -110,9 +149,14 @@ export default createStore({
         followers: [18, 25, 27], // Liste der Follower des Benutzerspro
         notifications: [], // Benachrichtigungen für den Benutzer
         messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
+        topicsaves: ["/0"],
         nestedReplies: [],
         createdReplies: [],
+        filterSettings: {
+          // Andere Einstellungen
+          categories: [], // Ein leeres Array für ausgewählte Kategorien
+        },
+
         joinedAt: "28.08.2023",
         email: "dejan.pantos@maschene.com",
         bio: "King of the street",
@@ -136,9 +180,13 @@ export default createStore({
         followers: [18, 25, 27], // Liste der Follower des Benutzerspro
         notifications: [], // Benachrichtigungen für den Benutzer
         messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
+        topicsaves: ["/0"],
         nestedReplies: [],
 
+        filterSettings: {
+          // Andere Einstellungen
+          categories: [], // Ein leeres Array für ausgewählte Kategorien
+        },
         joinedAt: "28.08.2023",
         email: "dejan.pantos@maschene.com",
         bio: "King of the street",
@@ -162,9 +210,12 @@ export default createStore({
         followers: [18, 25, 27], // Liste der Follower des Benutzerspro
         notifications: [], // Benachrichtigungen für den Benutzer
         messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
+        topicsaves: ["/0"],
         nestedReplies: [],
-
+        filterSettings: {
+          // Andere Einstellungen
+          categories: [], // Ein leeres Array für ausgewählte Kategorien
+        },
         joinedAt: "28.08.2023",
         email: "dejan.pantos@maschene.com",
         bio: "King of the street",
@@ -188,9 +239,12 @@ export default createStore({
         followers: [18, 25, 27], // Liste der Follower des Benutzerspro
         notifications: [], // Benachrichtigungen für den Benutzer
         messages: [], // Privatnachrichten des Benutzers
-        topicsaves: [],
+        topicsaves: ["/0"],
         nestedReplies: [],
-
+        filterSettings: {
+          // Andere Einstellungen
+          categories: [], // Ein leeres Array für ausgewählte Kategorien
+        },
         joinedAt: "28.08.2023",
         email: "dejan.pantos@maschene.com",
         bio: "King of the street",
@@ -198,6 +252,8 @@ export default createStore({
     ];
 
     return {
+      topics: [],
+      users: [],
       currentUser: users[0],
       loggedin,
       selectedTab: "pro",
@@ -207,10 +263,23 @@ export default createStore({
       comment: null, // Comment object
       reply: null, // Reply object
       commentReplyAnzeige: 5,
+      categories,
     };
   },
 
   mutations: {
+    setUsers(state, users) {
+      state.users = users;
+    },
+
+    setTopics(state, topics) {
+      state.topics = topics;
+    },
+
+    updateCurrentUser(state, payload) {
+      state.currentUser = { ...state.currentUser, ...payload };
+    },
+
     ADD_NOTIFICATION(state, notification) {
       state.notifications.push(notification);
     },
@@ -219,9 +288,7 @@ export default createStore({
       state.displayedCommentCount = 3; // Set it to the desired initial value
     },
     incrementDisplayedCommentCount(state, incrementAmount) {
-      console.log(state.displayedCommentCount + "bevor");
       state.displayedCommentCount += incrementAmount;
-      console.log(state.displayedCommentCount + "nach");
     },
 
     // Login mutation
@@ -310,6 +377,13 @@ export default createStore({
         }
       }
     },
+
+    UPVOTE_REPLY(state, { replyId, currentUserId, topicId, commentId }) {
+      const topic = state.topics.find((topic) => topic.id === topicId);
+      const comment =
+        topic.proComments.find((comment) => comment.id === commentId) ||
+        topic.contraComments.find((comment) => comment.id === commentId);
+
       let reply = null;
 
       if (comment) {
@@ -498,7 +572,7 @@ export default createStore({
         } else {
           // Thema ist bereits gespeichert, also entfernen
           state.currentUser.topicsaves.splice(index, 1);
-          console.log("Thema erfolgreich entfernt.");
+          ("Thema erfolgreich entfernt.");
         }
       }
     },
@@ -506,7 +580,8 @@ export default createStore({
     SET_SELECTED_TAB(state, tab) {
       state.selectedTab = tab;
     },
-    comment_und_reply(state, { comment, reply }) {
+    comment_und_reply2(state, { comment, reply }) {
+      console.log("kolleg2");
       state.comment = comment;
       state.reply = reply;
     },
@@ -534,7 +609,7 @@ export default createStore({
     },
 
     commentundreply({ commit }, { comment, reply }) {
-      commit("comment_und_reply", { comment, reply });
+      commit("comment_und_reply2", { comment, reply });
     },
 
     addNotification({ commit }, notification) {

@@ -7,7 +7,7 @@
 </template>
 
 <script>
-
+/* eslint-disable */
 import { mapState } from 'vuex';
 import TopicBox from './TopicBox'; // Make sure to adjust the path accordingly
 import axios from "axios";
@@ -20,7 +20,7 @@ export default {
   setup() {
     const store = useStore();
     const topics = store.state.topics;
-const users = store.state.topics;
+    const users = store.state.topics;
     // Laden Sie die Daten beim Komponentenstart
 
 

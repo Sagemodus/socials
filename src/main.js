@@ -7,11 +7,9 @@ import { far } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import App from './App.vue'
 import router from './router'
-import './firebase/init'; // Import and initialize Firebase before creating the app
 import store from './store/store'
 import Swal from 'sweetalert2';
-import 'firebase/analytics'; // Importiere Firebase Analytics
-import './firebase/init'; // Import and initialize Firebase before creating the app
+
 
 
       await store.dispatch("fetchTopics");

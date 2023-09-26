@@ -1,138 +1,168 @@
 <template>
-  <div class="login-container">
-    <div class="form-container">
-      <h1>Register</h1>
-      <form @submit.prevent="register">
-        <div class="input-group">
-          <label for="username">Username:</label>
-          <input type="text" id="username" v-model="username" required>
+  <div>
+    <h2>Register</h2>
+    <div class="row">
+      <div class="card mx-auto">
+        <div class="card-header text-white bg-primary">
+          <h4>Register</h4>
         </div>
-        <div class="input-group">
-          <label for="email">Email:</label>
-          <input type="email" id="email" v-model="email" required>
+        <div class="card-body">
+          <form @submit.prevent="registerUser">
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input
+                id="username"
+                type="text"
+                placeholder="Username"
+                name="username"
+                v-model="username"
+                class="form-control"
+              >
+            </div>
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input
+                id="name"
+                type="text"
+                placeholder="Name"
+                name="name"
+                v-model="name"
+                class="form-control"
+              >
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input
+                id="email"
+                type="text"
+                placeholder="Email"
+                name="email"
+                v-model="email"
+                class="form-control"
+              >
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                class="form-control"
+                placeholder="Password"
+                name="password"
+                id="password"
+                v-model="password"
+              >
+            </div>
+            <div class="form-group">
+              <label for="confirm_password">Confirm Password</label>
+              <input
+                type="password"
+                class="form-control"
+                placeholder="Confirm Password"
+                name="confirm_password"
+                id="confirm_password"
+                v-model="confirm_password"
+              >
+            </div>
+            <button class="btn btn-primary">Register</button>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <router-link to="/login" class="card-link">Already have an account?</router-link>
+          </form>
         </div>
-        <div class="input-group">
-          <label for="password">Password:</label>
-          <input type="password" id="password" v-model="password" required>
-        </div>
-        <div class="input-group">
-          <label for="confirmPassword">Confirm Password:</label>
-          <input type="password" id="confirmPassword" v-model="confirmPassword" required>
-        </div>
-        <button type="submit">Register</button>
-      </form>
+      </div>
     </div>
   </div>
 </template>
-  
-<script>
-import axios from 'axios'; // Import Axios for making API requests
 
+<script>
+import { mapActions } from "vuex";
 export default {
   data() {
     return {
       username: "",
-      email: "",
       password: "",
-      confirmPassword: ""
+      confirm_password: "",
+      name: "",
+      email: ""
     };
   },
   methods: {
-
-
-
-    register() {
-      // Check if passwords match
-      if (this.password !== this.confirmPassword) {
-        alert("Passwords do not match.");
-        return;
+  ...mapActions(["register"]),
+  async registerUser() {
+    let user = {
+      username: this.username,
+      password: this.password,
+      confirm_password: this.confirm_password,
+      email: this.email,
+      name: this.name
+    };
+    try {
+      const res = await this.register(user);
+      if (res.data.success) {
+        this.$router.push("login");
       }
-
-      // Send registration data to your Express.js server
-      axios.post('/api/register', {
-        username: this.username,
-        email: this.email,
-        password: this.password
-      })
-      .then((response) => {
-        // Handle the response from the server (e.g., redirect to login page)
-        console.log(response.data);
-        // Redirect to login page or display a success message
-      })
-      .catch((error) => {
-        console.error(error);
-        // Handle registration error (e.g., display error message)
-      });
+    } catch (error) {
+      console.error("Error registering user:", error);
+      // Handle the error (e.g., display an error message)
     }
   }
+}
+
 };
 </script>
-  
-  <style>
-  .login-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #F9F9F9;
-  }
-  
-  .form-container {
-    background-color: #FFFFFF;
-    border-bottom: 1px solid #CCCCCC;
-    padding: 20px;
-    text-align: center;
-  }
-  
-  h1 {
-    margin-bottom: 20px;
-  }
-  
-  .input-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 10px;
-  }
-  
-  label {
-    display: block;
-    margin-bottom: 5px;
-  }
-  
-  input[type="text"],
-  input[type="password"],
-  input[type="email"],
-  input[type="date"] {
-    width: 100%;
-    padding: 5px;
-    border: none;
-    border-bottom: 1px solid #CCCCCC;
-    outline: none;
-  }
-  
-  .additional-links {
-    margin-top: 20px;
-  }
-  
-  .additional-links p {
-    margin-bottom: 10px;
-  }
-  
-  .additional-links a {
-    color: grey;
-  }
-  
-  button {
-    padding: 10px 20px;
-    background-color: #ECECEC;
-    color: #000000;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background-color: #D1D1D1;
-  }
-  </style>
-  
+
+<style scoped>
+.registration {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f5f5f5; /* Soft white background */
+}
+
+.registration-title {
+  text-align: center;
+  color: #333; /* Dark gray text color */
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.registration-card {
+  width: 60%;
+}
+
+.card {
+  border: none; /* Remove card border */
+  border-radius: 10px; /* Rounded corners */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Soft shadow */
+}
+
+.btn {
+  border-radius: 0;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.form-label {
+  width: 100%; /* Labels start at the same spot */
+  font-weight: bold;
+  color: #555; /* Medium gray label text color */
+}
+
+.form-control {
+  border: 1px solid #ccc; /* Light gray border */
+  border-radius: 5px; /* Rounded corners */
+  padding: 10px;
+}
+
+.form-control:focus {
+  border-color: #007bff; /* Blue border when focused */
+}
+
+.registration-form {
+  padding: 20px;
+}
+</style>

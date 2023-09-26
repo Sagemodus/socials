@@ -141,34 +141,28 @@ const User = mongoose.model(
   })
 );
 
-app.post("/api/addUsers", async (req, res) => {
+app.post("/api/users/register", async (req, res) => {
   try {
     const userData = req.body;
-    const saltRounds = 10; // Number of salt rounds for bcrypt
 
-    // Hash the user's password
-    bcrypt.hash(userData.password, saltRounds, async (err, hashedPassword) => {
-      if (err) {
-        console.error("Error hashing password:", err);
-        return res.status(500).send({ message: "Error hashing password" });
-      }
+    // Generate a salt and hash the user's password
+    const saltRounds = 10; // Number of salt rounds
+    const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
 
-      // Replace the user's plaintext password with the hashed password
-      userData.password = hashedPassword;
+    // Replace the plain password with the hashed password
+    userData.password = hashedPassword;
 
-      // Create a new user document with the hashed password
-      const user = new User(userData);
-      await user.save();
+    // Create a new user document with the hashed password
+    const user = new User(userData);
+    await user.save();
 
-      console.log("User successfully registered");
-      res.status(200).send({ message: "User successfully registered" });
-    });
+    console.log("User successfully registered");
+    res.status(200).send({ message: "User successfully registered" });
   } catch (error) {
     console.error("Error registering user:", error);
     res.status(500).send({ message: "Error registering user" });
   }
 });
-
 
 
 
@@ -224,7 +218,6 @@ app.post("/api/addUsers", async (req, res) => {
    try {
      const users = await User.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
 
-     console.log(users+ " bruder")
      res.json(users); // Senden Sie die Daten als JSON an den Client
    } catch (error) {
      console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
@@ -243,7 +236,7 @@ app.get("/test", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Willkommen auf der Startseidtpppe!");
+  res.send("Expresss.js-Server startseiteè!");
 });
 
 app.listen(port, () => {

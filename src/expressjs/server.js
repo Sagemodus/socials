@@ -141,7 +141,7 @@ const User = mongoose.model(
   })
 );
 
-app.post("/api/addUsers", async (req, res) => {
+app.post("/api/register", async (req, res) => {
   try {
     const userData = req.body;
     const saltRounds = 10; // Number of salt rounds for bcrypt
@@ -224,7 +224,6 @@ app.post("/api/addUsers", async (req, res) => {
    try {
      const users = await User.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
 
-     console.log(users+ " bruder")
      res.json(users); // Senden Sie die Daten als JSON an den Client
    } catch (error) {
      console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
@@ -243,7 +242,7 @@ app.get("/test", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Willkommen auf der Startseidtpppe!");
+  res.send("Expresss.js-Server startseite!");
 });
 
 app.listen(port, () => {

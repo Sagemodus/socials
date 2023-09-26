@@ -51,20 +51,20 @@ export default {
   },
   methods: {
     ...mapActions(["login"]),
-    loginUser() {
+    async loginUser() {
       let user = {
         username: this.username,
         password: this.password
       };
-      this.login(user)
-        .then(res => {
-          if (res.data.success) {
-            this.$router.push("/profile");
-          }
-        })
-        .catch(err => {
-          console.log(err);
-        });
+      try {
+        const res = await this.login(user);
+        if (res.data.success) {
+          this.$router.push("/profile");
+        }
+      } catch (error) {
+        console.error("Error logging in:", error);
+        // Handle the error (e.g., display an error message)
+      }
     }
   }
 };

@@ -1,10 +1,14 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const bcrypt = require('bcrypt');
-const cors = require("cors"); // Importieren Sie das cors-Modul
+const bcrypt = require('bcrypt'); //Für password verschlüsselung
+const cors = require("cors"); 
 const app = express();
 const port = process.env.PORT || 3000;
 const bodyParser = require("body-parser");
+const jwt = require('jsonwebtoken'); // Tokens für session authentifizierung
+
+const jwtSecretKey = 'BlaBlo123'; //MUSS UMBEDINGT VERÄNDERT WERDEN .ENV FILE SICHER STELLEN
+
 
 app.use(cors());
 
@@ -134,8 +138,51 @@ const User = mongoose.model(
     profileImage: String,
     topicsaves: Array,
     tweets: Array,
+    hashedPassword: String,
   })
 );
+
+
+function generateAuthToken(user) {
+  const payload = {
+    userId: user._id,
+  };
+  
+
+  const token = jwt.sign(payload, jwtSecretKey, {
+    expiresIn: '1h', // Token expiration time (e.g., 1 hour)
+  });
+  
+  return token;
+}
+
+
+app.post("/api/users/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    // Find the user by username in the database
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(401).send({ message: "User not found" });
+    }
+    // Compare the provided password with the hashed password
+    const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
+    if (!isPasswordValid) {
+      return res.status(401).send({ message: "Invalid password" });
+    }
+    // Generate a JWT token
+    const token = generateAuthToken(user); // Use the generateToken function
+    // Send the token as a response along with any other data you want to include
+    res.status(200).send({ success: true, token });
+  } catch (error) {
+    console.error("Error logging in:", error);
+    res.status(500).send({ message: "Error logging in" });
+  }
+});
+
+
+
+
 
 
 app.post("/api/addUsers", async (req, res) => {
@@ -171,19 +218,20 @@ app.post("/api/users/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
 
     // Replace the plain password with the hashed password
-    userData.password = hashedPassword;
+    userData.hashedPassword = hashedPassword;
 
     // Create a new user document with the hashed password
     const user = new User(userData);
     await user.save();
 
     console.log("User successfully registered");
-    res.status(200).send({ message: "User successfully registered" });
+    res.status(200).send({ success: true, message: "User successfully registered" });
   } catch (error) {
     console.error("Error registering user:", error);
     res.status(500).send({ message: "Error registering user" });
   }
 });
+
 
 
 // Definieren Sie die API-Route zum Hinzufügen von Topics

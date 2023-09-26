@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
 import axios from "axios";
-import Auth from '../expressjs/auth';
+
 
 /* eslint-disable no-unused-vars */
 
@@ -103,9 +103,7 @@ function searchReplyInCommentAndReplies(comment, targetReplyId) {
 }
 
 export default createStore({
-  modules:{
-    Auth
-  },
+
   state() {
     const categories = [
       { main: "Sport", sub: "Fussball" },
@@ -144,6 +142,7 @@ export default createStore({
     ];
     const loggedin = "true";
 
+
     return {
       topics: [],
       users: [],
@@ -156,6 +155,7 @@ export default createStore({
       reply: null, // Reply object
       commentReplyAnzeige: 5,
       categories,
+      
     };
   },
 
@@ -505,6 +505,43 @@ export default createStore({
     },
   },
   actions: {
+
+    async login({
+      commit
+  }, user) {
+      commit('auth_request');
+      try {
+          let res = await axios.post('http://localhost:3000/api/users/login', user)
+          if (res.data.success) {
+              const token = res.data.token;
+              const user = res.data.user;
+              // Store the token into the localstorage
+              localStorage.setItem('token', token);
+              // Set the axios defaults
+              axios.defaults.headers.common['Authorization'] = token;
+              commit('auth_success', token, user);
+          }
+          return res;
+      } catch (err) {
+          commit('auth_error', err);
+      }
+  },
+
+    async register({
+      commit
+  }, userData) {
+      try {
+          commit('register_request');
+          let res = await axios.post('http://localhost:3000/api/users/register', userData);
+          if (res.data.success !== undefined) {
+              commit('register_success');
+          }
+          return res;
+      } catch (err) {
+          commit('register_error', err)
+      }
+  },
+
     async fetchUsers({ commit }) {
       try {
         const response = await axios.get("http://localhost:3000/api/users");

@@ -98,7 +98,8 @@ export default {
     try {
       const res = await this.register(user);
       if (res.data.success) {
-        this.$router.push("login");
+        console.log(res.data.success)
+        this.$router.push("/feed");
       }
     } catch (error) {
       console.error("Error registering user:", error);

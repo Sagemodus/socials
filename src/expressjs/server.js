@@ -148,6 +148,28 @@ const User = mongoose.model(
     hashedPassword: String,
   })
 );
+/*
+
+BIS JETZT NOCH DRAUSSEN, WIRD SPÄTER GEBRAUCHT BEI COMMENTS USW...
+
+function verifyToken(req, res, next) {
+  const token = req.headers.authorization; // Assuming the token is sent in the 'Authorization' header
+
+  if (!token) {
+    return res.status(401).json({ message: 'Token not provided' });
+  }
+
+  jwt.verify(token, jwtSecretKey, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ message: 'Invalid token' });
+    }
+
+    // If the token is valid, you can attach the user information to the request for use in the route handler
+    req.user = decoded.user;
+    next();
+  });
+}
+*/
 
 async function getNextUserId() {
   try {

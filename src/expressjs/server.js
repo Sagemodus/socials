@@ -7,6 +7,13 @@ const port = process.env.PORT || 3000;
 const bodyParser = require("body-parser");
 const jwt = require('jsonwebtoken'); // Tokens für session authentifizierung
 
+//von hier 
+const { JSDOM } = require('jsdom');
+const createDOMPurify = require('dompurify');
+const { window } = new JSDOM('');
+const DOMPurify = createDOMPurify(window);
+// bis hier ist alles für sanitierung von inputs
+
 const jwtSecretKey = 'BlaBlo123'; //MUSS UMBEDINGT VERÄNDERT WERDEN .ENV FILE SICHER STELLEN
 
 
@@ -142,43 +149,114 @@ const User = mongoose.model(
   })
 );
 
+async function getNextUserId() {
+  try {
+    // Find the document with the highest id value
+    const highestUser = await User.findOne({}, {}, { sort: { id: -1 } });
+
+    // If there are no users in the database, start with ID 1; otherwise, increment the highest ID value
+    const nextUserId = highestUser ? highestUser.id + 1 : 1;
+
+    return nextUserId;
+  } catch (error) {
+    console.error("Error getting next user ID:", error);
+    throw error;
+  }
+}
 
 function generateAuthToken(user) {
   const payload = {
-    userId: user._id,
+    user: {
+      _id: user._id,
+      username: user.username, // Add other user properties here
+    },
   };
-  
 
   const token = jwt.sign(payload, jwtSecretKey, {
-    expiresIn: '1h', // Token expiration time (e.g., 1 hour)
+    expiresIn: '1h',
   });
-  
+
   return token;
 }
-
-
 app.post("/api/users/login", async (req, res) => {
   try {
-    const { username, password } = req.body;
-    // Find the user by username in the database
-    const user = await User.findOne({ username });
+    // Sanitize user inputs
+    const name = DOMPurify.sanitize(req.body.name);
+    const password = DOMPurify.sanitize(req.body.password);
+
+    // Find the user by name in the database
+    const user = await User.findOne({ name: name });
+
     if (!user) {
       return res.status(401).send({ message: "User not found" });
     }
+
     // Compare the provided password with the hashed password
     const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
     if (!isPasswordValid) {
       return res.status(401).send({ message: "Invalid password" });
     }
+
     // Generate a JWT token
-    const token = generateAuthToken(user); // Use the generateToken function
-    // Send the token as a response along with any other data you want to include
-    res.status(200).send({ success: true, token });
+    const token = generateAuthToken(user);
+
+    // Send the token and user ID as a response
+    console.log(user.id);
+    res.status(200).send({ success: true, token, userId: user.id });
   } catch (error) {
     console.error("Error logging in:", error);
     res.status(500).send({ message: "Error logging in" });
   }
 });
+
+
+
+
+app.post("/api/users/register", async (req, res) => {
+  try {
+    const userData = req.body;
+
+    // Sanitize user input
+    const sanitizedName = DOMPurify.sanitize(userData.name);
+    const sanitizedPassword = DOMPurify.sanitize(userData.password);
+
+    // Check if a user with the same name already exists
+    const existingUser = await User.findOne({ name: sanitizedName });
+    if (existingUser) {
+      return res.status(400).send({ success: false, message: "User with this name already exists" });
+    }
+
+    // Get the next available user ID
+    const nextUserId = await getNextUserId();
+
+    // Set the id and joinedAt fields of the userData
+    userData.id = nextUserId;
+    userData.joinedAt = new Date().toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+
+    // Generate a salt and hash the user's password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(sanitizedPassword, saltRounds);
+
+    // Replace the plain password with the hashed password
+    userData.hashedPassword = hashedPassword;
+
+    // Create a new user document with the sanitized data
+    const user = new User({ name: sanitizedName, hashedPassword });
+    await user.save();
+
+    console.log("User successfully registered");
+    res.status(200).send({ success: true, message: "User successfully registered" });
+  } catch (error) {
+    console.error("Error registering user:", error);
+    res.status(500).send({ success: false, message: "Error registering user" });
+  }
+});
+
+
 
 
 
@@ -207,31 +285,6 @@ app.post("/api/addUsers", async (req, res) => {
     });
   }
 });
-
-
-app.post("/api/users/register", async (req, res) => {
-  try {
-    const userData = req.body;
-
-    // Generate a salt and hash the user's password
-    const saltRounds = 10; // Number of salt rounds
-    const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
-
-    // Replace the plain password with the hashed password
-    userData.hashedPassword = hashedPassword;
-
-    // Create a new user document with the hashed password
-    const user = new User(userData);
-    await user.save();
-
-    console.log("User successfully registered");
-    res.status(200).send({ success: true, message: "User successfully registered" });
-  } catch (error) {
-    console.error("Error registering user:", error);
-    res.status(500).send({ message: "Error registering user" });
-  }
-});
-
 
 
 // Definieren Sie die API-Route zum Hinzufügen von Topics

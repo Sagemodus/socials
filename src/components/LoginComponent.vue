@@ -30,9 +30,10 @@
                 v-model="password"
               >
             </div>
+            <error-messages :errors="errorMessages" v-if="errorMessages.length" />
             <input type="submit" class="btn btn-primary" value="Login">
             &nbsp;&nbsp;&nbsp;&nbsp;
-            <router-link to="/register" class="card-link">Need and account?</router-link>
+            <router-link to="/register" class="card-link">Need an account?</router-link>
           </form>
         </div>
       </div>
@@ -42,31 +43,48 @@
 
 <script>
 import { mapActions } from "vuex";
+import ErrorMessages from "@/components/ErrorMessages.vue"; // Adjust the import path as needed
 export default {
+  components: {
+    ErrorMessages,
+  },
   data() {
     return {
       username: "",
-      password: ""
+      password: "",
+      errorMessages: [],
     };
   },
   methods: {
     ...mapActions(["login"]),
     async loginUser() {
+      console.log("loginUser method called");
       let user = {
-        username: this.username,
-        password: this.password
+        name: this.username,
+        password: this.password,
       };
       try {
-        const res = await this.login(user);
-        if (res.data.success) {
-          this.$router.push("/profile");
+        const response = await this.login(user);
+        console.log("Response from login:", response);
+
+        if (response.success) {
+          // Request was successful, and login is successful
+          const userId = response.userId;
+          console.log("Redirecting to profile page with user ID:", userId);
+
+          // Redirect the user to their profile page with the user ID
+          this.$router.push(`/profil/${userId}`);
+        } else {
+          // Handle unsuccessful login based on the response
+          console.log("Login unsuccessful.");
+          this.errorMessages = ["Invalid username or password. Please try again."];
         }
       } catch (error) {
         console.error("Error logging in:", error);
-        // Handle the error (e.g., display an error message)
+        this.errorMessages = ["An error occurred while logging in. Please try again."];
       }
-    }
-  }
+    },
+  },
 };
 </script>
 

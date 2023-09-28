@@ -26,8 +26,12 @@ import ReplyPage from '../components/SingleReplyPage.vue';
 
 // Profil weiterleitungen
 import nestedReplyPage from '../components/profilebutton/nestedReplyPage.vue';
-import bookmarkSaves from '../components/profilebutton/bookmarkSaves.vue'
-import profileAndereUser from '../components/profilebutton/profileAndereUser.vue'
+import bookmarkSaves from '../components/profilebutton/bookmarkSaves.vue';
+import profileAndereUser from '../components/profilebutton/profileAndereUser.vue';
+
+//passwort vergessen
+import PasswordForgottenComponent from '../components/PasswordForgottenComponent.vue';
+import ResetPassword from '../components/ResetPasswordComponent.vue'
 
 import store from '../store/store.js'; // Import your Vuex store
 
@@ -65,6 +69,16 @@ const routes = [
     name: "login",
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/LoginView.vue"),
+  },
+  { 
+    path: '/password-reset',
+    name: 'PasswordForgottenComponent',
+   component: PasswordForgottenComponent 
+  },
+  {
+    path: '/password-reset-finale',
+    name: 'ResetPassword',
+    component: ResetPassword
   },
   {
     path: "/register",

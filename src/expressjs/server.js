@@ -14,7 +14,13 @@ const { window } = new JSDOM('');
 const DOMPurify = createDOMPurify(window);
 // bis hier ist alles für sanitierung von inputs
 
+//Secure token random generate für reset token und Emailer
+const crypto = require('crypto'); // For generating random tokens
+const nodemailer = require('nodemailer'); // For sending emails
+
 const jwtSecretKey = 'BlaBlo123'; //MUSS UMBEDINGT VERÄNDERT WERDEN .ENV FILE SICHER STELLEN
+
+
 
 
 app.use(cors());
@@ -146,8 +152,98 @@ const User = mongoose.model(
     topicsaves: Array,
     tweets: Array,
     hashedPassword: String,
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
   })
 );
+
+
+
+app.post("/api/users/reset-password-request", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Find the user by email in the database
+    const user = await User.findOne({ email: email });
+
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    // Generate a random reset token
+    const resetToken = crypto.randomBytes(20).toString("hex");
+
+    // Set an expiration time for the reset token (e.g., 1 hour)
+    const resetTokenExpiration = Date.now() + 3600000; // 1 hour in milliseconds
+
+    // Update the user's record with the reset token and expiration time
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = new Date(resetTokenExpiration); // Store as a Date object
+    await user.save();
+
+    // Send an email to the user with the reset token and a link to the reset page
+    const transporter = nodemailer.createTransport({
+      // Configure your email provider here (e.g., SMTP)
+    });
+
+    const mailOptions = {
+      from: "your@email.com",
+      to: user.email,
+      subject: "Password Reset",
+      text: `You are receiving this email because you (or someone else) requested a password reset for your account.\n\n` +
+        `Please click on the following link, or paste it into your browser to reset your password:\n\n` +
+        `http://yourwebsite.com/reset-password/${resetToken}\n\n` +
+        `If you did not request this, please ignore this email, and your password will remain unchanged.\n`,
+    };
+
+    transporter.sendMail(mailOptions, (error) => {
+      if (error) {
+        console.error("Error sending email:", error);
+        res.status(500).send({ message: "Error sending email" });
+      } else {
+        console.log("Password reset email sent");
+        res.status(200).send({ message: "Password reset email sent" });
+      }
+    });
+  } catch (error) {
+    console.error("Error initiating password reset:", error);
+    res.status(500).send({ message: "Error initiating password reset" });
+  }
+});
+
+
+// Define a route for resetting the password using the reset token
+app.post("/api/users/reset-password", async (req, res) => {
+  try {
+    const { resetToken, newPassword } = req.body;
+
+    // Find the user by the reset token and check if it's still valid
+    const user = await User.findOne({
+      resetPasswordToken: resetToken,
+      resetPasswordExpires: { $gt: Date.now() }, // Check if the token is still valid
+    });
+
+    if (!user) {
+      return res.status(400).send({ message: "Invalid or expired reset token" });
+    }
+
+    // Generate a new hashed password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update the user's password and reset token in the database
+    user.hashedPassword = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).send({ message: "Password reset successful" });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res.status(500).send({ message: "Error resetting password" });
+  }
+});
+
 
 async function getNextUserId() {
   try {

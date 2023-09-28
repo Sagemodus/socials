@@ -32,7 +32,6 @@ const Topic = mongoose.model(
     contraComments: [
       {
         author: Object,
-        commentIndex: Number,
         commentType: String,
         createdAt: Date,
         downvotes: Number,
@@ -44,7 +43,7 @@ const Topic = mongoose.model(
             Commentpath: String,
             author: Object,
             authorPath: Number,
-            commentIndex: Number,
+            commentobjekt: Object,
             createdAt: Date,
             downvotes: Number,
             expandReplies: Boolean,
@@ -83,7 +82,7 @@ const Topic = mongoose.model(
             Commentpath: String,
             author: Object,
             authorPath: Number,
-            commentIndex: Number,
+            commentobjekt: Object,
             createdAt: Date,
             downvotes: Number,
             expandReplies: Boolean,
@@ -310,18 +309,18 @@ app.get("/api/topics/:topicId", async (req, res) => {
   const topicId = req.params.topicId;
 
   try {
-    // Suchen Sie das Thema in der Datenbank anhand seiner ID
-    const topic = await Topic.findOne({ id: topicId });
+    const userData = req.body;
 
     if (!topic) {
       return res.status(404).json({ error: "Thema nicht gefunden" });
     }
     res.json(topic);
   } catch (error) {
-    console.error("Fehler beim Abrufen des Themas:", error);
-    res.status(500).json({ error: "Interner Serverfehler" });
+    console.error("Error registering user:", error);
+    res.status(500).send({ message: "Error registering user" });
   }
 });
+
 
 // Definieren Sie die API-Route zum Hinzufügen von Topics
 app.post("/api/addTopics", async (req, res) => {
@@ -373,6 +372,7 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
+
 app.post("/api/addComment", async (req, res) => {
   const comment = req.body;
 
@@ -404,14 +404,13 @@ app.post("/api/addComment", async (req, res) => {
   }
 });
 
-app.post("/api/addReply", async (req, res) => {});
 
 app.get("/test", (req, res) => {
   res.send("Express.js-Server läuft!");
 });
 
 app.get("/", (req, res) => {
-  res.send("Expresss.js-Server startseite!");
+  res.send("Expresss.js-Server startseiteè!");
 });
 
 app.listen(port, () => {

@@ -11,15 +11,11 @@ import store from './store/store'
 import Swal from 'sweetalert2';
 
 
-
-      await store.dispatch("fetchTopics");
-      
-
+await store.dispatch("fetchTopics");
 
 await store.dispatch("fetchUsers");
 library.add(fas)
 library.add(far)
-
 
 const app = createApp(App)
 app.use(router)

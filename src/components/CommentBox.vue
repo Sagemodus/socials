@@ -71,7 +71,7 @@ import { computed, onBeforeMount, onBeforeUnmount, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import dayjs from 'dayjs';
 import { ref } from 'vue';
-
+import axios from "axios";
 
 
 export default {
@@ -269,12 +269,8 @@ export default {
 
 
     // Funktion zum Einreichen einer Antwort
-    submitReply(comment) {
-
-      // Initialisiere commentIndex
-
-
-      const newReply2 = {
+     submitReply(comment) {
+      const newReply = {
         topicId: comment.topicId,
         id: uuidv4(),
         text: this.newReply,
@@ -282,23 +278,25 @@ export default {
         upvotes: 0,
         downvotes: 0,
         createdAt: dayjs(),
-        commentIndex: this.commentIndex, // Setze commentIndex basierend auf der Tab-Auswahl
+        commentIndex: this.commentIndex,
         parentId: this.comment.id,
-
+        Commentpath: comment.path,
+        commentId: comment.id,
+        commentType: comment.commentType,
+        path: `${comment.path}/${comment.replies.length}`
       };
 
-      if (!comment.replies) {
-        comment.replies = [];
-      }
-
-      comment.expandReplies = true;
-      comment.replies.push(newReply2);
-
-      this.newReply = "";
-      this.showReplyForm = false;
-
-      if (this.depth >= 5) {
-        this.$emit('reply-clicked', comment.id);
+      try {
+        // Rufe die Aktion in deinem Store auf, um die Antwort hinzuzufügen
+        this.$store.dispatch('addReplyAction', { newReply, comment } );
+        this.newReply = "";
+        // Überprüfe, ob die Tiefe (depth) 5 erreicht hat
+        if (this.depth >= 5) {
+          this.$emit('reply-clicked', comment.id);
+        }
+      } catch (error) {
+        console.error("Fehler beim Hinzufügen der Antwort:", error);
+        // Möglicherweise musst du hier Fehlerbehandlung hinzufügen
       }
     },
 

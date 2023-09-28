@@ -109,7 +109,9 @@ const author = computed(() => store.getters.getUserById(reply.value.author))
 
     
     
+
     // Verwenden Sie die Vuex Getter-Funktion, um das Kommentarobjekt basierend auf der ID abzurufen
+  
     const comment = computed(() => getComment(reply.value.Commentpath));
 
 const commentObjekt = computed(() => comment);
@@ -130,6 +132,7 @@ const commentObjekt = computed(() => comment);
     const topics = store.state.topics;
 
     const parseId = (element) => {
+      console.log(element)
       const parts = element.split('/').filter(part => part !== ''); // Entferne leere Teile
       const ids = {
         topicIndex: parts[0],
@@ -216,6 +219,7 @@ const commentObjekt = computed(() => comment);
 
 
     }
+
        const getComment = (path) => {
 
 
@@ -276,38 +280,25 @@ console.log(path + " comment")
 
     if (!reply.value.path && props.depth >= 2) {
 
-      getelement(props.path);
+        getelement(props.path);
+      
+      
 
-      // Verwende "nestedReplySuche", wenn es Werte gibt, andernfalls "replySuche"
-      const replySearch = nestedReplySuche.length > 0 ? nestedReplySuche : replySuche;
 
-      // Aktualisiere den Pfad basierend auf der Länge der Antworten
-      reply.value.path = `${props.path}/${replySearch[0]?.replies.length - 1}`;
-      author.value.nestedReplies.push(reply.value.path);
 
     }
 
 
 
-    console.log("comment.value.path")
-    if (!reply.value.path && props.depth <= 1) {
-
-      const path = computed(() => {
-        return `${comment.value.path}/${replyIndex.value - 1}`;
-      });
-      reply.value.path = path.value;
-    }
+  
    
 
-    const saveCommentDataToStore = () => {
-      console
-      store.dispatch('commentundreply', { comment: comment, reply: reply.value });
-    };
-    saveCommentDataToStore();
+    
 
     const goToTopic = (topicId) => {
       const differenz = commentIndex.value - displaycommentcount.value;
       const puffer = 3;
+      const reply = props.reply;
 
       if (commentIndex.value == 0) {
         commentIndex.value = comment.value.commentIndex
@@ -320,25 +311,19 @@ console.log(path + " comment")
             comment.value.expandReplies = false;
           }
 
-        saveCommentDataToStore();
-        setTimeout(() => {
+  
           
        
 
 
+console.log(props.reply)
+        router.push({
+          name: 'nested-reply-page',
+          params: {
+            path: props.reply.path
+          }
+        });
 
-
-          router.push({
-            name: 'nested-reply-page', // Der Name der Route (stellen Sie sicher, dass Sie diesen Namen in Ihrer Route-Definition haben)
-            params: {
-              id: topicId,
-              commentId: comment.value.id || props.commentId, // Falls commentId nicht vorhanden ist, setzen Sie ihn auf null (optional)
-              replyId: props.reply.id, // Falls replyId nicht vorhanden ist, setzen Sie ihn auf null (optional)
-
-
-            },
-          });
-        }, 50);
       }
       else {
 
@@ -360,7 +345,7 @@ console.log(path + " comment")
           store.state.selectedTab = 'contra';
           store.state.selectedTabColor = 'red';
         }
-        setTimeout(() => {
+
           router.push({
             name: 'topic-ganze-seite', // Der Name der Route (stellen Sie sicher, dass Sie diesen Namen in Ihrer Route-Definition haben)
             params: {
@@ -370,7 +355,7 @@ console.log(path + " comment")
 
             },
           });
-        }, 20);
+
 
 
 
@@ -483,34 +468,51 @@ console.log(path + " comment")
     },
 
     // Funktion zum Einreichen einer Antwort auf diese Antwort
-    submitReply() {
-      const newReply = {
-        topicId: this.topic,
-        id: uuidv4(),
-        text: this.newReply,
-        author: this.currentUser.id, // Aktueller Benutzer
-        replies: [],
-        upvotes: 0,
-        downvotes: 0,
-        createdAt: dayjs(),// Initialisiere die Votes für die Antwort
-        commentIndex: this.commentIndex + 1,
-        parentId:this.reply.id,
-      };
-      // Fügt die neue Antwort zu den Antworten dieser Antwort hinzu
-      /* eslint-disable */
-      if (!this.reply.replies) {
-        this.reply.replies = [];
+     async submitReply() {
+      try {
+        // Bestimmen Sie den Index der aktuellen Antwort basierend auf der Anzahl der bereits vorhandenen Antworten
+        const currentReplyIndex = this.reply.replies ? this.reply.replies.length : 0;
+
+        // Erstellen Sie den Pfad für die neue Antwort
+        const newPath = `${this.reply.path}/${currentReplyIndex}`;
+
+        const newReply = {
+          topicId: this.topic,
+          id: uuidv4(),
+          text: this.newReply,
+          author: this.currentUser.id, // Aktueller Benutzer
+          replies: [],
+          upvotes: 0,
+          downvotes: 0,
+          createdAt: dayjs(),
+          commentIndex: this.commentIndex + 1,
+          parentId: this.reply.id,
+          path: newPath,  // Setzen Sie den neu erstellten Pfad hier
+          Commentpath: this.reply.Commentpath,
+        };
+        // Fügt die neue Antwort zu den Antworten dieser Antwort hinzu
+        /* eslint-disable */
+        if (!this.reply.replies) {
+          this.reply.replies = [];
+        }
+
+        this.reply.expandReplies = true;
+        // Setzt das Antwort-Formular zurück
+        await this.$store.dispatch('submitReply', { reply: this.reply, newReply });
+        this.$store.dispatch('addReplyPathToUser', {
+          userId: this.currentUser.id,
+          replyPath: newPath,
+        });
+        this.newReply = "";
+        this.showReplyForm = false;
+
+        // Wenn die Verschachtelungstiefe 3 erreicht, leite den Benutzer zur gewünschten Seite weiter
+        if (this.depth >= 5) {
+          this.$emit('reply-clicked', this.reply.id);
+        }
       }
-
-      this.reply.replies.push(newReply);
-      this.reply.expandReplies = true;
-      // Setzt das Antwort-Formular zurück
-      this.newReply = "";
-      this.showReplyForm = false;
-
-      // Wenn die Verschachtelungstiefe 3 erreicht, leite den Benutzer zur gewünschten Seite weiter
-      if (this.depth >= 5) {
-        this.$emit('reply-clicked', this.reply.id);
+      catch (error) {
+        console.error('Fehler beim Hinzufügen der Antwort:', error);
       }
     },
     /* eslint-enable*/

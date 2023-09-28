@@ -2,10 +2,10 @@
   <div class="topic-container">
     <!-- Laden und Anzeigen von Themen -->
     <div v-if="topic" class="topic-ganzeseite">
-      <div class="author-info">
-        <img :src="topic.author.profileImage" alt="Author Profile Image" class="author-image" />
-        <span class="author-name">{{ topic.author.name }}</span>
-      </div>
+      <!-- <div class="author-info">
+        <img :src="author.profileImage" alt="Author Profile Image" class="author-image" />
+        <span class="author-name">{{ author.name }}</span>
+      </div> -->
       <div class="topic-content">
         <p class="topic-text">{{ topic.text }}</p>
       </div>
@@ -15,17 +15,18 @@
   <CommentBox v-if="comment" :key="comment.id" :comment="comment" :topic="comment.topicId" />
 
 
-  <!-- Laden und Anzeigen von Elterelement der Antworten -->
-  <CommentReply :key="replyEltern.id" :reply="replyEltern" :topic="topic.id" :commentId="comment.id"
-   :commentIndex="replyEltern.commentIndex" :id="replyEltern.id"></CommentReply>
-  <!-- Laden und Anzeigen von Antworten -->
-  <CommentReply :key="reply.id" :reply="reply" :topic="topic.id" :commentId="comment.id" 
-    :commentIndex="reply.commentIndex" :id="reply.id"></CommentReply>
+ 
+  <CommentReply :key="reply.id" :reply="reply" :topic="topic.id" :commentId="comment.id"
+   :commentIndex="reply.commentIndex" :id="reply.id"></CommentReply>
+
+  <CommentReply :key="lastElement.id" :reply="lastElement" :topic="topic.id" :commentId="comment.id" 
+    :commentIndex="lastElement.commentIndex" :id="lastElement.id"></CommentReply>
 </template>
 
 
 <script>
 import { useStore } from 'vuex';
+import { useRoute } from 'vue-router';
 /* eslint-disable no-unused-vars */
 import { computed, onBeforeMount, onMounted, onUnmounted } from 'vue';
 import CommentReply from '../CommentReply.vue';
@@ -36,137 +37,79 @@ export default {
     CommentBox,
     CommentReply,
   },
-  setup() {
-
+    setup() {
     const store = useStore();
-    const comment = store.state.comment;
-    const reply = store.state.reply;
-    const topicId = comment.topicId;
-    const topic = computed(() => store.getters.getTopicById(topicId));
-    const topics = computed(() => store.state.topics);
+    const route = useRoute();
+    const path = route.params.path;
 
+    console.log(path)
+    const topics = computed(() => store.state.topics)
+    // Zerlegen Sie den Pfad in ein nutzbares Format
+    const parsedPath = parsePath(path);
 
-    onBeforeMount(() => {
-      comment.expandReplies = false;
-    });
-
-
-
-
-    let topicsSuche = [];
-    let commentSuche = [];
-    let replySuche = [];
-    let nestedReplySuche = [];
-
-    function getLastElementFromPath() {
-      // Leeren Sie die Arrays zu Beginn jeder Ausführung der Funktion
-      topicsSuche.value = [];
-      commentSuche.value = [];
-      replySuche.value = [];
-      nestedReplySuche.value = [];
-
-      // Schleife durch die Pfade
-      const path = reply.path;
-      const ids = parseId(path); // Verwende die parseId Funktion, um die IDs zu extrahieren
-      const anzahleindexes = Object.keys(ids).length -2;
-
-
-
-      let pathZurSuche = "";
-
-      for (let i = 0; i < anzahleindexes; i++) {
-        // Schleife durch die IDs
-        if (i === 0) {
-          pathZurSuche = `topics.value[${ids.topicIndex}]`;
-
-        }
-        else if (i === 1) {
-          if (ids.type === 'pro') {
-            pathZurSuche += `.proComments[${ids.commentIndex}]`;
-          }
-          else if (ids.type === 'contra') {
-            pathZurSuche += `.contraComments[${ids.commentIndex}]`;
-
-          }
-        }
-        else if (i === 2) {
-          pathZurSuche += `.replies[${ids.replyIndex1}]`;
-
-        }
-
-     else if (i > 2) {
-          let läufer = 2;
-          pathZurSuche += `.replies[${ids['replyIndex' + läufer]}]`;
-          läufer++
-        }
-
-      }
-
-      // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
-      let nestedreply = eval(pathZurSuche);
-      if (anzahleindexes === 1) {
-        topicsSuche.push(nestedreply);
-      } else if (anzahleindexes === 2) {
-        commentSuche.push(nestedreply);
-      } else if (anzahleindexes === 3) {
-        replySuche.push(nestedreply);
-      } else if (anzahleindexes > 3) {
-        nestedReplySuche.push(nestedreply);
-      }
-
-      // Hier sollten Sie jetzt Zugriff auf die gewünschten Kommentare haben
-
-    }
-
-
-    getLastElementFromPath();
-
-    function parseId(path) {
-      const parts = path.split('/').filter(part => part !== ''); // Entferne leere Teile
-      const ids = {
-        topicIndex: parts[0],
-        type: parts[1].split('_')[0],
-        commentIndex: parts[1].split('_')[1],
-      };
-
-      // Dieses -1 entfernt das letzte objekt sodass ich das 2. letzte objekt verwenden kann
-      for (let i = 2; i < parts.length; i++) {
-        ids['replyIndex' + (i - 1)] = parts[i];
-      }
-
-      return ids;
-    }
-
-    const replyEltern = replySuche[0] || commentSuche[0] || topicsSuche[0] || nestedReplySuche[0];
-
-
-
-    onMounted(() => {
-      replyEltern.expandReplies = false;
-    });
-
-
+    // Holen Sie sich die benötigten Daten aus Ihrer Datenstruktur
+    const { topic, comment, reply, lastElement } = getValuesFromPath(topics.value, parsedPath);
 
     return {
       topic,
-      reply,
       comment,
-      topicsSuche,
-      replySuche,
-      commentSuche,
-      nestedReplySuche,
-      replyEltern,
-
+      reply,
+      lastElement
     };
-
-  },
+  }
 };
 
+function parsePath(path) {
+  const parts = path.split('/').filter(part => part !== '');
+  const parsed = [];
+  for (let part of parts) {
+    if (part.includes('_')) {
+      const [type, index] = part.split('_');
+      parsed.push(type === 'pro' ? 'proComments' : 'contraComments');
+      parsed.push(Number(index));
+    } else {
+      parsed.push(Number(part));
+    }
+  }
+  return parsed;
+}
 
+function getValuesFromPath(data, pathArray) {
+  let current = data;
+  const values = {
+    topic: null,
+    comment: null,
+    reply: null,
+    lastElement: null
+  };
 
+  // Erstes Element ist das Hauptthema
+  values.topic = current[pathArray[0]];
 
+  // Zweites Element ist der Pro- oder Contra-Kommentar
+  if (pathArray[1].includes('pro')) {
+    values.comment = values.topic.proComments[parseInt(pathArray[2])];
+  } else {
+    values.comment = values.topic.contraComments[parseInt(pathArray[2])];
+  }
 
+  // Drittes Element ist die erste Antwort
+  values.reply = values.comment.replies[pathArray[3]];
+
+  // Viertes Element ist die zweite Antwort
+  const secondReply = values.reply.replies[pathArray[4]];
+
+  // Fünftes Element ist die dritte Antwort (falls vorhanden)
+  if (pathArray.length > 5) {
+    values.lastElement = secondReply.replies[pathArray[5]];
+  } else {
+    values.lastElement = secondReply;
+  }
+
+  return values;
+}
 </script>
+
 
 <style scoped>
 p.topic-text {

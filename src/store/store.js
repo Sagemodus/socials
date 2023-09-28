@@ -43,6 +43,13 @@ function isCommentPositionAvailable(state, topicId, selectedTab) {
   return false;
 }
 
+function setAuthHeader(token) {
+  if (token) {
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  } else {
+    delete axios.defaults.headers.common["Authorization"];
+  }
+}
 
 function updatePercentages(topic) {
   const totalVotes = topic.upvotes + topic.downvotes;
@@ -156,13 +163,15 @@ export default createStore({
       commentReplyAnzeige: 5,
       categories,
       currentUser:{
-        token:null
+        token: localStorage.getItem("token") || null,
       }
     };
   },
 
+  
   mutations: {
 
+    
     register_request(state) {
       state.status = 'loading'; // You can set any loading state here if needed
     },
@@ -179,10 +188,12 @@ export default createStore({
     auth_request(state) {
       state.status = 'loading';
     },
+    
     auth_success(state, { token, user }) {
-      state.status = 'success';
+      state.status = "success";
       state.currentUser.token = token; // Set the user's token
       state.user = user; // Update the user data in the state
+      setAuthHeader(token); // Set the Authorization header with the token
     },
     
     auth_error(state) {
@@ -545,36 +556,33 @@ export default createStore({
 
 
     async login({ commit }, user) {
-      commit('auth_request');
+      commit("auth_request");
       try {
-        let res = await axios.post('http://localhost:3000/api/users/login', user);
-        console.log("Response from login:", res);
+        let res = await axios.post("http://localhost:3000/api/users/login", user);
+        // ...
         if (res.status === 200 && res.data.success) {
           const token = res.data.token;
           const userId = res.data.userId; // Get the userId from the response
           const userData = res.data.user;
-          localStorage.setItem('token', token);
-          axios.defaults.headers.common['Authorization'] = token;
-          commit('auth_success', { token, user: userData });
-          return { success: true, userId }; // Return success and userId
+          localStorage.setItem("token", token);
+          commit("auth_success", { token, user: userData });
+          setAuthHeader(token); // Set the Authorization header
+          return { success: true, userId };
         } else {
-          commit('auth_error');
+          commit("auth_error");
           console.log("Login unsuccessful. Response data:", res.data);
-          return { success: false }; // Return failure
+          return { success: false };
         }
       } catch (err) {
-        commit('auth_error');
+        commit("auth_error");
         console.error("Error logging in:", err);
-        return { success: false }; // Return failure
+        return { success: false };
       }
     },
     
 
 
-    
-    
-    
-
+  
     async register({
       commit
   }, userData) {
@@ -605,10 +613,6 @@ export default createStore({
       console.error("Error fetching data:", error);
     }
   },
-
-  isAuthenticated: (state) => {
-    return !!state.currentUser.token;
-  },  
 
     async fetchTopics({ commit }) {
       try {
@@ -678,6 +682,11 @@ export default createStore({
     },
   },
   getters: {
+
+    isAuthenticated: (state) => {
+      return !!state.currentUser.token; // Convert the token to a boolean
+    },
+
     formattedCreatedAt: (state) => (createdAt) => {
       return formatCreatedAt(createdAt);
     },

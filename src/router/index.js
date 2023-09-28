@@ -29,10 +29,16 @@ import nestedReplyPage from '../components/profilebutton/nestedReplyPage.vue';
 import bookmarkSaves from '../components/profilebutton/bookmarkSaves.vue'
 import profileAndereUser from '../components/profilebutton/profileAndereUser.vue'
 
+import store from '../store/store.js'; // Import your Vuex store
+
+
+
+
 const routes = [
   {
     path: "/feed",
     component: FeedView,
+    meta: { requiresAuth: true },
   },
   {
     path: "/search",
@@ -80,16 +86,19 @@ const routes = [
     path: "/popular",
     name: "Popular",
     component: PopularComponent,
+    meta: { requiresAuth: true },
   },
   {
     path: "/recent",
     name: "Recent",
     component: RecentComponent,
+    meta: { requiresAuth: true },
   },
   {
     path: "/people",
     name: "People",
     component: PeopleComponent,
+    meta: { requiresAuth: true },
   },
 
   {
@@ -139,6 +148,19 @@ const router = createRouter({
     } else {
       return { left: 0, top: 0 };
     }
+  }
+});
+
+
+
+router.beforeEach((to, from, next) => {
+  // Check if the route requires authentication and if the user is authenticated
+  if (to.meta.requiresAuth && !store.getters.isAuthenticated) {
+    // If not authenticated, redirect to the login page
+    next('/login'); // You can specify your login route here
+  } else {
+    // Continue with the navigation
+    next();
   }
 });
 

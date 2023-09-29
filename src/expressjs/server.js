@@ -309,17 +309,48 @@ app.get("/api/topics/:topicId", async (req, res) => {
   const topicId = req.params.topicId;
 
   try {
-    const userData = req.body;
+    // Suchen Sie das Thema in der Datenbank anhand seiner ID
+    const topic = await Topic.findOne({ id: topicId });
 
     if (!topic) {
       return res.status(404).json({ error: "Thema nicht gefunden" });
     }
+    console.log("funktioniert homie");
     res.json(topic);
+  } catch (error) {
+    console.error("Fehler beim Abrufen des Themas:", error);
+    res.status(500).json({ error: "Interner Serverfehler" });
+  }
+});
+
+
+
+app.post("/api/users/register", async (req, res) => {
+  try {
+    const userData = req.body;
+
+    // Generate a salt and hash the user's password
+    const saltRounds = 10; // Number of salt rounds
+    const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
+
+    // Replace the plain password with the hashed password
+    userData.password = hashedPassword;
+
+    // Create a new user document with the hashed password
+    const user = new User(userData);
+    await user.save();
+
+    console.log("User successfully registered");
+    res.status(200).send({ message: "User successfully registered" });
   } catch (error) {
     console.error("Error registering user:", error);
     res.status(500).send({ message: "Error registering user" });
   }
 });
+
+
+
+
 
 
 // Definieren Sie die API-Route zum Hinzufügen von Topics

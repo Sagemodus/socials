@@ -199,7 +199,6 @@ export default {
       return currentUser.value.nestedReplies.map(reply => reply);
     });
 
-
     const parseId = (element) => {
       const parts = element.split('/').filter(part => part !== ''); // Entferne leere Teile
       const ids = {
@@ -216,68 +215,47 @@ export default {
       return ids;
     }
 
-    
     let topicsSuche = [];
     let commentSuche = [];
     let replySuche = [];
     let nestedReplySuche = [];
 
+    function navigateData(ids, data) {
+      let current = data;
+      if (ids.topicIndex !== undefined) {
+        current = current[ids.topicIndex];
+      }
+      if (ids.type && ids.commentIndex !== undefined) {
+        current = ids.type === 'pro' ? current.proComments[ids.commentIndex] : current.contraComments[ids.commentIndex];
+      }
+      for (let i = 1; ids['replyIndex' + i] !== undefined; i++) {
+        current = current.replies[ids['replyIndex' + i]];
+      }
+      return current;
+    }
+
     function getLastElementFromPath() {
       // Leeren Sie die Arrays zu Beginn jeder Ausführung der Funktion
-      topicsSuche.value = [];
-      commentSuche.value = [];
-      replySuche.value = [];
-      nestedReplySuche.value = [];
+      topicsSuche = [];
+      commentSuche = [];
+      replySuche = [];
+      nestedReplySuche = [];
 
       // Schleife durch die Pfade
       nestedRepliesPaths.value.forEach(path => {
-        const ids = parseId(path); // Verwende die parseId Funktion, um die IDs zu extrahieren
-        const anzahleindexes = Object.keys(ids).length - 1;
+        const ids = parseId(path);
+        const nestedreply = navigateData(ids, topics); // topics sollte Ihre Hauptdatenquelle sein
 
-
-        let pathZurSuche = "";
-
-        for (let i = 0; i < anzahleindexes; i++) {
-          // Schleife durch die IDs
-          if (i === 0) {
-            pathZurSuche = `topics[${ids.topicIndex}]`;
-
-          }
-          else if (i === 1) {
-            if (ids.type === 'pro') {
-              pathZurSuche += `.proComments[${ids.commentIndex}]`;
-            }
-            else if (ids.type === 'contra') {
-              pathZurSuche += `.contraComments[${ids.commentIndex}]`;
-
-            }
-          }
-          else if (i === 2) {
-            pathZurSuche += `.replies[${ids.replyIndex1}]`;
-
-          }
-
-          else if (i > 2) {
-            let läufer = 2;
-            pathZurSuche += `.replies[${ids['replyIndex' + läufer]}]`;
-            läufer++
-          }
-
-        }
-        console.log(pathZurSuche)
-        // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
-        let nestedreply = eval(pathZurSuche);
-        if (anzahleindexes === 1) {
+        const depth = Object.keys(ids).length - 1;
+        if (depth === 1) {
           topicsSuche.push(nestedreply);
-        } else if (anzahleindexes === 2) {
+        } else if (depth === 2) {
           commentSuche.push(nestedreply);
-        } else if (anzahleindexes === 3) {
+        } else if (depth === 3) {
           replySuche.push(nestedreply);
-        } else if (anzahleindexes > 3) {
+        } else if (depth > 3) {
           nestedReplySuche.push(nestedreply);
         }
-
-        // Hier sollten Sie jetzt Zugriff auf die gewünschten Kommentare haben
       });
     }
 
@@ -294,7 +272,8 @@ export default {
     });
 
    const procreatedCommentList = computed(() => {
-  return procreatedComments.value.map(commentId => {
+     return procreatedComments.value.map(commentId => {
+    console.log(commentId)
    const comment = store.getters.getCommentById(commentId);
 
    

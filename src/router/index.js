@@ -142,10 +142,10 @@ const routes = [
     component: ReplyPage,
   },
   {
-    path: "/reply/:id/:commentId?/:replyId?",
-    component: nestedReplyPage,
+    path: "/nested-reply/:path?",
     name: "nested-reply-page",
-    meta: {},
+    component: nestedReplyPage,
+    props: true,
   },
   {
     path: "/bookmarksaves/:userId",

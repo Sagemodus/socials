@@ -1,7 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const bcrypt = require('bcrypt'); //Für password verschlüsselung
-const cors = require("cors"); 
+const bcrypt = require("bcrypt");
+const cors = require("cors"); //Für password verschlüsselung
+
 const app = express();
 const port = process.env.PORT || 3000;
 const bodyParser = require("body-parser");
@@ -157,6 +158,150 @@ const User = mongoose.model(
   })
 );
 
+app.put("/api/users/:userId/addReplyPath", async (req, res) => {
+  const userId = req.params.userId;
+  const replyPath = req.body.replyPath;
+
+  try {
+    const user = await User.findOne({ id: userId });
+
+    if (!user) {
+      return res.status(404).json({ error: "Benutzer nicht gefunden" });
+    }
+
+    // Fügen Sie den Reply-Pfad zum nestedReplies Array hinzu
+    user.nestedReplies.push(replyPath);
+
+    await user.save();
+
+    res.json({ success: true, message: "Reply-Pfad erfolgreich hinzugefügt" });
+  } catch (error) {
+    console.error("Fehler beim Hinzufügen des Reply-Pfads:", error);
+    res.status(500).json({ error: "Interner Serverfehler" });
+  }
+});
+
+app.post("/api/replies", async (req, res) => {
+  const newReply = req.body;
+
+  console.log(newReply.path + " path");
+
+  try {
+    const topic = await Topic.findOne({ id: newReply.topicId });
+
+    if (!topic) {
+      return res.status(404).json({ error: "Thema nicht gefunden" });
+    }
+
+    const parts = newReply.path.split("/").filter((p) => p);
+    let currentArray;
+
+    if (parts[1].startsWith("pro")) {
+      currentArray =
+        topic.proComments[parseInt(parts[1].split("_")[1])].replies;
+    } else {
+      currentArray =
+        topic.contraComments[parseInt(parts[1].split("_")[1])].replies;
+    }
+
+    if (!currentArray) {
+      return res.status(400).json({ error: "Ungültiger Pfad (pro/contra)" });
+    }
+
+    for (let i = 2; i < parts.length - 1; i++) {
+      const index = parseInt(parts[i], 10);
+      if (!currentArray[index]) {
+        return res.status(400).json({ error: `Ungültiger Pfadindex bei ${i}` });
+      }
+      currentArray = currentArray[index].replies;
+    }
+    console.log(currentArray);
+    currentArray.push(newReply);
+
+    topic.markModified("proComments");
+    topic.markModified("contraComments");
+    await topic.save();
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Fehler beim Hinzufügen der Antwort:", error);
+    res.status(500).json({ error: "Interner Serverfehler" });
+  }
+});
+
+const validateReply = (reply) => {
+  if (!reply.topicId || !reply.commentId || !reply.commentType) {
+    throw new Error("Ungültige Anfrage");
+  }
+
+  if (reply.commentType !== "pro" && reply.commentType !== "contra") {
+    throw new Error("Ungültiger Kommentartyp");
+  }
+};
+
+app.post("/api/addReply", async (req, res) => {
+  const reply = req.body;
+
+  console.log(reply.commentType);
+  console.log(reply.commentId);
+  console.log(reply.topicId);
+  try {
+    validateReply(reply);
+
+    const topic = await Topic.findOne({ id: reply.topicId });
+
+    if (!topic) {
+      return res.status(404).json({ error: "Thema nicht gefunden" });
+    }
+
+    const commentArray =
+      reply.commentType === "pro" ? topic.proComments : topic.contraComments;
+    const parentComment = commentArray.find((c) => c.id === reply.commentId);
+
+    if (!parentComment) {
+      return res.status(404).json({ error: "Kommentar nicht gefunden" });
+    }
+
+    parentComment.replies.push(reply);
+    await topic.save();
+
+    res
+      .status(200)
+      .json({ success: true, message: "Reply erfolgreich hinzugefügt" });
+  } catch (error) {
+    console.error("Fehler beim Hinzufügen des Reply:", error);
+    const errorMessage = error.message || "Interner Serverfehler";
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({ error: errorMessage });
+  }
+});
+
+app.post("/api/addUserReply", async (req, res) => {
+  const comment = req.body.comment;
+  const reply = req.body.reply;
+  const authorId = reply.author;
+  console.log(comment + " kolleg");
+  console.log(reply + " author");
+  try {
+    const user = await User.findOne({ id: authorId });
+    if (!user) {
+      return res.status(404).json({ error: "Benutzer nicht gefunden" });
+    }
+    console.log(reply.path + " path");
+    user.nestedReplies.push(reply.path);
+
+    await user.save();
+    res
+      .status(200)
+      .json({ success: true, message: "Kommentar erfolgreich hinzugefügt" });
+  } catch (error) {
+    // Speichern Sie das aktualisierte Thema in der Datenbank
+    console.error("Fehler beim Hinzufügen des Kommentars:", error);
+    res.status(500).json({ error: "Interner Serverfehler" });
+  }
+
+  // Senden Sie eine Erfolgsantwort zurück
+});
 
 
 app.post("/api/users/reset-password-request", async (req, res) => {
@@ -243,6 +388,25 @@ app.post("/api/users/reset-password", async (req, res) => {
     res.status(500).send({ message: "Error resetting password" });
   }
 });
+
+app.get("/api/topics/:topicId", async (req, res) => {
+  const topicId = req.params.topicId;
+
+  try {
+    // Suchen Sie das Thema in der Datenbank anhand seiner ID
+    const topic = await Topic.findOne({ id: topicId });
+
+    if (!topic) {
+      return res.status(404).json({ error: "Thema nicht gefunden" });
+    }
+    console.log("funktioniert homie");
+    res.json(topic);
+  } catch (error) {
+    console.error("Fehler beim Abrufen des Themas:", error);
+    res.status(500).json({ error: "Interner Serverfehler" });
+  }
+});
+
 
 
 async function getNextUserId() {
@@ -383,6 +547,10 @@ app.post("/api/addUsers", async (req, res) => {
 });
 
 
+
+
+
+
 // Definieren Sie die API-Route zum Hinzufügen von Topics
 app.post("/api/addTopics", async (req, res) => {
   try {
@@ -424,7 +592,6 @@ app.get("/api/users", async (req, res) => {
   try {
     const users = await User.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
 
-    console.log(users + " bruder");
     res.json(users); // Senden Sie die Daten als JSON an den Client
   } catch (error) {
     console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
@@ -436,18 +603,24 @@ app.get("/api/users", async (req, res) => {
 
 
 app.post("/api/addComment", async (req, res) => {
-  const { comment } = req.body;
-  console.log(comment + " kure");
-  try {
-    // Suchen Sie das Thema in der Datenbank anhand seiner ID
-    const topic = await Topic.findOne({ id: comment.topicId});
+  const comment = req.body;
 
+  try {
+    console.log(comment.topicId);
+
+    const topic = await Topic.findOne({ id: comment.topicId });
     if (!topic) {
       return res.status(404).json({ error: "Thema nicht gefunden" });
     }
 
     // Fügen Sie den neuen Kommentar zum Thema hinzu
-    topic.comments.push(comment);
+    if (comment.commentType == "pro") {
+      topic.proComments.push(comment);
+    }
+
+    if (comment.commentType == "contra") {
+      topic.contraComments.push(comment);
+    }
 
     // Speichern Sie das aktualisierte Thema in der Datenbank
     await topic.save();

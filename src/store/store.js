@@ -570,10 +570,93 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
     if (user) {
       user.nestedReplies.push(replyPath);
     }
-  }
-
   },
+
   actions: {
+
+  async addReplyPathToUser({ commit }, { userId, replyPath }) {
+    try {
+      const response = await axios.put(`http://192.168.1.42:3000/api/users/${userId}/addReplyPath`, { replyPath });
+
+      if (response.data && response.data.success) {
+        commit("ADD_REPLY_PATH_TO_USER", { userId, replyPath });
+      }
+    } catch (error) {
+      console.error("Fehler beim Hinzufügen des Reply-Pfads:", error);
+    }
+  },
+
+
+    async submitReply({ commit }, { reply, newReply }) {
+      try {
+        const response = await axios.post(
+          "http://192.168.1.42:3000/api/replies",
+          newReply
+        );
+        if (response.data && response.data.success) {
+          commit("ADD_REPLY", { reply, newReply });
+        }
+      } catch (error) {
+        console.error("Fehler beim Senden der Antwort an den Server:", error);
+      }
+    },
+
+    async addReplyAction({ commit }, { newReply, comment }) {
+      try {
+        // Simuliere den Serveraufruf
+        const response = await axios.post(
+          "http://192.168.1.42:3000/api/addReply",
+          newReply
+        );
+        const antwort = response.data;
+        console.log(newReply.path);
+        console.log(response.data.success);
+        // Überprüfe die Serverantwort
+        if (response.data && response.data.success) {
+          // Commit der Mutation, um die Antwort zum Kommentar hinzuzufügen
+          commit("addReplyMutation", { newReply, comment });
+          // Hier könnten Sie den Aufruf zum Hinzufügen des Replies zum Benutzerprofil einfügen
+          const userReplyResponse = await axios.post(
+            "http://192.168.1.42:3000/api/addUserReply",
+            {
+              comment,
+              reply: newReply,
+            }
+          );
+          if (userReplyResponse.data && userReplyResponse.data.success) {
+            console.log("Reply erfolgreich zum Benutzerprofil hinzugefügt");
+          } else {
+            console.error(
+              "Fehler beim Hinzufügen des Replies zum Benutzerprofil"
+            );
+          }
+        } else {
+          throw new Error(
+            response.data.error ||
+              "Unbekannter Fehler beim Hinzufügen der Antwort"
+          );
+        }
+
+        // Leere das Eingabefeld und blende das Antwortformular aus
+        // Dies sollte in der Komponente selbst erfolgen, z.B. durch das Auslösen eines Events oder das Setzen eines Zustands
+      } catch (error) {
+        console.error("Fehler beim Hinzufügen der Antwort:", error);
+        // Hier kannst du auf spezifische Fehler reagieren, z.B. durch das Anzeigen einer Fehlermeldung für den Benutzer
+      }
+    },
+
+    async fetchUsers({ commit }) {
+      try {
+        const response = await axios.get("http://192.168.1.42:3000/api/users");
+        const users = response.data;
+        console.log(users);
+        commit("setUsers", users);
+      } catch (error) {
+        console.error("Fehler beim Abrufen der Daten:", error);
+      }
+    },
+
+
 
   async addReplyPathToUser({ commit }, { userId, replyPath }) {
     try {

@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import axios from "axios";
 import Auth from "../expressjs/auth";
 
+
 /* eslint-disable no-unused-vars */
 
 export function formatCreatedAt(createdAt) {
@@ -40,6 +41,14 @@ function isCommentPositionAvailable(state, topicId, selectedTab) {
     return commentsArray.length < MAX_COMMENT_POSITION; // MAX_COMMENT_POSITION ist die maximale Anzahl von Kommentaren
   }
   return false;
+}
+
+function setAuthHeader(token) {
+  if (token) {
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  } else {
+    delete axios.defaults.headers.common["Authorization"];
+  }
 }
 
 function updatePercentages(topic) {
@@ -101,9 +110,11 @@ function searchReplyInCommentAndReplies(comment, targetReplyId) {
 }
 
 export default createStore({
+
   modules: {
     Auth,
   },
+
   state() {
     const categories = [
       { main: "Sport", sub: "Fussball" },
@@ -142,6 +153,7 @@ export default createStore({
     ];
     const loggedin = "true";
 
+
     return {
       topics: [],
       users: [],
@@ -154,10 +166,44 @@ export default createStore({
       reply: null, // Reply object
       commentReplyAnzeige: 5,
       categories,
+      currentUser:{
+        token: localStorage.getItem("token") || null,
+      }
     };
   },
 
+  
   mutations: {
+
+    
+    register_request(state) {
+      state.status = 'loading'; // You can set any loading state here if needed
+    },
+  
+    register_success(state, user) {
+      state.status = 'success';
+      state.user = user; // You can store the registered user data here if needed
+    },
+  
+    register_error(state) {
+      state.status = 'error'; // You can set an error state here if needed
+    },
+    
+    auth_request(state) {
+      state.status = 'loading';
+    },
+    
+    auth_success(state, { token, user }) {
+      state.status = "success";
+      state.currentUser.token = token; // Set the user's token
+      state.user = user; // Update the user data in the state
+      setAuthHeader(token); // Set the Authorization header with the token
+    },
+    
+    auth_error(state) {
+      state.status = 'error';
+    },
+
     setUsers(state, users) {
 
       state.users = users;
@@ -502,6 +548,7 @@ export default createStore({
       }
     },
 
+
     addReplyMutation(state, { newReply, comment }) {
       // Füge die neue Antwort zum Kommentar hinzu
       if (!comment.replies) {
@@ -607,8 +654,77 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
         commit("setUsers", users);
       } catch (error) {
         console.error("Fehler beim Abrufen der Daten:", error);
+
+  },
+  actions: {
+
+    logout({ commit }) {
+      // Clear the user's token and other data
+      commit("auth_logout");
+      // Clear the Authorization header
+      delete axios.defaults.headers.common['Authorization'];
+    },
+
+
+    async login({ commit }, user) {
+      commit("auth_request");
+      try {
+        let res = await axios.post("http://localhost:3000/api/users/login", user);
+        // ...
+        if (res.status === 200 && res.data.success) {
+          const token = res.data.token;
+          const userId = res.data.userId; // Get the userId from the response
+          const userData = res.data.user;
+          localStorage.setItem("token", token);
+          commit("auth_success", { token, user: userData });
+          setAuthHeader(token); // Set the Authorization header
+          return { success: true, userId };
+        } else {
+          commit("auth_error");
+          console.log("Login unsuccessful. Response data:", res.data);
+          return { success: false };
+        }
+      } catch (err) {
+        commit("auth_error");
+        console.error("Error logging in:", err);
+        return { success: false };
+
       }
     },
+    
+
+
+  
+    async register({
+      commit
+  }, userData) {
+      try {
+          commit('register_request');
+          let res = await axios.post('http://localhost:3000/api/users/register', userData);
+          if (res.data.success !== undefined) {
+              commit('register_success');
+          }
+          return res;
+      } catch (err) {
+          commit('register_error', err)
+      }
+  },
+
+  async fetchUsers({ commit, state }) {
+    try {
+      // Check if the user is authenticated (has a token)
+      if (state.currentUser.token) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${state.currentUser.token}`;
+      }
+  
+      const response = await axios.get("http://localhost:3000/api/users");
+      const users = response.data;
+      console.log(users);
+      commit("setUsers", users);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  },
 
     async fetchTopics({ commit }) {
       try {
@@ -681,6 +797,11 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
     },
   },
   getters: {
+
+    isAuthenticated: (state) => {
+      return !!state.currentUser.token; // Convert the token to a boolean
+    },
+
     formattedCreatedAt: (state) => (createdAt) => {
       return formatCreatedAt(createdAt);
     },

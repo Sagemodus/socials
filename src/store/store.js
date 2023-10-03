@@ -898,6 +898,7 @@ export default createStore({
     getTopicById: (state) => (id) => {
       return state.topics.find((topic) => topic.id === id);
     },
+    
 
     getUserById: (state) => (id) => {
       return state.users.find((user) => user.id === id);

@@ -245,53 +245,70 @@ export default {
     async addComment(commentText) {
       const author = this.user;
       const topicId = this.topic.id;
-      await this.$store.dispatch('fetchTopic', topicId);
 
-      const newComment = {
-        topicId: topicId,
-        id: uuidv4(),
-        text: commentText,
-        author: this.user.id,
-        upvotes: 0,
-        downvotes: 0,
-        createdAt: dayjs(), // Aktuelle Zeit hinzufügen
-        parentId: this.topic.id,
-        
-         // Pfad zum Kommentar hinzufügen
-      };
+      try {
+        // Zuerst das Thema abrufen
+        await this.$store.dispatch('fetchTopic', topicId);
+
+        const newComment = {
+          topicId: topicId,
+          id: uuidv4(),
+          text: commentText,
+          author: this.user.id,
+          upvotes: 0,
+          downvotes: 0,
+          createdAt: dayjs(), // Aktuelle Zeit hinzufügen
+          parentId: this.topic.id,
+          // Pfad zum Kommentar hinzufügen
+        };
+
+        const selectedTab = this.selectedTab; // Richtiges Property verwenden
+
+        // Den Kommentar an die API senden
 
 
-      const selectedTab = this.selectedTab; // Richtiges Property verwenden
-       await axios.post("http://localhost:3000/api/addComment", newComment);
+        // Kommentar zum Store hinzufügen
+        console.log(newComment + " component")
 
-      this.$store.dispatch('addCommentToTopic', { author, topicId, comment: newComment, selectedTab });
+        this.$store.dispatch('addCommentToTopic', { author, topicId, comment: newComment, selectedTab });
+        console.log('Kommentar erfolgreich hinzugefügt:');
+    
+
+      } catch (error) {
+        console.error('Fehler beim Hinzufügen des Kommentars:', error);
+        // Hier können Sie eine Fehlermeldung anzeigen oder andere Maßnahmen ergreifen, um mit dem Fehler umzugehen
+      }
     },
-  },
 
-  goToCommentPage(commentId) {
-    const comment = this.$store.getters.getCommentById(commentId);
-    // Führt Sie zur Kommentarseite, wenn es ausreichend Antworten gibt
-    if (comment && comment.replies && comment.replies.length >= 3) {
-      this.$router.push(`/comment/${commentId}`);
-    } else {
-      const replies = comment.replies;
-      if (replies && replies.length > 0) {
-        for (const reply of replies) {
-          if (reply.replies && reply.replies.length >= 3) {
-            this.$router.push({
-              path: `/comment/${commentId}`,
-              query: { maxDisplayedReplies: this.maxDisplayedReplies },
-            });
-            return;
+
+    goToCommentPage(commentId) {
+      const comment = this.$store.getters.getCommentById(commentId);
+      // Führt Sie zur Kommentarseite, wenn es ausreichend Antworten gibt
+      if (comment && comment.replies && comment.replies.length >= 3) {
+        this.$router.push(`/comment/${commentId}`);
+      } else {
+        const replies = comment.replies;
+        if (replies && replies.length > 0) {
+          for (const reply of replies) {
+            if (reply.replies && reply.replies.length >= 3) {
+              this.$router.push({
+                path: `/comment/${commentId}`,
+                query: { maxDisplayedReplies: this.maxDisplayedReplies },
+              });
+              return;
+            }
           }
         }
       }
-    }
+    },
+
+    created() {
+      this.fetchComments();
+    },
+
   },
 
-  created() {
-    this.fetchComments();
-  },
+
 };
 </script>
 

@@ -2,7 +2,7 @@
 <template>
   <div class="comment-reply" v-if="reply">
     <div class="profile-info">
-      <img :src="author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile"/>
+      <img :src="author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile" />
       <h5 class="profile-name">{{ author?.name }}</h5>
       <div class="month">
         <p>{{ $store.getters.formattedCreatedAt(reply.createdAt) }}</p>
@@ -28,7 +28,7 @@
           :style="{ color: iconColor(currentUser.farbe) }" />
         <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.downvotes }}</p>
       </button>
-<!-- eslint-disable-->
+      <!-- eslint-disable-->
       <button v-if="reply && !showReplyForm && reply.replies && reply.replies.length > 0"
         @click="reply.expandReplies = !reply.expandReplies" :class="['action-button', depth >= 5 ? 'disabled' : '']">
         <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-if="!reply.expandReplies"
@@ -36,7 +36,7 @@
         <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-else :icon="['fas', 'angle-up']" />
         <p :style="{ color: iconColor(currentUser.farbe) }">{{ replyCount + ' Replies' }}</p>
       </button>
-<!--eslint-enable-->
+      <!--eslint-enable-->
       <!--Aufklapp Button-->
       <router-link :style="{ color: iconColor(currentUser.farbe) }" v-if="reply && depth === 5 && reply.id"
         :to="`/reply/${reply.id}`" class="more-link">
@@ -47,7 +47,7 @@
     <!-- Anzeige der Antworten auf diese Antwort -->
     <div v-if="reply.expandReplies && reply && reply.replies && reply.replies.length > 0" class="replies-section">
       <comment-reply v-for="nestedReply in reply.replies" :key="nestedReply.id" :reply="nestedReply" :path="reply.path"
-        :depth="depth + 1" :topic="topic" :commentId="reply.id" 
+        :depth="depth + 1" :topic="topic" :commentId="reply.id"
         @reply-clicked="$emit('reply-clicked', $event)"></comment-reply>
     </div>
     <div v-if="showReplyForm" class="reply-form">
@@ -98,23 +98,25 @@ export default {
 
   setup(props) {
     const displaycommentcount = computed(() => store.state.displayedCommentCount);
-    
+
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     // Zugriff auf den currentUser aus dem Vuex-Store
     const router = useRouter();
     const currentUser = computed(() => store.state.currentUser);
     const reply = computed(() => props.reply);
 
-const author = computed(() => store.getters.getUserById(reply.value.author))
+    const author = computed(() => store.getters.getUserById(reply.value.author))
 
-    
-    
+
+
+
     // Verwenden Sie die Vuex Getter-Funktion, um das Kommentarobjekt basierend auf der ID abzurufen
+
     const comment = computed(() => getComment(reply.value.Commentpath));
 
-const commentObjekt = computed(() => comment);
-    
-  const commentIndex = computed(() => comment.value.commentIndex+1);
+    const commentObjekt = computed(() => comment);
+
+    const commentIndex = computed(() => comment.value.commentIndex + 1);
     const replyIndex = computed(() => comment.value.replies.length);
     const nestedIndex = computed(() => reply.value.replies.length);
 
@@ -130,6 +132,7 @@ const commentObjekt = computed(() => comment);
     const topics = store.state.topics;
 
     const parseId = (element) => {
+      console.log(element)
       const parts = element.split('/').filter(part => part !== ''); // Entferne leere Teile
       const ids = {
         topicIndex: parts[0],
@@ -216,13 +219,14 @@ const commentObjekt = computed(() => comment);
 
 
     }
-       const getComment = (path) => {
+
+    const getComment = (path) => {
 
 
 
       // Schleife durch die Pfade
 
-console.log(path + " comment")
+      console.log(path + " comment")
 
       const ids = parseId(path); // Verwende die parseId Funktion, um die IDs zu extrahieren
       const anzahleindexes = Object.keys(ids).length - 1;
@@ -260,8 +264,8 @@ console.log(path + " comment")
       }
 
       // Speichern des gefundenen Objekts im entsprechenden Array basierend auf der Ebene
-     return eval(pathZurSuche);
- 
+      return eval(pathZurSuche);
+
     }
 
 
@@ -269,7 +273,7 @@ console.log(path + " comment")
     if (!reply.depth) {
       reply.value.depth = props.depth;
     }
-/*eslint-enable */
+    /*eslint-enable */
     if (!reply.value.replies) {
       reply.value.replies = [];
     }
@@ -278,36 +282,23 @@ console.log(path + " comment")
 
       getelement(props.path);
 
-      // Verwende "nestedReplySuche", wenn es Werte gibt, andernfalls "replySuche"
-      const replySearch = nestedReplySuche.length > 0 ? nestedReplySuche : replySuche;
 
-      // Aktualisiere den Pfad basierend auf der Länge der Antworten
-      reply.value.path = `${props.path}/${replySearch[0]?.replies.length - 1}`;
-      author.value.nestedReplies.push(reply.value.path);
+
+
 
     }
 
 
 
-    console.log("comment.value.path")
-    if (!reply.value.path && props.depth <= 1) {
 
-      const path = computed(() => {
-        return `${comment.value.path}/${replyIndex.value - 1}`;
-      });
-      reply.value.path = path.value;
-    }
-   
 
-    const saveCommentDataToStore = () => {
-      console
-      store.dispatch('commentundreply', { comment: comment, reply: reply.value });
-    };
-    saveCommentDataToStore();
+
+
 
     const goToTopic = (topicId) => {
       const differenz = commentIndex.value - displaycommentcount.value;
       const puffer = 3;
+      const reply = props.reply;
 
       if (commentIndex.value == 0) {
         commentIndex.value = comment.value.commentIndex
@@ -320,32 +311,26 @@ console.log(path + " comment")
             comment.value.expandReplies = false;
           }
 
-        saveCommentDataToStore();
-        setTimeout(() => {
-          
-       
 
 
 
 
-          router.push({
-            name: 'nested-reply-page', // Der Name der Route (stellen Sie sicher, dass Sie diesen Namen in Ihrer Route-Definition haben)
-            params: {
-              id: topicId,
-              commentId: comment.value.id || props.commentId, // Falls commentId nicht vorhanden ist, setzen Sie ihn auf null (optional)
-              replyId: props.reply.id, // Falls replyId nicht vorhanden ist, setzen Sie ihn auf null (optional)
 
+        console.log(props.reply)
+        router.push({
+          name: 'nested-reply-page',
+          params: {
+            path: props.reply.path
+          }
+        });
 
-            },
-          });
-        }, 50);
       }
       else {
 
         console.log(commentIndex.value)
         console.log(displaycommentcount.value)
-  
-       
+
+
         console.log(differenz);
         comment.value.expandReplies = true;
 
@@ -360,17 +345,17 @@ console.log(path + " comment")
           store.state.selectedTab = 'contra';
           store.state.selectedTabColor = 'red';
         }
-        setTimeout(() => {
-          router.push({
-            name: 'topic-ganze-seite', // Der Name der Route (stellen Sie sicher, dass Sie diesen Namen in Ihrer Route-Definition haben)
-            params: {
-              id: topicId,
-              commentId: comment.value.id || props.commentId, // Falls commentId nicht vorhanden ist, setzen Sie ihn auf null (optional)
-              replyId: props.reply.id || null, // Falls replyId nicht vorhanden ist, setzen Sie ihn auf null (optional)
 
-            },
-          });
-        }, 20);
+        router.push({
+          name: 'topic-ganze-seite', // Der Name der Route (stellen Sie sicher, dass Sie diesen Namen in Ihrer Route-Definition haben)
+          params: {
+            id: topicId,
+            commentId: comment.value.id || props.commentId, // Falls commentId nicht vorhanden ist, setzen Sie ihn auf null (optional)
+            replyId: props.reply.id || null, // Falls replyId nicht vorhanden ist, setzen Sie ihn auf null (optional)
+
+          },
+        });
+
 
 
 
@@ -382,7 +367,7 @@ console.log(path + " comment")
 
 
     };
-/*eslint-disable*/
+    /*eslint-disable*/
     return {
       iconColor,
       currentUser,
@@ -400,7 +385,7 @@ console.log(path + " comment")
       // Mache den currentUser verfügbar
     };
   },
-/*eslint-enable*/
+  /*eslint-enable*/
   data() {
     return {
       showReplyForm: false,
@@ -423,7 +408,7 @@ console.log(path + " comment")
     hasDislikedReply() {
       return this.currentUser.hasdislikedreply.includes(this.reply.id);
     },
-    
+
 
   },
 
@@ -483,34 +468,51 @@ console.log(path + " comment")
     },
 
     // Funktion zum Einreichen einer Antwort auf diese Antwort
-    submitReply() {
-      const newReply = {
-        topicId: this.topic,
-        id: uuidv4(),
-        text: this.newReply,
-        author: this.currentUser.id, // Aktueller Benutzer
-        replies: [],
-        upvotes: 0,
-        downvotes: 0,
-        createdAt: dayjs(),// Initialisiere die Votes für die Antwort
-        commentIndex: this.commentIndex + 1,
-        parentId:this.reply.id,
-      };
-      // Fügt die neue Antwort zu den Antworten dieser Antwort hinzu
-      /* eslint-disable */
-      if (!this.reply.replies) {
-        this.reply.replies = [];
+    async submitReply() {
+      try {
+        // Bestimmen Sie den Index der aktuellen Antwort basierend auf der Anzahl der bereits vorhandenen Antworten
+        const currentReplyIndex = this.reply.replies ? this.reply.replies.length : 0;
+
+        // Erstellen Sie den Pfad für die neue Antwort
+        const newPath = `${this.reply.path}/${currentReplyIndex}`;
+
+        const newReply = {
+          topicId: this.topic,
+          id: uuidv4(),
+          text: this.newReply,
+          author: this.currentUser.id, // Aktueller Benutzer
+          replies: [],
+          upvotes: 0,
+          downvotes: 0,
+          createdAt: dayjs(),
+          commentIndex: this.commentIndex + 1,
+          parentId: this.reply.id,
+          path: newPath,  // Setzen Sie den neu erstellten Pfad hier
+          Commentpath: this.reply.Commentpath,
+        };
+        // Fügt die neue Antwort zu den Antworten dieser Antwort hinzu
+        /* eslint-disable */
+        if (!this.reply.replies) {
+          this.reply.replies = [];
+        }
+
+        this.reply.expandReplies = true;
+        // Setzt das Antwort-Formular zurück
+        await this.$store.dispatch('submitReply', { reply: this.reply, newReply });
+        this.$store.dispatch('addReplyPathToUser', {
+          userId: this.currentUser.id,
+          replyPath: newPath,
+        });
+        this.newReply = "";
+        this.showReplyForm = false;
+
+        // Wenn die Verschachtelungstiefe 3 erreicht, leite den Benutzer zur gewünschten Seite weiter
+        if (this.depth >= 5) {
+          this.$emit('reply-clicked', this.reply.id);
+        }
       }
-
-      this.reply.replies.push(newReply);
-      this.reply.expandReplies = true;
-      // Setzt das Antwort-Formular zurück
-      this.newReply = "";
-      this.showReplyForm = false;
-
-      // Wenn die Verschachtelungstiefe 3 erreicht, leite den Benutzer zur gewünschten Seite weiter
-      if (this.depth >= 5) {
-        this.$emit('reply-clicked', this.reply.id);
+      catch (error) {
+        console.error('Fehler beim Hinzufügen der Antwort:', error);
       }
     },
     /* eslint-enable*/

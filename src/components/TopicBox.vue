@@ -29,7 +29,7 @@
         <!--Save Button-->
         <button @click="saveChanges" class="savebutton">
 
-          <font-awesome-icon :icon="isSaved(topic.path) ? ['fas', 'bookmark'] : ['far', 'bookmark']" class="icon"
+          <font-awesome-icon :icon="isSaved(topic.path, currentUser.id) ? ['fas', 'bookmark'] : ['far', 'bookmark']" class="icon"
             :style="{ color: iconColor(currentUser.farbe) }" />
         </button>
 
@@ -45,16 +45,16 @@
     </div>
 
 
-    <div class="balken">
-      <div class="like-bar" :class="{ liked: hasLikedTopic || hasDislikedTopic }"
-        :style="{ width: topic.upvotePercentage + '%' }" :title="topic.upvotePercentage + '%'" :interactive="true">
-        <p v-if="hasLikedTopic || hasDislikedTopic" class="bar-text">{{ topic.upvotePercentage + '%' }}</p>
-      </div>
-      <div class="dislike-bar" :class="{ disliked: hasLikedTopic || hasDislikedTopic }"
-        :style="{ width: topic.downvotePercentage + '%' }" :title="topic.downvotePercentage + '%'" :interactive="true">
-        <p v-if="hasLikedTopic || hasDislikedTopic" class="bar-text">{{ topic.downvotePercentage + '%' }}</p>
-      </div>
+  <div class="balken">
+    <div class="like-bar" :class="{ liked: hasLikedTopic || hasDislikedTopic }"
+      :style="{ width: upvotePercentage + '%' }" :title="upvotePercentage + '%'" :interactive="true">
+      <p v-if="hasLikedTopic || hasDislikedTopic" class="bar-text">{{ upvotePercentage + '%' }}</p>
     </div>
+    <div class="dislike-bar" :class="{ disliked: hasLikedTopic || hasDislikedTopic }"
+      :style="{ width: downvotePercentage + '%' }" :title="downvotePercentage + '%'" :interactive="true">
+      <p v-if="hasLikedTopic || hasDislikedTopic" class="bar-text">{{ downvotePercentage + '%' }}</p>
+    </div>
+  </div>
 
 
     <!--Like Button-->
@@ -162,14 +162,10 @@ export default {
 
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     const router = useRouter();
-
-    console.log(props.id)
-   
     const topic = computed(() => store.getters.getTopicById(props.id));
     // Zugriff auf den currentUser aus dem Vuex-Store
 
     const author = store.getters.getUserById(topic.value.author);
-    console.log(topic.value)
     const currentUser = computed(() => store.state.currentUser);
 
     const selectedTab = computed(() => store.state.selectedTab);
@@ -252,7 +248,13 @@ export default {
       };
     },
 
-
+    upvotePercentage() {
+      const totalVotes = this.topic.upvotes + this.topic.downvotes;
+      return totalVotes === 0 ? 0 : Math.round((this.topic.upvotes / totalVotes) * 100);
+    },
+    downvotePercentage() {
+      return 100 - this.upvotePercentage;
+    },
 
 
 
@@ -289,11 +291,16 @@ export default {
 
     //Save button logik
     saveChanges() {
-      this.ADD_TOPIC_TO_SAVES(this.topic.path);
+      const path = this.topic.path;
+      const currentUserId = this.currentUser.id;
+
+
+      this.$store.dispatch('addtopicToSaves', {  path, currentUserId })
+
 
     },
-    isSaved(topicId) {
-      return this.$store.getters.isTopicSaved(topicId);
+    isSaved(topicId,) {
+      return this.$store.getters.isTopicSaved( topicId);
     },
 
     // Funktion zur Berechnung des Prozentsatzes
@@ -352,7 +359,7 @@ export default {
 
     like(event) {
       const userId = this.currentUser.id;
-      this.TOGGLE_LIKE({ topicId: this.id, userId });
+      this.$store.dispatch('toggleLikeAction', { topicId: this.id, userId });
       const likeButton = event.target;
       this.animateButton(likeButton);
     },

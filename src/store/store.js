@@ -32,6 +32,32 @@ export function formatCreatedAt(createdAt) {
 }
 const MAX_COMMENT_POSITION = 100;
 
+
+
+function setDepthForReplies(replies, depth) {
+  if (!replies || !Array.isArray(replies) || replies.length === 0) {
+    return;
+  }
+
+  for (let reply of replies) {
+    console.log("Setting depth for reply:", reply, "to", depth); // Debugging-Statement
+    reply.depth = depth;
+    setDepthForReplies(reply.replies, depth + 1);
+  }
+}
+
+function setDepthForTopics(topics) {
+  for (let topic of topics) {
+    setDepthForReplies(topic.contraComments, 0); // Starttiefe ist 1
+    setDepthForReplies(topic.proComments, 0); // Starttiefe ist 1
+  }
+}
+
+
+
+
+
+
 function isCommentPositionAvailable(state, topicId, selectedTab) {
   const topic = state.topics.find((topic) => topic.id === topicId);
   if (topic) {
@@ -158,15 +184,17 @@ export default createStore({
   },
 
   mutations: {
-    setUsers(state, users) {
+    setTopics(state, topics) {
+      state.topics = topics;
+      console.log("kolleg")
+    },
 
+    setUsers(state, users) {
       state.users = users;
       state.currentUser = users[0];
     },
 
-    setTopics(state, topics) {
-      state.topics = topics;
-    },
+   
 
     updateCurrentUser(state, payload) {
       state.currentUser = { ...state.currentUser, ...payload };
@@ -364,33 +392,28 @@ export default createStore({
 
     TOGGLE_LIKE(state, { topicId, userId }) {
       const topic = state.topics.find((topic) => topic.id === topicId);
+      const user = state.users.find((user) => user.id === userId);
 
-      if (topic) {
-        const user = state.users.find((user) => user.id === userId);
-        if (user) {
-          if (!user.haslikedtopic.includes(topicId)) {
-            // Füge den Like hinzu
-            topic.upvotes += 1;
-            user.haslikedtopic.push(topicId);
+      if (!topic || !user) return;
 
-            // Entferne den Dislike (falls vorhanden)
-            if (user.hasdislikedtopic.includes(topicId)) {
-              topic.downvotes -= 1;
-              user.hasdislikedtopic = user.hasdislikedtopic.filter(
-                (id) => id !== topicId
-              );
-            }
-          } else {
-            // Entferne den Like
-            topic.upvotes -= 1;
-            user.haslikedtopic = user.haslikedtopic.filter(
-              (id) => id !== topicId
-            );
-          }
+      const hasLiked = user.haslikedtopic.includes(topicId);
+      const hasDisliked = user.hasdislikedtopic.includes(topicId);
 
-          updatePercentages(topic); // Aktualisiere Prozentsätze
+      if (!hasLiked) {
+        topic.upvotes += 1;
+        user.haslikedtopic.push(topicId);
+        if (hasDisliked) {
+          topic.downvotes -= 1;
+          user.hasdislikedtopic = user.hasdislikedtopic.filter(
+            (id) => id !== topicId
+          );
         }
+      } else {
+        topic.upvotes -= 1;
+        user.haslikedtopic = user.haslikedtopic.filter((id) => id !== topicId);
       }
+
+      updatePercentages(topic); // Aktualisiere Prozentsätze
     },
 
     TOGGLE_DISLIKE(state, { topicId, userId }) {
@@ -518,28 +541,72 @@ export default createStore({
       reply.replies.push(newReply);
     },
 
-ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
-    const user = state.users.find(user => user.id === userId);
-    if (user) {
-      user.nestedReplies.push(replyPath);
-    }
-  }
-
+    ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
+      const user = state.users.find((user) => user.id === userId);
+      if (user) {
+        user.nestedReplies.push(replyPath);
+      }
+    },
   },
   actions: {
 
-  async addReplyPathToUser({ commit }, { userId, replyPath }) {
-    try {
-      const response = await axios.put(`http://192.168.1.42:3000/api/users/${userId}/addReplyPath`, { replyPath });
 
-      if (response.data && response.data.success) {
-        commit("ADD_REPLY_PATH_TO_USER", { userId, replyPath });
+
+    
+    async toggleLikeAction({ commit }, payload) {
+      // Hier können Sie zusätzliche Logik oder API-Aufrufe hinzufügen, falls erforderlich
+      commit("TOGGLE_LIKE", payload);
+    },
+
+    async updateCurrentUserAction({ commit }, payload) {
+      try {
+        // Extrahieren Sie die benötigten Daten aus dem Payload
+        const { filterSettings, currentUserId } = payload;
+
+        console.log(filterSettings);
+        console.log(currentUserId);
+        // Senden Sie die Daten an den API-Endpunkt
+        const response = await axios.post(
+          "http://192.168.1.42:3000/api/addFilterUser",
+          {
+            filterSettings: filterSettings,
+            currentUserId: currentUserId,
+          }
+        );
+
+        // Überprüfen Sie den Status der Antwort
+        if (response.status === 200 && response.data.success) {
+          // Wenn die API-Anfrage erfolgreich war, aktualisieren Sie den Zustand
+          commit("updateCurrentUser", payload);
+        } else {
+          // Andernfalls werfen Sie einen Fehler mit der Fehlermeldung aus der Antwort
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
+        }
+      } catch (error) {
+        // Behandeln Sie Fehler, z.B. durch das Anzeigen einer Fehlermeldung
+        console.error(
+          "Fehler beim Aktualisieren des Benutzers:",
+          error.message
+        );
+        // Optional: Sie könnten hier auch einen Zustand setzen, um den Fehler im UI anzuzeigen
       }
-    } catch (error) {
-      console.error("Fehler beim Hinzufügen des Reply-Pfads:", error);
-    }
-  },
+    },
 
+    async addReplyPathToUser({ commit }, { userId, replyPath }) {
+      try {
+        const response = await axios.put(
+          `http://192.168.1.42:3000/api/users/${userId}/addReplyPath`,
+          { replyPath }
+        );
+
+        if (response.data && response.data.success) {
+        }
+      } catch (error) {
+        console.error("Fehler beim Hinzufügen des Reply-Pfads:", error);
+      }
+    },
 
     async submitReply({ commit }, { reply, newReply }) {
       try {
@@ -622,6 +689,19 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
 
     commentundreply({ commit }, { comment, reply }) {
       commit("comment_und_reply2", { comment, reply });
+    },
+    async addtopicToSaves({ commit }, { path, currentUserId }) {
+      console.log(currentUserId);
+      console.log(path);
+      const response = await axios.post(
+        "http://192.168.1.42:3000/api/addTopicToSaves",
+        { path: path, currentUserId: currentUserId }
+      );
+      if (response.data.success == true) {
+        commit("ADD_TOPIC_TO_SAVES", path);
+      } else {
+        console.log("failed " + resonse.data.error);
+      }
     },
 
     addNotification({ commit }, notification) {

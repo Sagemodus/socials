@@ -11,7 +11,7 @@
     <p class="antwort-text" @click='goToTopic(reply.topicId)'>{{ reply?.text }}</p>
     <div class="buttons-container">
       <!-- Antwort-Button anzeigen, um auf diese Antwort zu antworten -->
-      <button v-if="!showReplyForm && depth < 5" @click="openReplyForm" class="action-button">
+      <button v-if="!showReplyForm && reply.depth < 5" @click="openReplyForm" class="action-button">
         <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" :icon="['fas', 'commenting']" class="icon" />
       </button>
       <!-- Upvote Button -->
@@ -47,7 +47,7 @@
     <!-- Anzeige der Antworten auf diese Antwort -->
     <div v-if="reply.expandReplies && reply && reply.replies && reply.replies.length > 0" class="replies-section">
       <comment-reply v-for="nestedReply in reply.replies" :key="nestedReply.id" :reply="nestedReply" :path="reply.path"
-        :depth="depth + 1" :topic="topic" :commentId="reply.id"
+       :topic="topic" :commentId="reply.id"
         @reply-clicked="$emit('reply-clicked', $event)"></comment-reply>
     </div>
     <div v-if="showReplyForm" class="reply-form">
@@ -68,14 +68,14 @@ import { mapGetters, mapActions } from 'vuex';
 import { iconColor } from './farben';
 import { useStore } from 'vuex';
 /* eslint-disable no-unused-vars */
-import { computed, onBeforeMount } from 'vue';
+import { computed, onBeforeMount, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import dayjs from 'dayjs';
+
 export default {
   props: {
     depth: {
       type: Number,
-      default: 1,
     },
     reply: { // Füge das 'reply'-Prop hinzu
       type: Object,
@@ -106,10 +106,6 @@ export default {
     const reply = computed(() => props.reply);
 
     const author = computed(() => store.getters.getUserById(reply.value.author))
-
-
-
-
     // Verwenden Sie die Vuex Getter-Funktion, um das Kommentarobjekt basierend auf der ID abzurufen
 
     const comment = computed(() => getComment(reply.value.Commentpath));
@@ -124,12 +120,17 @@ export default {
     let commentSuche = [];
     let replySuche = [];
     let nestedReplySuche = [];
-    const commentelement = 2;
-    const replyelement = 3;
-    const topicselement = 1;
     /*eslint-disable */
-    const replydepth = props.depth;
+    const replydepth = reply.depth;
     const topics = store.state.topics;
+
+    onUnmounted(() => {
+     reply.value.expandReplies = false;
+    });
+
+
+
+
 
     const parseId = (element) => {
       console.log(element)
@@ -270,15 +271,13 @@ export default {
 
 
     /*eslint-disable*/
-    if (!reply.depth) {
-      reply.value.depth = props.depth;
-    }
+  
     /*eslint-enable */
     if (!reply.value.replies) {
       reply.value.replies = [];
     }
 
-    if (!reply.value.path && props.depth >= 2) {
+    if (!reply.value.path && reply.value.depth >= 2) {
 
       getelement(props.path);
 
@@ -305,11 +304,11 @@ export default {
       }
 
 
-      if (props.depth > 1) {
-        if (commentIndex.value > displaycommentcount.value)
-          if (props.depth > 2) {
-            comment.value.expandReplies = false;
-          }
+      if (reply.replytype == "nested") {
+   
+      
+          comment.value.expandReplies = false;
+  
 
 
 
@@ -477,7 +476,7 @@ export default {
         const newPath = `${this.reply.path}/${currentReplyIndex}`;
 
         const newReply = {
-          topicId: this.topic,
+          topicId: this.reply.topicId,
           id: uuidv4(),
           text: this.newReply,
           author: this.currentUser.id, // Aktueller Benutzer
@@ -489,6 +488,8 @@ export default {
           parentId: this.reply.id,
           path: newPath,  // Setzen Sie den neu erstellten Pfad hier
           Commentpath: this.reply.Commentpath,
+          depth: this.reply.depth + 1,
+          replytype: "nested",
         };
         // Fügt die neue Antwort zu den Antworten dieser Antwort hinzu
         /* eslint-disable */

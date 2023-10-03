@@ -53,11 +53,11 @@
 
             <!-- Inhalte für den "Replies"-Tab -->
             <template #replies>
-                <comment-reply v-for="reply in replySuche" :key="reply.id" :reply="reply" :depth="1" :topic="reply.topicId"
+                <comment-reply v-for="reply in replySuche" :key="reply.id" :reply="reply"  :topic="reply.topicId"
                     
                     :commentIndex="reply.commentIndex" :id="reply.id"></comment-reply>
 
-                <comment-reply v-for="reply in nestedReplySuche" :key="reply.id" :reply="reply" :depth="2"
+                <comment-reply v-for="reply in nestedReplySuche" :key="reply.id" :reply="reply" 
                     :topic="reply.topicId" 
                     :commentIndex="reply.commentIndex" :id="reply.id"></comment-reply>
             </template>

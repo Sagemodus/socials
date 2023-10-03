@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount,markRaw } from 'vue';
+import { ref, onMounted, onBeforeUnmount,markRaw, shallowRef } from 'vue';
 import PublicComponent from '../components/PublicComponent.vue';
 import FAndFComponent from '../components/FAndFComponent.vue';
 import SwipeNavigationComponent from '../components/SwipeNavigationComponent.vue';
@@ -36,7 +36,7 @@ export default {
      
     ];
     const currentTab = ref('/public');
-    const currentComponent = ref(tabs.find((tab) => tab.path === currentTab.value));
+    const currentComponent = shallowRef(tabs.find((tab) => tab.path === currentTab.value));
     const lastScrollPosition = ref(0);
     const isTabBarSticky = ref(false);
     const isScrolled = ref(false); // Neu hinzugefügt

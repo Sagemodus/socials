@@ -103,7 +103,6 @@
             v-for="reply in replySuche"
              :key="reply.id"
               :reply="reply"
-              :depth="1"
               :topic="reply.topicId"
 
              :commentIndex="reply.commentIndex"
@@ -112,9 +111,9 @@
 
            <comment-reply
               v-for="reply in nestedReplySuche"
+              
                :key="reply.id"
                 :reply="reply"
-                :depth="2"
                 :topic="reply.topicId"
 
                :commentIndex="reply.commentIndex"
@@ -273,7 +272,6 @@ export default {
 
    const procreatedCommentList = computed(() => {
      return procreatedComments.value.map(commentId => {
-    console.log(commentId)
    const comment = store.getters.getCommentById(commentId);
 
    

@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, shallowRef } from 'vue';
 import SwipeNavigationComponentSuche from '../components/swipenavigationcomponentsuche.vue';
 import SearchbarComponent from '../components/SearchbarComponent.vue';
 import PopularComponent from '../components/PopularComponent.vue';
@@ -39,11 +39,11 @@ export default {
       { path: '/conversation', component: ConversationComponent },
 
     ];
-    const currentTab = ref('/popular');
-    const searchResults = ref([]); 
-    const lastScrollPosition = ref(0);
-    const isTabBarSticky = ref(false);
-    const isScrolled = ref(false);
+    const currentTab = shallowRef('/popular');
+    const searchResults = shallowRef([]); 
+    const lastScrollPosition = shallowRef(0);
+    const isTabBarSticky = shallowRef(false);
+    const isScrolled = shallowRef(false);
     
 
     const switchTab = (path) => {

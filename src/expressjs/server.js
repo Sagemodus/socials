@@ -137,6 +137,47 @@ const User = mongoose.model(
   })
 );
 
+  app.post("/api/addFilterUser", async (req, res) => {
+    const filterSettings = req.body.filterSettings;
+    const currentUserId = req.body.currentUserId;
+
+    console.log(currentUserId);
+    console.log;
+    if (!filterSettings || !currentUserId) {
+      return res.status(400).json({
+        success: false,
+        message: "Filtereinstellungen oder Benutzer-ID fehlen.",
+      });
+    }
+
+    try {
+      const user = await User.findOne({ id: currentUserId });
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Benutzer nicht gefunden." });
+      }
+
+      // Aktualisieren Sie das User-Objekt mit den neuen Filtereinstellungen
+      user.filterSettings = filterSettings;
+
+      // Speichern Sie den aktualisierten Benutzer in der Datenbank
+      await user.save();
+
+      res.json({
+        success: true,
+        message: "Benutzer erfolgreich aktualisiert.",
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Ein Fehler ist aufgetreten.",
+        error: error.message,
+      });
+    }
+  });
+
 app.put("/api/users/:userId/addReplyPath", async (req, res) => {
   const userId = req.params.userId;
   const replyPath = req.body.replyPath;
@@ -163,7 +204,7 @@ app.put("/api/users/:userId/addReplyPath", async (req, res) => {
 app.post("/api/replies", async (req, res) => {
   const newReply = req.body;
 
-  console.log(newReply.path + " path");
+  console.log(newReply.topicId+ " path");
 
   try {
     const topic = await Topic.findOne({ id: newReply.topicId });
@@ -435,15 +476,35 @@ app.post("/api/addComment", async (req, res) => {
   }
 });
 
-
-app.get("/test", (req, res) => {
-  res.send("Express.js-Server läuft!");
-});
-
-app.get("/", (req, res) => {
-  res.send("Expresss.js-Server startseiteè!");
-});
-
 app.listen(port, () => {
   console.log(`Server läuft auf Port ${port}`);
+});
+
+
+app.post("/api/addTopicToSaves", async (req, res) => {
+  const path = req.body.path;
+  const currentUserId = req.body.currentUserId;
+  console.log(currentUserId)
+  console.log(path)
+  try {
+    const user = await User.findOne({ id: currentUserId });
+    if (!user) {
+      return res.status(404).json({ error: "Benutzer nicht gefunden" });
+    }
+    console.log(path + " path");
+    user.topicsaves.push(path);
+
+    await user.save();
+    res
+      .status(200)
+      .json({ success: true, message: "Topic erfolgreich hinzugefügt" });
+  } catch (error) {
+    // Speichern Sie das aktualisierte Thema in der Datenbank
+    console.error("Fehler beim Hinzufügen des Topics:", error);
+    res.status(500).json({ error: "Interner Serverfehler" });
+  }
+
+
+
+  // Senden Sie eine Erfolgsantwort zurück
 });

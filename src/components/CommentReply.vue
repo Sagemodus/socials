@@ -297,6 +297,7 @@ export default {
     const goToTopic = (topicId) => {
       const differenz = commentIndex.value - displaycommentcount.value;
       const puffer = 3;
+// eslint-disable-next-line no-unused-vars
       const reply = props.reply;
 
       if (commentIndex.value == 0) {

@@ -589,12 +589,15 @@ export default createStore({
       reply.replies.push(newReply);
     },
 
-    ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
-      const user = state.users.find((user) => user.id === userId);
-      if (user) {
-        user.nestedReplies.push(replyPath);
-      }
+
+ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
+    const user = state.users.find(user => user.id === userId);
+    if (user) {
+      user.nestedReplies.push(replyPath);
+    }
     },
+  },
+
 
   actions: {
 
@@ -842,23 +845,25 @@ export default createStore({
       }
     },
     
-
-
   
-    async register({
-      commit
-  }, userData) {
+    async register({ commit }, userData) {
       try {
-          commit('register_request');
-          let res = await axios.post('http://localhost:3000/api/users/register', userData);
-          if (res.data.success !== undefined) {
-              commit('register_success');
-          }
-          return res;
+        commit('register_request');
+        let res = await axios.post('http://localhost:3000/api/users/register', userData);
+    
+        if (res.data.success) {
+          commit('register_success');
+        } else {
+          commit('register_error', res.data.message || 'An error occurred while registering.');
+        }
+    
+        return res;
       } catch (err) {
-          commit('register_error', err)
+        commit('register_error', err.message || 'An error occurred while registering.');
+        throw err; // Rethrow the error for further handling in the component
       }
-  },
+    },
+    
 
   async fetchUsers({ commit, state }) {
     try {
@@ -1019,4 +1024,5 @@ export default createStore({
       return state.currentUser.farbe;
     },
   },
-});
+}
+);

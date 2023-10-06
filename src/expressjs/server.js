@@ -19,9 +19,11 @@ const DOMPurify = createDOMPurify(window);
 const crypto = require('crypto'); // For generating random tokens
 const nodemailer = require('nodemailer'); // For sending emails
 
+
+const httpServer = require('http').createServer(app);
+const io = require('socket.io')(httpServer);
+
 const jwtSecretKey = 'BlaBlo123'; //MUSS UMBEDINGT VERÄNDERT WERDEN .ENV FILE SICHER STELLEN
-
-
 
 
 app.use(cors());
@@ -158,6 +160,7 @@ const User = mongoose.model(
   })
 );
 
+
   app.post("/api/addFilterUser", async (req, res) => {
     const filterSettings = req.body.filterSettings;
     const currentUserId = req.body.currentUserId;
@@ -198,6 +201,25 @@ const User = mongoose.model(
       });
     }
   });
+
+//CHAT START
+
+io.on('connection', (socket) => {
+  console.log('User connected');
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
+
+  socket.on('chatMessage', (message) => {
+    console.log(`Message: ${message}`);
+    io.emit('chatMessage', message);
+  });
+});
+
+
+//CHAT END
+
 
 app.put("/api/users/:userId/addReplyPath", async (req, res) => {
   const userId = req.params.userId;

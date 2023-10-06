@@ -92,7 +92,7 @@ export default {
   },
   methods: {
   ...mapActions(["register"]),
-  async registerUser() {
+    async registerUser() {
     let user = {
       username: this.username,
       password: this.password,
@@ -101,18 +101,23 @@ export default {
       name: this.name
     };
     try {
-      const res = await this.register(user);
-      if (res.data.success) {
-        this.$router.push("/login");
-      }
-    }catch (error) {
-        console.error("Error registering user:", error);
-        this.errorMessages = ["An error occurred while registering. Please try again."];
-      
-    }
+  const res = await this.register(user);
+  if (res.data && res.data.success) {
+    console.log(res); // Log the response
+    this.$router.push("/feed");
+  } else if (res.data && res.data.message) {
+    // Display the error message from the server
+    this.errorMessages = [res.data.message];
+  } else {
+    this.errorMessages = ["An error occurred while registering. Please try again."];
   }
+} catch (error) {
+  console.error("Error registering user:", error);
+  this.errorMessages = ["An error occurred while registering. Please try again."];
 }
 
+  }
+}
 };
 </script>
 

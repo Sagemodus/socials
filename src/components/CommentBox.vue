@@ -52,7 +52,7 @@
     </div>
 
     <div v-if="comment.expandReplies" class="replies-section">
-      <comment-reply v-for="reply in comment.replies" :key="reply.id" :reply="reply" :depth="1" :topic="topic"
+      <comment-reply v-for="reply in comment.replies" :key="reply.id" :reply="reply"  :topic="topic"
         :commentId="comment.id"  :commentIndex="commentIndex"
         @reply-clicked="onReplyClicked" :id="reply.id"></comment-reply>
     </div>
@@ -113,6 +113,11 @@ export default {
     const findCommentIndex = (commentId, commentsArray) => {
       return commentsArray.findIndex(comment => comment.id === commentId);
     };
+
+    onUnmounted(() => {
+      comment.value.expandReplies = false;
+    });
+
 
 
     const goToProfile = () => {
@@ -283,7 +288,10 @@ export default {
         Commentpath: comment.path,
         commentId: comment.id,
         commentType: comment.commentType,
-        path: `${comment.path}/${comment.replies.length}`
+        path: `${comment.path}/${comment.replies.length|| 0}`,
+        expandReplies: false,
+        depth: comment.depth + 1,
+        replytype: "reply",
       };
 
       try {

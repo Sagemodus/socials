@@ -137,6 +137,7 @@ export default {
     const saveSearchPopup = () => {
       const updatedFilterSettings = { ...currentUser.value.filterSettings };
       updatedFilterSettings.categories = selectedCategories.value;
+      store.dispatch('updateCurrentUserAction', { filterSettings: updatedFilterSettings, currentUserId:currentUser.value.id });
       store.commit('updateCurrentUser', { filterSettings: updatedFilterSettings });
       dialogVisible.value = false;
     };

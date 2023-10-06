@@ -2,10 +2,10 @@
   <div class="topic-container">
     <!-- Laden und Anzeigen von Themen -->
     <div v-if="topic" class="topic-ganzeseite">
-      <!-- <div class="author-info">
+      <div class="author-info">
         <img :src="author.profileImage" alt="Author Profile Image" class="author-image" />
         <span class="author-name">{{ author.name }}</span>
-      </div> -->
+      </div> 
       <div class="topic-content">
         <p class="topic-text">{{ topic.text }}</p>
       </div>
@@ -15,11 +15,11 @@
   <CommentBox v-if="comment" :key="comment.id" :comment="comment" :topic="comment.topicId" />
 
 
- 
-  <CommentReply :key="reply.id" :reply="reply" :topic="topic.id" :commentId="comment.id"
-   :commentIndex="reply.commentIndex" :id="reply.id"></CommentReply>
 
-  <CommentReply :key="lastElement.id" :reply="lastElement" :topic="topic.id" :commentId="comment.id" 
+  <CommentReply :key="reply.id" :reply="reply" :topic="topic.id" :commentId="comment.id"
+    :commentIndex="reply.commentIndex" :id="reply.id"></CommentReply>
+
+  <CommentReply :key="lastElement.id" :reply="lastElement" :topic="topic.id" :commentId="comment.id"
     :commentIndex="lastElement.commentIndex" :id="lastElement.id"></CommentReply>
 </template>
 
@@ -28,7 +28,7 @@
 import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
 /* eslint-disable no-unused-vars */
-import { computed, onBeforeMount, onMounted, onUnmounted } from 'vue';
+import { computed, onBeforeMount, onMounted, onUnmounted, ref, watch } from 'vue';
 import CommentReply from '../CommentReply.vue';
 import CommentBox from '../CommentBox.vue';
 
@@ -37,24 +37,46 @@ export default {
     CommentBox,
     CommentReply,
   },
-    setup() {
+  setup() {
     const store = useStore();
     const route = useRoute();
-    const path = route.params.path;
+    const topics = computed(() => store.state.topics);
+    const path = ref(route.params.path || ''); // Verwenden Sie ref, um path reaktiv zu machen
 
-    console.log(path)
-    const topics = computed(() => store.state.topics)
-    // Zerlegen Sie den Pfad in ein nutzbares Format
-    const parsedPath = parsePath(path);
 
-    // Holen Sie sich die benötigten Daten aus Ihrer Datenstruktur
-    const { topic, comment, reply, lastElement } = getValuesFromPath(topics.value, parsedPath);
+    let parsedPath = parsePath(path.value);
+    let values = getValuesFromPath(topics.value, parsedPath);
+
+
+    const topic = ref(values.topic);
+    const comment = ref(values.comment);
+    const reply = ref(values.reply);
+    const lastElement = ref(values.lastElement);
+    const author =
+      store.getters.getUserById(topic.value.author);
+    // Beobachten Sie Änderungen der Route
+    watch(route, () => {
+      path.value = route.params.path;
+      if (path.value) {
+        parsedPath = parsePath(path.value);
+        values = getValuesFromPath(topics.value, parsedPath);
+      }
+
+      topic.value = values.topic;
+      comment.value = values.comment;
+      reply.value = values.reply;
+      lastElement.value = values.lastElement;
+    });
+
+
+
 
     return {
       topic,
       comment,
       reply,
-      lastElement
+      lastElement,
+      author
     };
   }
 };
@@ -88,24 +110,23 @@ function getValuesFromPath(data, pathArray) {
 
   // Zweites Element ist der Pro- oder Contra-Kommentar
   if (pathArray[1].includes('pro')) {
-    values.comment = values.topic.proComments[parseInt(pathArray[2])];
+    current = values.topic.proComments[parseInt(pathArray[2])];
   } else {
-    values.comment = values.topic.contraComments[parseInt(pathArray[2])];
+    current = values.topic.contraComments[parseInt(pathArray[2])];
   }
+  values.comment = current;
 
   // Drittes Element ist die erste Antwort
-  values.reply = values.comment.replies[pathArray[3]];
-
-  // Viertes Element ist die zweite Antwort
-  const secondReply = values.reply.replies[pathArray[4]];
-
-  // Fünftes Element ist die dritte Antwort (falls vorhanden)
-  if (pathArray.length > 5) {
-    values.lastElement = secondReply.replies[pathArray[5]];
-  } else {
-    values.lastElement = secondReply;
+  if (pathArray.length > 3) {
+    current = current.replies[pathArray[3]];
+    values.reply = current;
   }
 
+  // Viertes Element und darüber hinaus
+  for (let i = 4; i < pathArray.length; i++) {
+    current = current.replies[pathArray[i]];
+  }
+  values.lastElement = current;
   return values;
 }
 </script>

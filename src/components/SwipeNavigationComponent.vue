@@ -54,11 +54,22 @@ export default {
     };
 
     onMounted(() => {
-      const el = document;
+    const el = document;
       const hammer = new Hammer(el);
       hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
-      hammer.on('swiperight', previousTab);
-      hammer.on('swipeleft', nextTab);
+      hammer.on('swiperight', function () {
+        if (typeof window.Android !== 'undefined' && window.Android.swipeRight) {
+          window.Android.swipeRight();
+        }
+        previousTab();
+      });
+      hammer.on('swipeleft', function () {
+        if (typeof window.Android !== 'undefined' && window.Android.swipeLeft) {
+          window.Android.swipeLeft();
+        }
+        nextTab();
+      });
+
       const userfarbe = currentUser.value.farbe;
       const color = userfarbe ? iconColor(userfarbe) : 'gray';
       document.documentElement.style.setProperty('--iconColor', color);

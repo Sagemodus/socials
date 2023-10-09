@@ -1,6 +1,6 @@
 <template>
   <div class="search-bar">
-    <input type="text" v-model="searchText" placeholder="Search..." @input="search">
+    <input type="text" v-model="searchText" placeholder="Search..." @keyup="searche">
   </div>
 </template>
 
@@ -12,7 +12,8 @@ export default {
     };
   },
   methods: {
-    search() {
+    searche() {
+       console.log("searche method called with:", this.searchText);
       this.$emit('search', this.searchText);
     }
   }
@@ -28,6 +29,9 @@ export default {
   border: 1px solid #ccc;
   border-radius: 25px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 10px;
+      margin-left: 5px;
+      margin-right: 5px;
 }
 
 .search-bar input {
@@ -44,8 +48,6 @@ export default {
   color: #868585;
 }
 
-.search-bar input:focus {
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
-}
+
 
 </style>

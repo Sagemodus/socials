@@ -386,7 +386,7 @@ export default {
 .comment-box {
   padding-bottom: 10px;
   border-bottom: 1px solid #e1e4e8;
-  font-family: Verdana, Geneva, sans-serif;
+  text-align: left;
   padding-left: 1vh;
   border-left: 2px solid #ccc;
 

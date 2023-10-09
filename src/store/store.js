@@ -550,12 +550,47 @@ export default createStore({
   },
   actions: {
 
-
+async toggleDislikeAction({ commit }, payload) {
+  try {
+    const response = await axios.post("http://192.168.1.42:3000/api/topicdislike", payload);
+    if (response.status === 200 && response.data.success) {
+      commit("TOGGLE_DISLIKE", payload);
+    } else {
+      throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
+    }
+  } catch (error) {
+    console.error("Fehler beim Aktualisieren des Dislikes:", error.message);
+  }
+},
 
     
     async toggleLikeAction({ commit }, payload) {
+      
+      console.log(payload.topicId)
       // Hier können Sie zusätzliche Logik oder API-Aufrufe hinzufügen, falls erforderlich
-      commit("TOGGLE_LIKE", payload);
+      try {
+        const response = await axios.patch("http://192.168.1.42:3000/api/topiclike", payload);
+      if (response.status === 200 && response.data.success) {
+        commit("TOGGLE_LIKE", payload);
+      }
+      
+      else {
+        throw new Error(
+          response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+        );
+      }
+
+
+      }
+      catch (error) {
+        // Behandeln Sie Fehler, z.B. durch das Anzeigen einer Fehlermeldung
+        console.error(
+          "Fehler beim Aktualisieren des Benutzers:",
+          error.message
+        );
+        // Optional: Sie könnten hier auch einen Zustand setzen, um den Fehler im UI anzuzeigen
+      }
+      
     },
 
     async updateCurrentUserAction({ commit }, payload) {
@@ -721,20 +756,58 @@ export default createStore({
       commit("UPDATE_TOPIC_PERCENTAGES", { topicId });
     },
 
-    upvoteComment({ commit }, { commentId, currentUserId, topicId }) {
-      commit("UPVOTE_COMMENT", { commentId, currentUserId, topicId });
+    async upvoteComment({ commit }, payload) {
+      try {
+        const response = await axios.post("http://192.168.1.42:3000/api/commentupvote", payload);
+        if (response.status === 200 && response.data.success) {
+          commit("UPVOTE_COMMENT", payload);
+        } else {
+          throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
+        }
+      } catch (error) {
+        console.error("Fehler beim Hochwerten des Kommentars:", error.message);
+        // Optional: Sie könnten hier auch einen Zustand setzen, um den Fehler im UI anzuzeigen
+      }
     },
 
-    downvoteComment({ commit }, { commentId, currentUserId, topicId }) {
-      commit("DOWNVOTE_COMMENT", { commentId, currentUserId, topicId });
-    },
+async downvoteComment({ commit }, payload) {
+  try {
+    const response = await axios.post("http://192.168.1.42:3000/api/commentdownvote", payload);
+    if (response.status === 200 && response.data.success) {
+      commit("DOWNVOTE_COMMENT", payload);
+    } else {
+      throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
+    }
+  } catch (error) {
+    console.error("Fehler beim Herabwerten des Kommentars:", error.message);
+  }
+},
+async upvoteReply({ commit }, payload) {
+  try {
+    const response = await axios.post("http://192.168.1.42:3000/api/replyupvote", payload);
+    if (response.status === 200 && response.data.success) {
+      commit("UPVOTE_REPLY", payload);
+    } else {
+      throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
+    }
+  } catch (error) {
+    console.error("Fehler beim Hochwerten der Antwort:", error.message);
+  }
+},
+async downvoteReply({ commit }, payload) {
+  try {
+    console.log(payload.commentId);
+    const response = await axios.post("http://192.168.1.42:3000/api/replydownvote", payload);
+    if (response.status === 200 && response.data.success) {
+      commit("DOWNVOTE_REPLY", payload);
+    } else {
+      throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
+    }
+  } catch (error) {
+    console.error("Fehler beim Herunterwerten der Antwort:", error.message);
+  }
+},
 
-    upvoteReply({ commit }, { replyId, currentUserId, topicId, commentId }) {
-      commit("UPVOTE_REPLY", { replyId, currentUserId, topicId, commentId });
-    },
-    downvoteReply({ commit }, { replyId, currentUserId, topicId, commentId }) {
-      commit("DOWNVOTE_REPLY", { replyId, currentUserId, topicId, commentId });
-    },
 
     async fetchTopic({ commit }, topicId) {
       try {

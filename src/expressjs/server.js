@@ -26,6 +26,7 @@ db.on("error", (err) => {
 const Topic = mongoose.model(
   "Topic",
   new mongoose.Schema({
+    title: String,
     text: String,
     author: Object,
     category: Object,
@@ -136,47 +137,435 @@ const User = mongoose.model(
     tweets: Array,
   })
 );
+function searchReplyInCommentAndReplies(comment, replyId) {
+  // Überprüfen Sie zuerst den aktuellen Kommentar
+  console.log(comment.id);
+  if (comment.id === replyId) {
+    return comment;
+  }
 
-  app.post("/api/addFilterUser", async (req, res) => {
-    const filterSettings = req.body.filterSettings;
-    const currentUserId = req.body.currentUserId;
-
-    console.log(currentUserId);
-    console.log;
-    if (!filterSettings || !currentUserId) {
-      return res.status(400).json({
-        success: false,
-        message: "Filtereinstellungen oder Benutzer-ID fehlen.",
-      });
+  // Durchsuchen Sie dann die Antworten des aktuellen Kommentars
+  for (let reply of comment.replies) {
+    if (reply.id === replyId) {
+      return reply;
     }
 
-    try {
-      const user = await User.findOne({ id: currentUserId });
+    // Wenn die Antwort Unterantworten hat, suchen Sie rekursiv darin
+    const foundReply = searchReplyInCommentAndReplies(reply, replyId);
+    if (foundReply) {
+      return foundReply;
+    }
+  }
 
-      if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Benutzer nicht gefunden." });
+  // Wenn die Antwort nicht gefunden wurde, geben Sie null zurück
+  return null;
+}
+
+app.post("/api/replydownvote", async (req, res) => {
+  try {
+    const { replyId, currentUserId, topicId, commentId } = req.body;
+
+    const topic = await Topic.findOne({ id: topicId });
+    const user = await User.findOne({ id: currentUserId });
+
+    if (!topic || !user) {
+      res.status(404).send({ message: "Thema oder Benutzer nicht gefunden" });
+      return;
+    }
+
+    const comment =
+      topic.proComments.find((comment) => comment.id === commentId) ||
+      topic.contraComments.find((comment) => comment.id === commentId);
+
+    let reply = null;
+
+    if (comment) {
+      reply = searchReplyInCommentAndReplies(comment, replyId);
+    } else {
+      const topicComments = topic.proComments.concat(topic.contraComments);
+      for (const topicComment of topicComments) {
+        reply = searchReplyInCommentAndReplies(topicComment, replyId);
+        if (reply) {
+          break;
+        }
       }
-
-      // Aktualisieren Sie das User-Objekt mit den neuen Filtereinstellungen
-      user.filterSettings = filterSettings;
-
-      // Speichern Sie den aktualisierten Benutzer in der Datenbank
-      await user.save();
-
-      res.json({
-        success: true,
-        message: "Benutzer erfolgreich aktualisiert.",
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Ein Fehler ist aufgetreten.",
-        error: error.message,
-      });
     }
-  });
+
+    if (!reply) {
+      res.status(404).send({ message: "Antwort nicht gefunden" });
+      return;
+    }
+
+    const hasLiked = user.haslikedreply.includes(replyId);
+    const hasDisliked = user.hasdislikedreply.includes(replyId);
+
+    if (hasDisliked) {
+      reply.downvotes -= 1;
+      user.hasdislikedreply = user.hasdislikedreply.filter(
+        (id) => id !== replyId
+      );
+    } else {
+      if (hasLiked) {
+        reply.upvotes -= 1;
+        user.haslikedreply = user.haslikedreply.filter((id) => id !== replyId);
+      }
+      reply.downvotes += 1;
+      user.hasdislikedreply.push(replyId);
+    }
+
+    await topic.save();
+    await user.save();
+
+    console.log("Antwort erfolgreich in der Datenbank heruntergewertet");
+    res.status(200).send({
+      success: true,
+      message: "Antwort erfolgreich in der Datenbank heruntergewertet",
+    });
+  } catch (error) {
+    console.error(
+      "Fehler beim Herunterwerten der Antwort in der Datenbank:",
+      error
+    );
+    res.status(500).send({
+      message: "Fehler beim Herunterwerten der Antwort in der Datenbank",
+    });
+  }
+});
+
+app.post("/api/replyupvote", async (req, res) => {
+  try {
+    const { replyId, currentUserId, topicId, commentId } = req.body;
+
+    const topic = await Topic.findOne({ id: topicId });
+    const user = await User.findOne({ id: currentUserId });
+
+    if (!topic || !user) {
+      res.status(404).send({ message: "Thema oder Benutzer nicht gefunden" });
+      return;
+    }
+
+    const comment =
+      topic.proComments.find((comment) => comment.id === commentId) ||
+      topic.contraComments.find((comment) => comment.id === commentId);
+
+    let reply = null;
+
+    if (comment) {
+      reply = searchReplyInCommentAndReplies(comment, replyId);
+    } else {
+      const topicComments = topic.proComments.concat(topic.contraComments);
+      for (const topicComment of topicComments) {
+        reply = searchReplyInCommentAndReplies(topicComment, replyId);
+        if (reply) {
+          break;
+        }
+      }
+    }
+
+    if (!reply) {
+      res.status(404).send({ message: "Antwort nicht gefunden" });
+      return;
+    }
+
+    const hasLiked = user.haslikedreply.includes(replyId);
+    const hasDisliked = user.hasdislikedreply.includes(replyId);
+
+    if (hasLiked) {
+      reply.upvotes -= 1;
+      user.haslikedreply = user.haslikedreply.filter((id) => id !== replyId);
+    } else {
+      if (hasDisliked) {
+        reply.downvotes -= 1;
+        user.hasdislikedreply = user.hasdislikedreply.filter(
+          (id) => id !== replyId
+        );
+      }
+      reply.upvotes += 1;
+      user.haslikedreply.push(replyId);
+    }
+
+    await topic.save();
+    await user.save();
+
+    console.log("Antwort erfolgreich in der Datenbank hochgewertet");
+    res.status(200).send({
+      success: true,
+      message: "Antwort erfolgreich in der Datenbank hochgewertet",
+    });
+  } catch (error) {
+    console.error(
+      "Fehler beim Hochwerten der Antwort in der Datenbank:",
+      error
+    );
+    res.status(500).send({
+      message: "Fehler beim Hochwerten der Antwort in der Datenbank",
+    });
+  }
+});
+
+app.post("/api/commentdownvote", async (req, res) => {
+  try {
+    const { commentId, currentUserId, topicId } = req.body;
+
+    const topic = await Topic.findOne({ id: topicId });
+    const user = await User.findOne({ id: currentUserId });
+
+    if (!topic || !user) {
+      res.status(404).send({ message: "Thema oder Benutzer nicht gefunden" });
+      return;
+    }
+
+    const comment =
+      topic.proComments.find((comment) => comment.id === commentId) ||
+      topic.contraComments.find((comment) => comment.id === commentId);
+
+    if (!comment) {
+      res.status(404).send({ message: "Kommentar nicht gefunden" });
+      return;
+    }
+
+    const hasLiked = user.haslikedcomment.includes(commentId);
+    const hasDisliked = user.hasdislikedcomment.includes(commentId);
+
+    if (hasDisliked) {
+      comment.downvotes -= 1;
+      user.hasdislikedcomment = user.hasdislikedcomment.filter(
+        (id) => id !== commentId
+      );
+    } else {
+      if (hasLiked) {
+        comment.upvotes -= 1;
+        user.haslikedcomment = user.haslikedcomment.filter(
+          (id) => id !== commentId
+        );
+      }
+      comment.downvotes += 1;
+      user.hasdislikedcomment.push(commentId);
+    }
+
+    await topic.save();
+    await user.save();
+
+    console.log("Kommentar erfolgreich in der Datenbank herabgewertet");
+    res.status(200).send({
+      success: true,
+      message: "Kommentar erfolgreich in der Datenbank herabgewertet",
+    });
+  } catch (error) {
+    console.error(
+      "Fehler beim Herabwerten des Kommentars in der Datenbank:",
+      error
+    );
+    res.status(500).send({
+      message: "Fehler beim Herabwerten des Kommentars in der Datenbank",
+    });
+  }
+});
+
+app.post("/api/commentupvote", async (req, res) => {
+  try {
+    const payload = req.body;
+    const { commentId, currentUserId, topicId } = payload;
+
+    const topic = await Topic.findOne({ id: topicId });
+    const user = await User.findOne({ id: currentUserId });
+
+    if (!topic || !user) {
+      res.status(404).send({ message: "Thema oder Benutzer nicht gefunden" });
+      return;
+    }
+
+    const comment =
+      topic.proComments.find((comment) => comment.id === commentId) ||
+      topic.contraComments.find((comment) => comment.id === commentId);
+
+    if (!comment) {
+      res.status(404).send({ message: "Kommentar nicht gefunden" });
+      return;
+    }
+
+    const hasLiked = user.haslikedcomment.includes(commentId);
+    const hasDisliked = user.hasdislikedcomment.includes(commentId);
+
+    if (hasLiked) {
+      comment.upvotes -= 1;
+      user.haslikedcomment = user.haslikedcomment.filter(
+        (id) => id !== commentId
+      );
+    } else {
+      if (hasDisliked) {
+        comment.downvotes -= 1;
+        user.hasdislikedcomment = user.hasdislikedcomment.filter(
+          (id) => id !== commentId
+        );
+      }
+      comment.upvotes += 1;
+      user.haslikedcomment.push(commentId);
+    }
+
+    await topic.save();
+    await user.save();
+
+    console.log("Kommentar erfolgreich in der Datenbank hochgewertet");
+    res.status(200).send({
+      success: true,
+      message: "Kommentar erfolgreich in der Datenbank hochgewertet",
+    });
+  } catch (error) {
+    console.error(
+      "Fehler beim Hochwerten des Kommentars in der Datenbank:",
+      error
+    );
+    res.status(500).send({
+      message: "Fehler beim Hochwerten des Kommentars in der Datenbank",
+    });
+  }
+});
+
+app.post("/api/topicdislike", async (req, res) => {
+  try {
+    const payload = req.body;
+    const topicId = payload.topicId;
+    const userId = payload.userId;
+
+    const topic = await Topic.findOne({ id: topicId });
+    const user = await User.findOne({ id: userId });
+
+    if (!topic || !user) {
+      res.status(404).send({ message: "Thema oder Benutzer nicht gefunden" });
+      return;
+    }
+
+    const hasLiked = user.haslikedtopic.includes(topicId);
+    const hasDisliked = user.hasdislikedtopic.includes(topicId);
+
+    if (!hasDisliked) {
+      topic.downvotes += 1;
+      user.hasdislikedtopic.push(topicId);
+      if (hasLiked) {
+        topic.upvotes -= 1;
+        user.haslikedtopic = user.haslikedtopic.filter((id) => id !== topicId);
+      }
+    } else {
+      topic.downvotes -= 1;
+      user.hasdislikedtopic = user.hasdislikedtopic.filter(
+        (id) => id !== topicId
+      );
+    }
+
+    await topic.save();
+    await user.save();
+
+    console.log("Dislike erfolgreich in die Datenbank gespeichert");
+    res.status(200).send({
+      success: true,
+      message: "Dislike erfolgreich in die Datenbank gespeichert",
+    });
+  } catch (error) {
+    console.error(
+      "Fehler beim Speichern des Dislikes in die Datenbank:",
+      error
+    );
+    res.status(500).send({
+      message: "Fehler beim Speichern des Dislikes in die Datenbank",
+    });
+  }
+});
+
+app.patch("/api/topiclike", async (req, res) => {
+  try {
+    const payload = req.body;
+    const topicId = payload.topicId;
+    const userId = payload.userId;
+
+    // Finde das Thema und den Benutzer in der Datenbank
+    const topic = await Topic.findOne({ id: topicId });
+    const user = await User.findOne({ id: userId });
+
+    // Überprüfe, ob das Thema und der Benutzer existieren
+    if (!topic || !user) {
+      res.status(404).send({ message: "Thema oder Benutzer nicht gefunden" });
+      return;
+    }
+
+    // Überprüfe, ob der Benutzer das Thema bereits geliked oder disliked hat
+    const hasLiked = user.haslikedtopic.includes(topicId);
+    const hasDisliked = user.hasdislikedtopic.includes(topicId);
+
+    if (!hasLiked) {
+      topic.upvotes += 1;
+      user.haslikedtopic.push(topicId);
+
+      if (hasDisliked) {
+        topic.downvotes -= 1;
+        user.hasdislikedtopic = user.hasdislikedtopic.filter(
+          (id) => id !== topicId
+        );
+      }
+    } else {
+      topic.upvotes -= 1;
+      user.haslikedtopic = user.haslikedtopic.filter((id) => id !== topicId);
+    }
+
+    // Hier können Sie die updatePercentages(topic)-Funktion implementieren, wenn Sie sie im Backend haben
+
+    // Speichern Sie die Änderungen in der Datenbank
+    await topic.save();
+    await user.save();
+
+    console.log("Topics erfolgreich in die Datenbank gespeichert");
+    res.status(200).send({
+      success: true,
+      message: "Topics erfolgreich in die Datenbank gespeichert",
+    });
+  } catch (error) {
+    console.error("Fehler beim Speichern der Topics in die Datenbank:", error);
+    res.status(500).send({
+      message: "Fehler beim Speichern der Topics in die Datenbank",
+    });
+  }
+});
+
+app.post("/api/addFilterUser", async (req, res) => {
+  const filterSettings = req.body.filterSettings;
+  const currentUserId = req.body.currentUserId;
+
+  console.log(currentUserId);
+  console.log;
+  if (!filterSettings || !currentUserId) {
+    return res.status(400).json({
+      success: false,
+      message: "Filtereinstellungen oder Benutzer-ID fehlen.",
+    });
+  }
+
+  try {
+    const user = await User.findOne({ id: currentUserId });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Benutzer nicht gefunden." });
+    }
+
+    // Aktualisieren Sie das User-Objekt mit den neuen Filtereinstellungen
+    user.filterSettings = filterSettings;
+
+    // Speichern Sie den aktualisierten Benutzer in der Datenbank
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Benutzer erfolgreich aktualisiert.",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Ein Fehler ist aufgetreten.",
+      error: error.message,
+    });
+  }
+});
 
 app.put("/api/users/:userId/addReplyPath", async (req, res) => {
   const userId = req.params.userId;
@@ -204,7 +593,7 @@ app.put("/api/users/:userId/addReplyPath", async (req, res) => {
 app.post("/api/replies", async (req, res) => {
   const newReply = req.body;
 
-  console.log(newReply.topicId+ " path");
+  console.log(newReply.topicId + " path");
 
   try {
     const topic = await Topic.findOne({ id: newReply.topicId });
@@ -364,8 +753,6 @@ app.get("/api/topics/:topicId", async (req, res) => {
   }
 });
 
-
-
 app.post("/api/users/register", async (req, res) => {
   try {
     const userData = req.body;
@@ -389,31 +776,37 @@ app.post("/api/users/register", async (req, res) => {
   }
 });
 
-
-
-
-
-
 // Definieren Sie die API-Route zum Hinzufügen von Topics
 app.post("/api/addTopics", async (req, res) => {
   try {
     const topicsData = req.body; // Die Topics-Daten kommen im Anforderungskörper als Array von Objekten
+
     // Hier können Sie die gesendeten Daten anzeigen
 
     // Iterieren Sie durch jedes Element in den Topics-Daten
 
-    // Erstellen Sie ein neues Topic-Dokument und speichern Sie es in der Datenbank
-    const topic = new Topic(topicsData);
-    await topic.save();
+    // Aktualisieren Sie das Topic-Dokument, wenn es existiert, oder erstellen Sie ein neues, wenn es nicht existiert
+    await Topic.findOneAndUpdate(
+      { _id: topicsData._id }, // Suchkriterium, z.B. basierend auf der ID
+      topicsData, // Die Daten, die aktualisiert werden sollen
+      { upsert: true, new: true } // Optionen: upsert erstellt ein neues Dokument, wenn es nicht existiert; new gibt das aktualisierte Dokument zurück
+    );
 
-    console.log("Topics erfolgreich in die Datenbank gespeichert");
-    res
-      .status(200)
-      .send({ message: "Topics erfolgreich in die Datenbank gespeichert" });
+    console.log(
+      "Topics erfolgreich in die Datenbank gespeichert oder aktualisiert"
+    );
+    res.status(200).send({
+      message:
+        "Topics erfolgreich in die Datenbank gespeichert oder aktualisiert",
+    });
   } catch (error) {
-    console.error("Fehler beim Speichern der Topics in die Datenbank:", error);
+    console.error(
+      "Fehler beim Speichern oder Aktualisieren der Topics in die Datenbank:",
+      error
+    );
     res.status(500).send({
-      message: "Fehler beim Speichern der Topics in die Datenbank",
+      message:
+        "Fehler beim Speichern oder Aktualisieren der Topics in die Datenbank",
     });
   }
 });
@@ -443,7 +836,6 @@ app.get("/api/users", async (req, res) => {
       .json({ message: "Fehler beim Abrufen der Daten aus der Datenbank" });
   }
 });
-
 
 app.post("/api/addComment", async (req, res) => {
   const comment = req.body;
@@ -480,12 +872,11 @@ app.listen(port, () => {
   console.log(`Server läuft auf Port ${port}`);
 });
 
-
 app.post("/api/addTopicToSaves", async (req, res) => {
   const path = req.body.path;
   const currentUserId = req.body.currentUserId;
-  console.log(currentUserId)
-  console.log(path)
+  console.log(currentUserId);
+  console.log(path);
   try {
     const user = await User.findOne({ id: currentUserId });
     if (!user) {
@@ -503,8 +894,6 @@ app.post("/api/addTopicToSaves", async (req, res) => {
     console.error("Fehler beim Hinzufügen des Topics:", error);
     res.status(500).json({ error: "Interner Serverfehler" });
   }
-
-
 
   // Senden Sie eine Erfolgsantwort zurück
 });

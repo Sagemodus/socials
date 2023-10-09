@@ -2,6 +2,7 @@
   <div>
     <button @click="szene">Topics</button>
     <button @click="szene2"> Users</button>
+    <button @click="szene3"> titel</button>
     <!-- Loop through the data and create TopicBox components for each topic -->
     <TopicBox v-for="topic in sortedTopics.slice()" :key="topic.id" :id="topic.id" />
   </div>
@@ -25,7 +26,20 @@ export default {
     // Laden Sie die Daten beim Komponentenstart
 
 
+    const szene3 = () => {
+      const topicList = store.state.topics; // Holen Sie die Liste der Topics
+      console.log(topicList);
 
+      // Iterieren Sie durch jedes Element in der Topic-Liste mit forEach
+      topicList.forEach(topicData => {
+        console.log(topicData);
+
+        // Setzen Sie einen zufälligen Titel für das aktuelle Topic
+        topicData.title = "Zufälliger Titel " + Math.floor(Math.random() * 1000);
+
+        addTopicsToDatabase(topicData); // Rufen Sie die Funktion auf, um das Topic in die Datenbank einzufügen
+      });
+    };
 
 
     const szene2= () => {
@@ -100,7 +114,8 @@ console.log(topicList)
       addTopicsToDatabase,
       topics,
       szene,
-      szene2
+      szene2,
+      szene3
     }
   },
 

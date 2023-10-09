@@ -1,10 +1,30 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const cors = require("cors"); // Importieren Sie das cors-Modul
+const cors = require("cors"); //Für password verschlüsselung
+
 const app = express();
 const port = process.env.PORT || 3000;
 const bodyParser = require("body-parser");
+const jwt = require('jsonwebtoken'); // Tokens für session authentifizierung
+
+//von hier 
+const { JSDOM } = require('jsdom');
+const createDOMPurify = require('dompurify');
+const { window } = new JSDOM('');
+const DOMPurify = createDOMPurify(window);
+// bis hier ist alles für sanitierung von inputs
+
+//Secure token random generate für reset token und Emailer
+const crypto = require('crypto'); // For generating random tokens
+const nodemailer = require('nodemailer'); // For sending emails
+
+
+const httpServer = require('http').createServer(app);
+const io = require('socket.io')(httpServer);
+
+const jwtSecretKey = 'BlaBlo123'; //MUSS UMBEDINGT VERÄNDERT WERDEN .ENV FILE SICHER STELLEN
+
 
 app.use(cors());
 
@@ -135,6 +155,9 @@ const User = mongoose.model(
     profileImage: String,
     topicsaves: Array,
     tweets: Array,
+    hashedPassword: String,
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
   })
 );
 function searchReplyInCommentAndReplies(comment, replyId) {
@@ -160,6 +183,20 @@ function searchReplyInCommentAndReplies(comment, replyId) {
   // Wenn die Antwort nicht gefunden wurde, geben Sie null zurück
   return null;
 }
+
+app.post("/api/addFilterUser", async (req, res) => {
+  const filterSettings = req.body.filterSettings;
+  const currentUserId = req.body.currentUserId;
+
+  console.log(currentUserId);
+  console.log;
+  if (!filterSettings || !currentUserId) {
+    return res.status(400).json({
+      success: false,
+      message: "Filtereinstellungen oder Benutzer-ID fehlen.",
+    });
+  }
+});
 
 app.post("/api/replydownvote", async (req, res) => {
   try {
@@ -567,6 +604,25 @@ app.post("/api/addFilterUser", async (req, res) => {
   }
 });
 
+//CHAT START
+
+io.on('connection', (socket) => {
+  console.log('User connected');
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
+
+  socket.on('chatMessage', (message) => {
+    console.log(`Message: ${message}`);
+    io.emit('chatMessage', message);
+  });
+});
+
+
+//CHAT END
+
+
 app.put("/api/users/:userId/addReplyPath", async (req, res) => {
   const userId = req.params.userId;
   const replyPath = req.body.replyPath;
@@ -712,26 +768,89 @@ app.post("/api/addUserReply", async (req, res) => {
   // Senden Sie eine Erfolgsantwort zurück
 });
 
-app.post("/api/addUsers", async (req, res) => {
+
+app.post("/api/users/reset-password-request", async (req, res) => {
   try {
-    const userData = req.body; // Die Topics-Daten kommen im Anforderungskörper als Array von Objekten
-    // Hier können Sie die gesendeten Daten anzeigen
+    const { email } = req.body;
 
-    // Iterieren Sie durch jedes Element in den Topics-Daten
+    // Find the user by email in the database
+    const user = await User.findOne({ email: email });
 
-    // Erstellen Sie ein neues Topic-Dokument und speichern Sie es in der Datenbank
-    const user = new User(userData);
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    // Generate a random reset token
+    const resetToken = crypto.randomBytes(20).toString("hex");
+
+    // Set an expiration time for the reset token (e.g., 1 hour)
+    const resetTokenExpiration = Date.now() + 3600000; // 1 hour in milliseconds
+
+    // Update the user's record with the reset token and expiration time
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = new Date(resetTokenExpiration); // Store as a Date object
     await user.save();
 
-    console.log("Topics erfolgreich in die Datenbank gespeichert");
-    res
-      .status(200)
-      .send({ message: "Topics erfolgreich in die Datenbank gespeichert" });
-  } catch (error) {
-    console.error("Fehler beim Speichern der Topics in die Datenbank:", error);
-    res.status(500).send({
-      message: "Fehler beim Speichern der Topics in die Datenbank",
+    // Send an email to the user with the reset token and a link to the reset page
+    const transporter = nodemailer.createTransport({
+      // Configure your email provider here (e.g., SMTP)
     });
+
+    const mailOptions = {
+      from: "your@email.com",
+      to: user.email,
+      subject: "Password Reset",
+      text: `You are receiving this email because you (or someone else) requested a password reset for your account.\n\n` +
+        `Please click on the following link, or paste it into your browser to reset your password:\n\n` +
+        `http://yourwebsite.com/reset-password/${resetToken}\n\n` +
+        `If you did not request this, please ignore this email, and your password will remain unchanged.\n`,
+    };
+
+    transporter.sendMail(mailOptions, (error) => {
+      if (error) {
+        console.error("Error sending email:", error);
+        res.status(500).send({ message: "Error sending email" });
+      } else {
+        console.log("Password reset email sent");
+        res.status(200).send({ message: "Password reset email sent" });
+      }
+    });
+  } catch (error) {
+    console.error("Error initiating password reset:", error);
+    res.status(500).send({ message: "Error initiating password reset" });
+  }
+});
+
+
+// Define a route for resetting the password using the reset token
+app.post("/api/users/reset-password", async (req, res) => {
+  try {
+    const { resetToken, newPassword } = req.body;
+
+    // Find the user by the reset token and check if it's still valid
+    const user = await User.findOne({
+      resetPasswordToken: resetToken,
+      resetPasswordExpires: { $gt: Date.now() }, // Check if the token is still valid
+    });
+
+    if (!user) {
+      return res.status(400).send({ message: "Invalid or expired reset token" });
+    }
+
+    // Generate a new hashed password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update the user's password and reset token in the database
+    user.hashedPassword = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).send({ message: "Password reset successful" });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res.status(500).send({ message: "Error resetting password" });
   }
 });
 
@@ -753,26 +872,142 @@ app.get("/api/topics/:topicId", async (req, res) => {
   }
 });
 
+
+
+async function getNextUserId() {
+  try {
+    // Find the document with the highest id value
+    const highestUser = await User.findOne({}, {}, { sort: { id: -1 } });
+
+    // If there are no users in the database, start with ID 1; otherwise, increment the highest ID value
+    const nextUserId = highestUser ? highestUser.id + 1 : 1;
+
+    return nextUserId;
+  } catch (error) {
+    console.error("Error getting next user ID:", error);
+    throw error;
+  }
+}
+
+function generateAuthToken(user) {
+  const payload = {
+    user: {
+      _id: user._id,
+      username: user.username, // Add other user properties here
+    },
+  };
+
+  const token = jwt.sign(payload, jwtSecretKey, {
+    expiresIn: '1h',
+  });
+
+  return token;
+}
+app.post("/api/users/login", async (req, res) => {
+  try {
+    // Sanitize user inputs
+    const name = DOMPurify.sanitize(req.body.name);
+    const password = DOMPurify.sanitize(req.body.password);
+
+    // Find the user by name in the database
+    const user = await User.findOne({ name: name });
+
+    if (!user) {
+      return res.status(401).send({ message: "User not found" });
+    }
+
+    // Compare the provided password with the hashed password
+    const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
+    if (!isPasswordValid) {
+      return res.status(401).send({ message: "Invalid password" });
+    }
+
+    // Generate a JWT token
+    const token = generateAuthToken(user);
+
+    // Send the token and user ID as a response
+    console.log(user.id);
+    res.status(200).send({ success: true, token, userId: user.id });
+  } catch (error) {
+    console.error("Error logging in:", error);
+    res.status(500).send({ message: "Error logging in" });
+  }
+});
+
+
+
+
 app.post("/api/users/register", async (req, res) => {
   try {
     const userData = req.body;
 
+    // Sanitize user input
+    const sanitizedName = DOMPurify.sanitize(userData.name);
+    const sanitizedPassword = DOMPurify.sanitize(userData.password);
+
+    // Check if a user with the same name already exists
+    const existingUser = await User.findOne({ name: sanitizedName });
+    if (existingUser) {
+      return res.status(400).send({ success: false, message: "User with this name already exists" });
+    }
+
+    // Get the next available user ID
+    const nextUserId = await getNextUserId();
+
+    // Set the id and joinedAt fields of the userData
+    userData.id = nextUserId;
+    userData.joinedAt = new Date().toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+
     // Generate a salt and hash the user's password
-    const saltRounds = 10; // Number of salt rounds
-    const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(sanitizedPassword, saltRounds);
 
     // Replace the plain password with the hashed password
-    userData.password = hashedPassword;
+    userData.hashedPassword = hashedPassword;
 
-    // Create a new user document with the hashed password
-    const user = new User(userData);
+    // Create a new user document with the sanitized data
+    const user = new User({ name: sanitizedName, hashedPassword });
     await user.save();
 
     console.log("User successfully registered");
-    res.status(200).send({ message: "User successfully registered" });
+    res.status(200).send({ success: true, message: "User successfully registered" });
   } catch (error) {
     console.error("Error registering user:", error);
-    res.status(500).send({ message: "Error registering user" });
+    res.status(500).send({ success: false, message: "Error registering user" });
+  }
+});
+
+
+
+
+
+
+
+
+app.post("/api/addUsers", async (req, res) => {
+  try {
+    const userData = req.body; // Die Topics-Daten kommen im Anforderungskörper als Array von Objekten
+    // Hier können Sie die gesendeten Daten anzeigen
+
+    // Iterieren Sie durch jedes Element in den Topics-Daten
+
+    // Erstellen Sie ein neues Topic-Dokument und speichern Sie es in der Datenbank
+    const user = new User(userData);
+    await user.save();
+
+    console.log("Topics erfolgreich in die Datenbank gespeichert");
+    res
+      .status(200)
+      .send({ message: "Topics erfolgreich in die Datenbank gespeichert" });
+  } catch (error) {
+    console.error("Fehler beim Speichern der Topics in die Datenbank:", error);
+    res.status(500).send({
+      message: "Fehler beim Speichern der Topics in die Datenbank",
+    });
   }
 });
 

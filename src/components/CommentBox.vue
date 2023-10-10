@@ -53,7 +53,7 @@
 
     <div v-if="comment.expandReplies" class="replies-section">
       <comment-reply v-for="reply in comment.replies" :key="reply.id" :reply="reply"  :topic="topic"
-        :commentId="comment.id"  :commentIndex="commentIndex"
+        :commentId="comment.id"  :commentIndex="commentIndex" :depth="1"
         @reply-clicked="onReplyClicked" :id="reply.id"></comment-reply>
     </div>
   </div>
@@ -288,7 +288,7 @@ export default {
         Commentpath: comment.path,
         commentId: comment.id,
         commentType: comment.commentType,
-        path: `${comment.path}/${comment.replies.length|| 0}`,
+        path: `${comment.path}/${comment.replies ? comment.replies.length : 0}`,
         expandReplies: false,
         depth: comment.depth + 1,
         replytype: "reply",
@@ -386,7 +386,7 @@ export default {
 .comment-box {
   padding-bottom: 10px;
   border-bottom: 1px solid #e1e4e8;
-  font-family: Verdana, Geneva, sans-serif;
+  text-align: left;
   padding-left: 1vh;
   border-left: 2px solid #ccc;
 
@@ -489,6 +489,9 @@ export default {
     }
   }
 
+.comment-reply:not(:last-child) {
+    border-bottom: 1px solid #ccc;
+}
   .expand-button {
     display: flex;
     align-items: center;
@@ -499,7 +502,9 @@ export default {
     /* Die Höhe des Buttons festlegen */
     font-size: 1.5rem;
   }
-
+.comment-content {
+    padding-top: 10px;
+}
 
   .reply-form {
     margin-top: 10px;

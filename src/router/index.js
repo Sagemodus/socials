@@ -26,23 +26,13 @@ import ReplyPage from '../components/SingleReplyPage.vue';
 
 // Profil weiterleitungen
 import nestedReplyPage from '../components/profilebutton/nestedReplyPage.vue';
-import bookmarkSaves from '../components/profilebutton/bookmarkSaves.vue';
-import profileAndereUser from '../components/profilebutton/profileAndereUser.vue';
-
-//passwort vergessen
-import PasswordForgottenComponent from '../components/PasswordForgottenComponent.vue';
-import ResetPassword from '../components/ResetPasswordComponent.vue'
-
-import store from '../store/store.js'; // Import your Vuex store
-
-
-
+import bookmarkSaves from '../components/profilebutton/bookmarkSaves.vue'
+import profileAndereUser from '../components/profilebutton/profileAndereUser.vue'
 
 const routes = [
   {
     path: "/feed",
     component: FeedView,
-    meta: { requiresAuth: true },
   },
   {
     path: "/search",
@@ -70,16 +60,6 @@ const routes = [
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/LoginView.vue"),
   },
-  { 
-    path: '/password-reset',
-    name: 'PasswordForgottenComponent',
-   component: PasswordForgottenComponent 
-  },
-  {
-    path: '/password-reset-finale',
-    name: 'ResetPassword',
-    component: ResetPassword
-  },
   {
     path: "/register",
     name: "register",
@@ -100,19 +80,16 @@ const routes = [
     path: "/popular",
     name: "Popular",
     component: PopularComponent,
-    meta: { requiresAuth: true },
   },
   {
     path: "/recent",
     name: "Recent",
     component: RecentComponent,
-    meta: { requiresAuth: true },
   },
   {
     path: "/people",
     name: "People",
     component: PeopleComponent,
-    meta: { requiresAuth: true },
   },
 
   {
@@ -162,19 +139,6 @@ const router = createRouter({
     } else {
       return { left: 0, top: 0 };
     }
-  }
-});
-
-
-
-router.beforeEach((to, from, next) => {
-  // Check if the route requires authentication and if the user is authenticated
-  if (to.meta.requiresAuth && !store.getters.isAuthenticated) {
-    // If not authenticated, redirect to the login page
-    next('/login'); // You can specify your login route here
-  } else {
-    // Continue with the navigation
-    next();
   }
 });
 

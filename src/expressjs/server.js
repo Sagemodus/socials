@@ -1,30 +1,10 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const cors = require("cors"); //Für password verschlüsselung
-
+const cors = require("cors"); // Importieren Sie das cors-Modul
 const app = express();
 const port = process.env.PORT || 3000;
 const bodyParser = require("body-parser");
-const jwt = require('jsonwebtoken'); // Tokens für session authentifizierung
-
-//von hier 
-const { JSDOM } = require('jsdom');
-const createDOMPurify = require('dompurify');
-const { window } = new JSDOM('');
-const DOMPurify = createDOMPurify(window);
-// bis hier ist alles für sanitierung von inputs
-
-//Secure token random generate für reset token und Emailer
-const crypto = require('crypto'); // For generating random tokens
-const nodemailer = require('nodemailer'); // For sending emails
-
-
-const httpServer = require('http').createServer(app);
-const io = require('socket.io')(httpServer);
-
-const jwtSecretKey = 'BlaBlo123'; //MUSS UMBEDINGT VERÄNDERT WERDEN .ENV FILE SICHER STELLEN
-
 
 app.use(cors());
 
@@ -46,11 +26,15 @@ db.on("error", (err) => {
 const Topic = mongoose.model(
   "Topic",
   new mongoose.Schema({
+    title: String,
     text: String,
     author: Object,
     category: Object,
     contraComments: [
       {
+        showelement: Boolean,
+        commentIndex: Number,
+        depth: Number,
         author: Object,
         commentType: String,
         createdAt: Date,
@@ -74,9 +58,12 @@ const Topic = mongoose.model(
             text: String,
             topicId: String,
             upvotes: Number,
+            depth: Number,
+            commentId: String,
+            parentId: String,
+            commentIndex: Number,
           },
         ],
-        showelement: Boolean,
         text: String,
         topicId: String,
         upvotes: Number,
@@ -89,6 +76,9 @@ const Topic = mongoose.model(
     path: String,
     proComments: [
       {
+        showelement: Boolean,
+
+        depth: Number,
         author: Object,
         commentIndex: Number,
         commentType: String,
@@ -99,6 +89,7 @@ const Topic = mongoose.model(
         path: String,
         replies: [
           {
+            depth: Number,
             Commentpath: String,
             author: Object,
             authorPath: Number,
@@ -113,9 +104,11 @@ const Topic = mongoose.model(
             text: String,
             topicId: String,
             upvotes: Number,
+            commentId: String,
+            parentId: String,
+            commentIndex: Number,
           },
         ],
-        showelement: Boolean,
         text: String,
         topicId: String,
         upvotes: Number,
@@ -154,72 +147,446 @@ const User = mongoose.model(
     profileImage: String,
     topicsaves: Array,
     tweets: Array,
-    hashedPassword: String,
-    resetPasswordToken: String,
-    resetPasswordExpires: Date,
   })
 );
+function searchReplyInCommentAndReplies(comment, replyId) {
+  // Überprüfen Sie zuerst den aktuellen Kommentar
+  console.log(comment.id);
+  if (comment.id === replyId) {
+    return comment;
+  }
 
-
-  app.post("/api/addFilterUser", async (req, res) => {
-    const filterSettings = req.body.filterSettings;
-    const currentUserId = req.body.currentUserId;
-
-    console.log(currentUserId);
-    console.log;
-    if (!filterSettings || !currentUserId) {
-      return res.status(400).json({
-        success: false,
-        message: "Filtereinstellungen oder Benutzer-ID fehlen.",
-      });
+  // Durchsuchen Sie dann die Antworten des aktuellen Kommentars
+  for (let reply of comment.replies) {
+    if (reply.id === replyId) {
+      return reply;
     }
 
-    try {
-      const user = await User.findOne({ id: currentUserId });
+    // Wenn die Antwort Unterantworten hat, suchen Sie rekursiv darin
+    const foundReply = searchReplyInCommentAndReplies(reply, replyId);
+    if (foundReply) {
+      return foundReply;
+    }
+  }
 
-      if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Benutzer nicht gefunden." });
+  // Wenn die Antwort nicht gefunden wurde, geben Sie null zurück
+  return null;
+}
+
+app.post("/api/replydownvote", async (req, res) => {
+  try {
+    const { replyId, currentUserId, topicId, commentId } = req.body;
+
+    const topic = await Topic.findOne({ id: topicId });
+    const user = await User.findOne({ id: currentUserId });
+
+    if (!topic || !user) {
+      res.status(404).send({ message: "Thema oder Benutzer nicht gefunden" });
+      return;
+    }
+
+    const comment =
+      topic.proComments.find((comment) => comment.id === commentId) ||
+      topic.contraComments.find((comment) => comment.id === commentId);
+
+    let reply = null;
+
+    if (comment) {
+      reply = searchReplyInCommentAndReplies(comment, replyId);
+    } else {
+      const topicComments = topic.proComments.concat(topic.contraComments);
+      for (const topicComment of topicComments) {
+        reply = searchReplyInCommentAndReplies(topicComment, replyId);
+        if (reply) {
+          break;
+        }
       }
-
-      // Aktualisieren Sie das User-Objekt mit den neuen Filtereinstellungen
-      user.filterSettings = filterSettings;
-
-      // Speichern Sie den aktualisierten Benutzer in der Datenbank
-      await user.save();
-
-      res.json({
-        success: true,
-        message: "Benutzer erfolgreich aktualisiert.",
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Ein Fehler ist aufgetreten.",
-        error: error.message,
-      });
     }
-  });
 
-//CHAT START
+    if (!reply) {
+      res.status(404).send({ message: "Antwort nicht gefunden" });
+      return;
+    }
 
-io.on('connection', (socket) => {
-  console.log('User connected');
+    const hasLiked = user.haslikedreply.includes(replyId);
+    const hasDisliked = user.hasdislikedreply.includes(replyId);
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
-  });
+    if (hasDisliked) {
+      reply.downvotes -= 1;
+      user.hasdislikedreply = user.hasdislikedreply.filter(
+        (id) => id !== replyId
+      );
+    } else {
+      if (hasLiked) {
+        reply.upvotes -= 1;
+        user.haslikedreply = user.haslikedreply.filter((id) => id !== replyId);
+      }
+      reply.downvotes += 1;
+      user.hasdislikedreply.push(replyId);
+    }
+   topic.markModified("proComments");
+   topic.markModified("contraComments");
+   topic.markModified("replies");
+    await topic.save();
+    await user.save();
 
-  socket.on('chatMessage', (message) => {
-    console.log(`Message: ${message}`);
-    io.emit('chatMessage', message);
-  });
+    console.log("Antwort erfolgreich in der Datenbank heruntergewertet");
+    res.status(200).send({
+      success: true,
+      message: "Antwort erfolgreich in der Datenbank heruntergewertet",
+    });
+  } catch (error) {
+    console.error(
+      "Fehler beim Herunterwerten der Antwort in der Datenbank:",
+      error
+    );
+    res.status(500).send({
+      message: "Fehler beim Herunterwerten der Antwort in der Datenbank",
+    });
+  }
 });
 
+app.post("/api/replyupvote", async (req, res) => {
+  try {
+    const { replyId, currentUserId, topicId, commentId } = req.body;
 
-//CHAT END
+    console.log(topicId + " topicid");
+    const topic = await Topic.findOne({ id: topicId });
+    const user = await User.findOne({ id: currentUserId });
 
+    console.log(commentId + " commentid");
+
+    if (!topic || !user) {
+      res.status(404).send({ message: "Thema oder Benutzer nicht gefunden" });
+      return;
+    }
+
+    const comment =
+      topic.proComments.find((comment) => comment.id === commentId) ||
+      topic.contraComments.find((comment) => comment.id === commentId);
+
+    let reply = null;
+    console.log(comment + " komment");
+    if (comment) {
+      reply = searchReplyInCommentAndReplies(comment, replyId);
+    } else {
+      const topicComments = topic.proComments.concat(topic.contraComments);
+      for (const topicComment of topicComments) {
+        reply = searchReplyInCommentAndReplies(topicComment, replyId);
+        if (reply) {
+          console.log(reply.id + " kolleg");
+          break;
+        }
+      }
+    }
+
+    if (!reply) {
+      res.status(404).send({ message: "Antwort nicht gefunden" });
+      return;
+    }
+
+    const hasLiked = user.haslikedreply.includes(replyId);
+    const hasDisliked = user.hasdislikedreply.includes(replyId);
+
+    if (hasLiked) {
+      reply.upvotes -= 1;
+      user.haslikedreply = user.haslikedreply.filter((id) => id !== replyId);
+    } else {
+      if (hasDisliked) {
+        reply.downvotes -= 1;
+        user.hasdislikedreply = user.hasdislikedreply.filter(
+          (id) => id !== replyId
+        );
+      }
+      reply.upvotes += 1;
+      user.haslikedreply.push(replyId);
+    }
+   topic.markModified("proComments");
+   topic.markModified("contraComments");
+   topic.markModified("replies");
+    await topic.save();
+    await user.save();
+
+    console.log("Antwort erfolgreich in der Datenbank hochgewertet");
+    res.status(200).send({
+      success: true,
+      message: "Antwort erfolgreich in der Datenbank hochgewertet",
+    });
+  } catch (error) {
+    console.error(
+      "Fehler beim Hochwerten der Antwort in der Datenbank:",
+      error
+    );
+    res.status(500).send({
+      message: "Fehler beim Hochwerten der Antwort in der Datenbank",
+    });
+  }
+});
+
+app.post("/api/commentdownvote", async (req, res) => {
+  try {
+    const { commentId, currentUserId, topicId } = req.body;
+
+    const topic = await Topic.findOne({ id: topicId });
+    const user = await User.findOne({ id: currentUserId });
+
+    if (!topic || !user) {
+      res.status(404).send({ message: "Thema oder Benutzer nicht gefunden" });
+      return;
+    }
+
+    const comment =
+      topic.proComments.find((comment) => comment.id === commentId) ||
+      topic.contraComments.find((comment) => comment.id === commentId);
+
+    if (!comment) {
+      res.status(404).send({ message: "Kommentar nicht gefunden" });
+      return;
+    }
+
+    const hasLiked = user.haslikedcomment.includes(commentId);
+    const hasDisliked = user.hasdislikedcomment.includes(commentId);
+
+    if (hasDisliked) {
+      comment.downvotes -= 1;
+      user.hasdislikedcomment = user.hasdislikedcomment.filter(
+        (id) => id !== commentId
+      );
+    } else {
+      if (hasLiked) {
+        comment.upvotes -= 1;
+        user.haslikedcomment = user.haslikedcomment.filter(
+          (id) => id !== commentId
+        );
+      }
+      comment.downvotes += 1;
+      user.hasdislikedcomment.push(commentId);
+    }
+    topic.markModified("proComments");
+    topic.markModified("contraComments");
+    topic.markModified("replies");
+    await topic.save();
+    await user.save();
+
+    res.status(200).send({
+      success: true,
+      message: "Kommentar erfolgreich in der Datenbank herabgewertet",
+    });
+  } catch (error) {
+    console.error(
+      "Fehler beim Herabwerten des Kommentars in der Datenbank:",
+      error
+    );
+    res.status(500).send({
+      message: "Fehler beim Herabwerten des Kommentars in der Datenbank",
+    });
+  }
+});
+
+app.post("/api/commentupvote", async (req, res) => {
+  try {
+    const payload = req.body;
+    const { commentId, currentUserId, topicId } = payload;
+
+    const topic = await Topic.findOne({ id: topicId });
+    const user = await User.findOne({ id: currentUserId });
+
+    if (!topic || !user) {
+      res.status(404).send({ message: "Thema oder Benutzer nicht gefunden" });
+      return;
+    }
+
+    const comment =
+      topic.proComments.find((comment) => comment.id === commentId) ||
+      topic.contraComments.find((comment) => comment.id === commentId);
+
+    if (!comment) {
+      res.status(404).send({ message: "Kommentar nicht gefunden" });
+      return;
+    }
+
+    const hasLiked = user.haslikedcomment.includes(commentId);
+    const hasDisliked = user.hasdislikedcomment.includes(commentId);
+
+    if (hasLiked) {
+      comment.upvotes -= 1;
+      user.haslikedcomment = user.haslikedcomment.filter(
+        (id) => id !== commentId
+      );
+    } else {
+      if (hasDisliked) {
+        comment.downvotes -= 1;
+        user.hasdislikedcomment = user.hasdislikedcomment.filter(
+          (id) => id !== commentId
+        );
+      }
+      comment.upvotes += 1;
+      user.haslikedcomment.push(commentId);
+    }
+
+    await topic.save();
+    await user.save();
+
+    console.log("Kommentar erfolgreich in der Datenbank hochgewertet");
+    res.status(200).send({
+      success: true,
+      message: "Kommentar erfolgreich in der Datenbank hochgewertet",
+    });
+  } catch (error) {
+    console.error(
+      "Fehler beim Hochwerten des Kommentars in der Datenbank:",
+      error
+    );
+    res.status(500).send({
+      message: "Fehler beim Hochwerten des Kommentars in der Datenbank",
+    });
+  }
+});
+
+app.post("/api/topicdislike", async (req, res) => {
+  try {
+    const payload = req.body;
+    const topicId = payload.topicId;
+    const userId = payload.userId;
+
+    const topic = await Topic.findOne({ id: topicId });
+    const user = await User.findOne({ id: userId });
+
+    if (!topic || !user) {
+      res.status(404).send({ message: "Thema oder Benutzer nicht gefunden" });
+      return;
+    }
+
+    const hasLiked = user.haslikedtopic.includes(topicId);
+    const hasDisliked = user.hasdislikedtopic.includes(topicId);
+
+    if (!hasDisliked) {
+      topic.downvotes += 1;
+      user.hasdislikedtopic.push(topicId);
+      if (hasLiked) {
+        topic.upvotes -= 1;
+        user.haslikedtopic = user.haslikedtopic.filter((id) => id !== topicId);
+      }
+    } else {
+      topic.downvotes -= 1;
+      user.hasdislikedtopic = user.hasdislikedtopic.filter(
+        (id) => id !== topicId
+      );
+    }
+
+    await topic.save();
+    await user.save();
+
+    console.log("Dislike erfolgreich in die Datenbank gespeichert");
+    res.status(200).send({
+      success: true,
+      message: "Dislike erfolgreich in die Datenbank gespeichert",
+    });
+  } catch (error) {
+    console.error(
+      "Fehler beim Speichern des Dislikes in die Datenbank:",
+      error
+    );
+    res.status(500).send({
+      message: "Fehler beim Speichern des Dislikes in die Datenbank",
+    });
+  }
+});
+
+app.patch("/api/topiclike", async (req, res) => {
+  try {
+    const payload = req.body;
+    const topicId = payload.topicId;
+    const userId = payload.userId;
+
+    // Finde das Thema und den Benutzer in der Datenbank
+    const topic = await Topic.findOne({ id: topicId });
+    const user = await User.findOne({ id: userId });
+
+    // Überprüfe, ob das Thema und der Benutzer existieren
+    if (!topic || !user) {
+      res.status(404).send({ message: "Thema oder Benutzer nicht gefunden" });
+      return;
+    }
+
+    // Überprüfe, ob der Benutzer das Thema bereits geliked oder disliked hat
+    const hasLiked = user.haslikedtopic.includes(topicId);
+    const hasDisliked = user.hasdislikedtopic.includes(topicId);
+
+    if (!hasLiked) {
+      topic.upvotes += 1;
+      user.haslikedtopic.push(topicId);
+
+      if (hasDisliked) {
+        topic.downvotes -= 1;
+        user.hasdislikedtopic = user.hasdislikedtopic.filter(
+          (id) => id !== topicId
+        );
+      }
+    } else {
+      topic.upvotes -= 1;
+      user.haslikedtopic = user.haslikedtopic.filter((id) => id !== topicId);
+    }
+
+    // Hier können Sie die updatePercentages(topic)-Funktion implementieren, wenn Sie sie im Backend haben
+
+    // Speichern Sie die Änderungen in der Datenbank
+    await topic.save();
+    await user.save();
+
+    console.log("Topics erfolgreich in die Datenbank gespeichert");
+    res.status(200).send({
+      success: true,
+      message: "Topics erfolgreich in die Datenbank gespeichert",
+    });
+  } catch (error) {
+    console.error("Fehler beim Speichern der Topics in die Datenbank:", error);
+    res.status(500).send({
+      message: "Fehler beim Speichern der Topics in die Datenbank",
+    });
+  }
+});
+
+app.post("/api/addFilterUser", async (req, res) => {
+  const filterSettings = req.body.filterSettings;
+  const currentUserId = req.body.currentUserId;
+
+  console.log(currentUserId);
+  console.log;
+  if (!filterSettings || !currentUserId) {
+    return res.status(400).json({
+      success: false,
+      message: "Filtereinstellungen oder Benutzer-ID fehlen.",
+    });
+  }
+
+  try {
+    const user = await User.findOne({ id: currentUserId });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Benutzer nicht gefunden." });
+    }
+
+    // Aktualisieren Sie das User-Objekt mit den neuen Filtereinstellungen
+    user.filterSettings = filterSettings;
+
+    // Speichern Sie den aktualisierten Benutzer in der Datenbank
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Benutzer erfolgreich aktualisiert.",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Ein Fehler ist aufgetreten.",
+      error: error.message,
+    });
+  }
+});
 
 app.put("/api/users/:userId/addReplyPath", async (req, res) => {
   const userId = req.params.userId;
@@ -247,7 +614,7 @@ app.put("/api/users/:userId/addReplyPath", async (req, res) => {
 app.post("/api/replies", async (req, res) => {
   const newReply = req.body;
 
-  console.log(newReply.topicId+ " path");
+  console.log(newReply.topicId + " path");
 
   try {
     const topic = await Topic.findOne({ id: newReply.topicId });
@@ -278,7 +645,6 @@ app.post("/api/replies", async (req, res) => {
       }
       currentArray = currentArray[index].replies;
     }
-    console.log(currentArray);
     currentArray.push(newReply);
 
     topic.markModified("proComments");
@@ -305,9 +671,6 @@ const validateReply = (reply) => {
 app.post("/api/addReply", async (req, res) => {
   const reply = req.body;
 
-  console.log(reply.commentType);
-  console.log(reply.commentId);
-  console.log(reply.topicId);
   try {
     validateReply(reply);
 
@@ -366,226 +729,6 @@ app.post("/api/addUserReply", async (req, res) => {
   // Senden Sie eine Erfolgsantwort zurück
 });
 
-
-app.post("/api/users/reset-password-request", async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    // Find the user by email in the database
-    const user = await User.findOne({ email: email });
-
-    if (!user) {
-      return res.status(404).send({ message: "User not found" });
-    }
-
-    // Generate a random reset token
-    const resetToken = crypto.randomBytes(20).toString("hex");
-
-    // Set an expiration time for the reset token (e.g., 1 hour)
-    const resetTokenExpiration = Date.now() + 3600000; // 1 hour in milliseconds
-
-    // Update the user's record with the reset token and expiration time
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = new Date(resetTokenExpiration); // Store as a Date object
-    await user.save();
-
-    // Send an email to the user with the reset token and a link to the reset page
-    const transporter = nodemailer.createTransport({
-      // Configure your email provider here (e.g., SMTP)
-    });
-
-    const mailOptions = {
-      from: "your@email.com",
-      to: user.email,
-      subject: "Password Reset",
-      text: `You are receiving this email because you (or someone else) requested a password reset for your account.\n\n` +
-        `Please click on the following link, or paste it into your browser to reset your password:\n\n` +
-        `http://yourwebsite.com/reset-password/${resetToken}\n\n` +
-        `If you did not request this, please ignore this email, and your password will remain unchanged.\n`,
-    };
-
-    transporter.sendMail(mailOptions, (error) => {
-      if (error) {
-        console.error("Error sending email:", error);
-        res.status(500).send({ message: "Error sending email" });
-      } else {
-        console.log("Password reset email sent");
-        res.status(200).send({ message: "Password reset email sent" });
-      }
-    });
-  } catch (error) {
-    console.error("Error initiating password reset:", error);
-    res.status(500).send({ message: "Error initiating password reset" });
-  }
-});
-
-
-// Define a route for resetting the password using the reset token
-app.post("/api/users/reset-password", async (req, res) => {
-  try {
-    const { resetToken, newPassword } = req.body;
-
-    // Find the user by the reset token and check if it's still valid
-    const user = await User.findOne({
-      resetPasswordToken: resetToken,
-      resetPasswordExpires: { $gt: Date.now() }, // Check if the token is still valid
-    });
-
-    if (!user) {
-      return res.status(400).send({ message: "Invalid or expired reset token" });
-    }
-
-    // Generate a new hashed password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    // Update the user's password and reset token in the database
-    user.hashedPassword = hashedPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-    await user.save();
-
-    res.status(200).send({ message: "Password reset successful" });
-  } catch (error) {
-    console.error("Error resetting password:", error);
-    res.status(500).send({ message: "Error resetting password" });
-  }
-});
-
-app.get("/api/topics/:topicId", async (req, res) => {
-  const topicId = req.params.topicId;
-
-  try {
-    // Suchen Sie das Thema in der Datenbank anhand seiner ID
-    const topic = await Topic.findOne({ id: topicId });
-
-    if (!topic) {
-      return res.status(404).json({ error: "Thema nicht gefunden" });
-    }
-    console.log("funktioniert homie");
-    res.json(topic);
-  } catch (error) {
-    console.error("Fehler beim Abrufen des Themas:", error);
-    res.status(500).json({ error: "Interner Serverfehler" });
-  }
-});
-
-
-
-async function getNextUserId() {
-  try {
-    // Find the document with the highest id value
-    const highestUser = await User.findOne({}, {}, { sort: { id: -1 } });
-
-    // If there are no users in the database, start with ID 1; otherwise, increment the highest ID value
-    const nextUserId = highestUser ? highestUser.id + 1 : 1;
-
-    return nextUserId;
-  } catch (error) {
-    console.error("Error getting next user ID:", error);
-    throw error;
-  }
-}
-
-function generateAuthToken(user) {
-  const payload = {
-    user: {
-      _id: user._id,
-      username: user.username, // Add other user properties here
-    },
-  };
-
-  const token = jwt.sign(payload, jwtSecretKey, {
-    expiresIn: '1h',
-  });
-
-  return token;
-}
-app.post("/api/users/login", async (req, res) => {
-  try {
-    // Sanitize user inputs
-    const name = DOMPurify.sanitize(req.body.name);
-    const password = DOMPurify.sanitize(req.body.password);
-
-    // Find the user by name in the database
-    const user = await User.findOne({ name: name });
-
-    if (!user) {
-      return res.status(401).send({ message: "User not found" });
-    }
-
-    // Compare the provided password with the hashed password
-    const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
-    if (!isPasswordValid) {
-      return res.status(401).send({ message: "Invalid password" });
-    }
-
-    // Generate a JWT token
-    const token = generateAuthToken(user);
-
-    // Send the token and user ID as a response
-    console.log(user.id);
-    res.status(200).send({ success: true, token, userId: user.id });
-  } catch (error) {
-    console.error("Error logging in:", error);
-    res.status(500).send({ message: "Error logging in" });
-  }
-});
-
-
-
-
-app.post("/api/users/register", async (req, res) => {
-  try {
-    const userData = req.body;
-
-    // Sanitize user input
-    const sanitizedName = DOMPurify.sanitize(userData.name);
-    const sanitizedPassword = DOMPurify.sanitize(userData.password);
-
-    // Check if a user with the same name already exists
-    const existingUser = await User.findOne({ name: sanitizedName });
-    if (existingUser) {
-      return res.status(400).send({ success: false, message: "User with this name already exists" });
-    }
-
-    // Get the next available user ID
-    const nextUserId = await getNextUserId();
-
-    // Set the id and joinedAt fields of the userData
-    userData.id = nextUserId;
-    userData.joinedAt = new Date().toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-
-    // Generate a salt and hash the user's password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(sanitizedPassword, saltRounds);
-
-    // Replace the plain password with the hashed password
-    userData.hashedPassword = hashedPassword;
-
-    // Create a new user document with the sanitized data
-    const user = new User({ name: sanitizedName, hashedPassword });
-    await user.save();
-
-    console.log("User successfully registered");
-    res.status(200).send({ success: true, message: "User successfully registered" });
-  } catch (error) {
-    console.error("Error registering user:", error);
-    res.status(500).send({ success: false, message: "Error registering user" });
-  }
-});
-
-
-
-
-
-
-
-
 app.post("/api/addUsers", async (req, res) => {
   try {
     const userData = req.body; // Die Topics-Daten kommen im Anforderungskörper als Array von Objekten
@@ -609,31 +752,78 @@ app.post("/api/addUsers", async (req, res) => {
   }
 });
 
+app.get("/api/topics/:topicId", async (req, res) => {
+  const topicId = req.params.topicId;
 
+  try {
+    // Suchen Sie das Thema in der Datenbank anhand seiner ID
+    const topic = await Topic.findOne({ id: topicId });
 
+    if (!topic) {
+      return res.status(404).json({ error: "Thema nicht gefunden" });
+    }
+    console.log("funktioniert homie");
+    res.json(topic);
+  } catch (error) {
+    console.error("Fehler beim Abrufen des Themas:", error);
+    res.status(500).json({ error: "Interner Serverfehler" });
+  }
+});
 
+app.post("/api/users/register", async (req, res) => {
+  try {
+    const userData = req.body;
 
+    // Generate a salt and hash the user's password
+    const saltRounds = 10; // Number of salt rounds
+    const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
+
+    // Replace the plain password with the hashed password
+    userData.password = hashedPassword;
+
+    // Create a new user document with the hashed password
+    const user = new User(userData);
+    await user.save();
+
+    console.log("User successfully registered");
+    res.status(200).send({ message: "User successfully registered" });
+  } catch (error) {
+    console.error("Error registering user:", error);
+    res.status(500).send({ message: "Error registering user" });
+  }
+});
 
 // Definieren Sie die API-Route zum Hinzufügen von Topics
 app.post("/api/addTopics", async (req, res) => {
   try {
     const topicsData = req.body; // Die Topics-Daten kommen im Anforderungskörper als Array von Objekten
+
     // Hier können Sie die gesendeten Daten anzeigen
 
     // Iterieren Sie durch jedes Element in den Topics-Daten
 
-    // Erstellen Sie ein neues Topic-Dokument und speichern Sie es in der Datenbank
-    const topic = new Topic(topicsData);
-    await topic.save();
+    // Aktualisieren Sie das Topic-Dokument, wenn es existiert, oder erstellen Sie ein neues, wenn es nicht existiert
+    await Topic.findOneAndUpdate(
+      { _id: topicsData._id }, // Suchkriterium, z.B. basierend auf der ID
+      topicsData, // Die Daten, die aktualisiert werden sollen
+      { upsert: true, new: true } // Optionen: upsert erstellt ein neues Dokument, wenn es nicht existiert; new gibt das aktualisierte Dokument zurück
+    );
 
-    console.log("Topics erfolgreich in die Datenbank gespeichert");
-    res
-      .status(200)
-      .send({ message: "Topics erfolgreich in die Datenbank gespeichert" });
+    console.log(
+      "Topics erfolgreich in die Datenbank gespeichert oder aktualisiert"
+    );
+    res.status(200).send({
+      message:
+        "Topics erfolgreich in die Datenbank gespeichert oder aktualisiert",
+    });
   } catch (error) {
-    console.error("Fehler beim Speichern der Topics in die Datenbank:", error);
+    console.error(
+      "Fehler beim Speichern oder Aktualisieren der Topics in die Datenbank:",
+      error
+    );
     res.status(500).send({
-      message: "Fehler beim Speichern der Topics in die Datenbank",
+      message:
+        "Fehler beim Speichern oder Aktualisieren der Topics in die Datenbank",
     });
   }
 });
@@ -663,7 +853,6 @@ app.get("/api/users", async (req, res) => {
       .json({ message: "Fehler beim Abrufen der Daten aus der Datenbank" });
   }
 });
-
 
 app.post("/api/addComment", async (req, res) => {
   const comment = req.body;
@@ -700,12 +889,11 @@ app.listen(port, () => {
   console.log(`Server läuft auf Port ${port}`);
 });
 
-
 app.post("/api/addTopicToSaves", async (req, res) => {
   const path = req.body.path;
   const currentUserId = req.body.currentUserId;
-  console.log(currentUserId)
-  console.log(path)
+  console.log(currentUserId);
+  console.log(path);
   try {
     const user = await User.findOne({ id: currentUserId });
     if (!user) {
@@ -723,8 +911,6 @@ app.post("/api/addTopicToSaves", async (req, res) => {
     console.error("Fehler beim Hinzufügen des Topics:", error);
     res.status(500).json({ error: "Interner Serverfehler" });
   }
-
-
 
   // Senden Sie eine Erfolgsantwort zurück
 });

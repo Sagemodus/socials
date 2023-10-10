@@ -8,7 +8,6 @@ import dayjs from "dayjs";
 import axios from "axios";
 import Auth from "../expressjs/auth";
 
-
 /* eslint-disable no-unused-vars */
 
 export function formatCreatedAt(createdAt) {
@@ -67,14 +66,6 @@ function isCommentPositionAvailable(state, topicId, selectedTab) {
     return commentsArray.length < MAX_COMMENT_POSITION; // MAX_COMMENT_POSITION ist die maximale Anzahl von Kommentaren
   }
   return false;
-}
-
-function setAuthHeader(token) {
-  if (token) {
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  } else {
-    delete axios.defaults.headers.common["Authorization"];
-  }
 }
 
 function updatePercentages(topic) {
@@ -136,11 +127,9 @@ function searchReplyInCommentAndReplies(comment, targetReplyId) {
 }
 
 export default createStore({
-
   modules: {
     Auth,
   },
-
   state() {
     const categories = [
       { main: "Sport", sub: "Fussball" },
@@ -179,7 +168,6 @@ export default createStore({
     ];
     const loggedin = "true";
 
-
     return {
       topics: [],
       users: [],
@@ -192,49 +180,14 @@ export default createStore({
       reply: null, // Reply object
       commentReplyAnzeige: 5,
       categories,
-      currentUser:{
-        token: localStorage.getItem("token") || null,
-      }
     };
   },
 
-  
   mutations: {
     setTopics(state, topics) {
       state.topics = topics;
       console.log("kolleg")
     },
-
-    
-    register_request(state) {
-      state.status = 'loading'; // You can set any loading state here if needed
-    },
-  
-    register_success(state, user) {
-      state.status = 'success';
-      state.user = user; // You can store the registered user data here if needed
-    },
-  
-    register_error(state) {
-      state.status = 'error'; // You can set an error state here if needed
-    },
-    
-    auth_request(state) {
-      state.status = 'loading';
-    },
-    
-    auth_success(state, { token, user }) {
-      state.status = "success";
-      state.currentUser.token = token; // Set the user's token
-      state.user = user; // Update the user data in the state
-      setAuthHeader(token); // Set the Authorization header with the token
-    },
-    
-    auth_error(state) {
-      state.status = 'error';
-    },
-
-    
 
     setUsers(state, users) {
       state.users = users;
@@ -572,7 +525,6 @@ export default createStore({
       }
     },
 
-
     addReplyMutation(state, { newReply, comment }) {
       // Füge die neue Antwort zum Kommentar hinzu
       if (!comment.replies) {
@@ -589,24 +541,56 @@ export default createStore({
       reply.replies.push(newReply);
     },
 
-
-ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
-    const user = state.users.find(user => user.id === userId);
-    if (user) {
-      user.nestedReplies.push(replyPath);
-    }
+    ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
+      const user = state.users.find((user) => user.id === userId);
+      if (user) {
+        user.nestedReplies.push(replyPath);
+      }
     },
   },
-
-
   actions: {
 
-
+async toggleDislikeAction({ commit }, payload) {
+  try {
+    const response = await axios.post("http://192.168.1.42:3000/api/topicdislike", payload);
+    if (response.status === 200 && response.data.success) {
+      commit("TOGGLE_DISLIKE", payload);
+    } else {
+      throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
+    }
+  } catch (error) {
+    console.error("Fehler beim Aktualisieren des Dislikes:", error.message);
+  }
+},
 
     
     async toggleLikeAction({ commit }, payload) {
+      
+      console.log(payload.topicId)
       // Hier können Sie zusätzliche Logik oder API-Aufrufe hinzufügen, falls erforderlich
-      commit("TOGGLE_LIKE", payload);
+      try {
+        const response = await axios.patch("http://192.168.1.42:3000/api/topiclike", payload);
+      if (response.status === 200 && response.data.success) {
+        commit("TOGGLE_LIKE", payload);
+      }
+      
+      else {
+        throw new Error(
+          response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+        );
+      }
+
+
+      }
+      catch (error) {
+        // Behandeln Sie Fehler, z.B. durch das Anzeigen einer Fehlermeldung
+        console.error(
+          "Fehler beim Aktualisieren des Benutzers:",
+          error.message
+        );
+        // Optional: Sie könnten hier auch einen Zustand setzen, um den Fehler im UI anzuzeigen
+      }
+      
     },
 
     async updateCurrentUserAction({ commit }, payload) {
@@ -728,159 +712,6 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
       }
     },
 
-  async addReplyPathToUser({ commit }, { userId, replyPath }) {
-    try {
-      const response = await axios.put(`http://192.168.1.42:3000/api/users/${userId}/addReplyPath`, { replyPath });
-
-      if (response.data && response.data.success) {
-        commit("ADD_REPLY_PATH_TO_USER", { userId, replyPath });
-      }
-    } catch (error) {
-      console.error("Fehler beim Hinzufügen des Reply-Pfads:", error);
-    }
-  },
-
-
-    async submitReply({ commit }, { reply, newReply }) {
-      try {
-        const response = await axios.post(
-          "http://192.168.1.42:3000/api/replies",
-          newReply
-        );
-        if (response.data && response.data.success) {
-          commit("ADD_REPLY", { reply, newReply });
-        }
-      } catch (error) {
-        console.error("Fehler beim Senden der Antwort an den Server:", error);
-      }
-    },
-
-    async addReplyAction({ commit }, { newReply, comment }) {
-      try {
-        // Simuliere den Serveraufruf
-        const response = await axios.post(
-          "http://192.168.1.42:3000/api/addReply",
-          newReply
-        );
-        const antwort = response.data;
-        console.log(newReply.path);
-        console.log(response.data.success);
-        // Überprüfe die Serverantwort
-        if (response.data && response.data.success) {
-          // Commit der Mutation, um die Antwort zum Kommentar hinzuzufügen
-          commit("addReplyMutation", { newReply, comment });
-          // Hier könnten Sie den Aufruf zum Hinzufügen des Replies zum Benutzerprofil einfügen
-          const userReplyResponse = await axios.post(
-            "http://192.168.1.42:3000/api/addUserReply",
-            {
-              comment,
-              reply: newReply,
-            }
-          );
-          if (userReplyResponse.data && userReplyResponse.data.success) {
-            console.log("Reply erfolgreich zum Benutzerprofil hinzugefügt");
-          } else {
-            console.error(
-              "Fehler beim Hinzufügen des Replies zum Benutzerprofil"
-            );
-          }
-        } else {
-          throw new Error(
-            response.data.error ||
-              "Unbekannter Fehler beim Hinzufügen der Antwort"
-          );
-        }
-
-        // Leere das Eingabefeld und blende das Antwortformular aus
-        // Dies sollte in der Komponente selbst erfolgen, z.B. durch das Auslösen eines Events oder das Setzen eines Zustands
-      } catch (error) {
-        console.error("Fehler beim Hinzufügen der Antwort:", error);
-        // Hier kannst du auf spezifische Fehler reagieren, z.B. durch das Anzeigen einer Fehlermeldung für den Benutzer
-      }
-    },
-
-    async fetchUsers({ commit }) {
-      try {
-        const response = await axios.get("http://192.168.1.42:3000/api/users");
-        const users = response.data;
-        console.log(users);
-        commit("setUsers", users);
-      } catch (error) {
-        console.error("Fehler beim Abrufen der Daten:", error);
-      }
-    },
-    
-
-    logout({ commit }) {
-      // Clear the user's token and other data
-      commit("auth_logout");
-      // Clear the Authorization header
-      delete axios.defaults.headers.common['Authorization'];
-    },
-
-
-    async login({ commit }, user) {
-      commit("auth_request");
-      try {
-        let res = await axios.post("http://localhost:3000/api/users/ldssogin", user);
-        // ...
-        if (res.status === 200 && res.data.success) {
-          const token = res.data.token;
-          const userId = res.data.userId; // Get the userId from the response
-          const userData = res.data.user;
-          localStorage.setItem("token", token);
-          commit("auth_success", { token, user: userData });
-          setAuthHeader(token); // Set the Authorization header
-          return { success: true, userId };
-        } else {
-          commit("auth_error");
-          console.log("Login unsuccessful. Response data:", res.data);
-          return { success: false };
-        }
-      } catch (err) {
-        commit("auth_error");
-        console.error("Error logging in:", err);
-        return { success: false };
-
-      }
-    },
-    
-  
-    async register({ commit }, userData) {
-      try {
-        commit('register_request');
-        let res = await axios.post('http://localhost:3000/api/users/register', userData);
-    
-        if (res.data.success) {
-          commit('register_success');
-        } else {
-          commit('register_error', res.data.message || 'An error occurred while registering.');
-        }
-    
-        return res;
-      } catch (err) {
-        commit('register_error', err.message || 'An error occurred while registering.');
-        throw err; // Rethrow the error for further handling in the component
-      }
-    },
-    
-
-  async fetchUsers({ commit, state }) {
-    try {
-      // Check if the user is authenticated (has a token)
-      if (state.currentUser.token) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${state.currentUser.token}`;
-      }
-  
-      const response = await axios.get("http://localhost:3000/api/users");
-      const users = response.data;
-      console.log(users);
-      commit("setUsers", users);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  },
-
     async fetchTopics({ commit }) {
       try {
         const response = await axios.get("http://192.168.1.42:3000/api/topics");
@@ -925,20 +756,58 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
       commit("UPDATE_TOPIC_PERCENTAGES", { topicId });
     },
 
-    upvoteComment({ commit }, { commentId, currentUserId, topicId }) {
-      commit("UPVOTE_COMMENT", { commentId, currentUserId, topicId });
+    async upvoteComment({ commit }, payload) {
+      try {
+        const response = await axios.post("http://192.168.1.42:3000/api/commentupvote", payload);
+        if (response.status === 200 && response.data.success) {
+          commit("UPVOTE_COMMENT", payload);
+        } else {
+          throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
+        }
+      } catch (error) {
+        console.error("Fehler beim Hochwerten des Kommentars:", error.message);
+        // Optional: Sie könnten hier auch einen Zustand setzen, um den Fehler im UI anzuzeigen
+      }
     },
 
-    downvoteComment({ commit }, { commentId, currentUserId, topicId }) {
-      commit("DOWNVOTE_COMMENT", { commentId, currentUserId, topicId });
-    },
+async downvoteComment({ commit }, payload) {
+  try {
+    const response = await axios.post("http://192.168.1.42:3000/api/commentdownvote", payload);
+    if (response.status === 200 && response.data.success) {
+      commit("DOWNVOTE_COMMENT", payload);
+    } else {
+      throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
+    }
+  } catch (error) {
+    console.error("Fehler beim Herabwerten des Kommentars:", error.message);
+  }
+},
+async upvoteReply({ commit }, payload) {
+  try {
+    const response = await axios.post("http://192.168.1.42:3000/api/replyupvote", payload);
+    if (response.status === 200 && response.data.success) {
+      commit("UPVOTE_REPLY", payload);
+    } else {
+      throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
+    }
+  } catch (error) {
+    console.error("Fehler beim Hochwerten der Antwort:", error.message);
+  }
+},
+async downvoteReply({ commit }, payload) {
+  try {
+    console.log(payload.commentId);
+    const response = await axios.post("http://192.168.1.42:3000/api/replydownvote", payload);
+    if (response.status === 200 && response.data.success) {
+      commit("DOWNVOTE_REPLY", payload);
+    } else {
+      throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
+    }
+  } catch (error) {
+    console.error("Fehler beim Herunterwerten der Antwort:", error.message);
+  }
+},
 
-    upvoteReply({ commit }, { replyId, currentUserId, topicId, commentId }) {
-      commit("UPVOTE_REPLY", { replyId, currentUserId, topicId, commentId });
-    },
-    downvoteReply({ commit }, { replyId, currentUserId, topicId, commentId }) {
-      commit("DOWNVOTE_REPLY", { replyId, currentUserId, topicId, commentId });
-    },
 
     async fetchTopic({ commit }, topicId) {
       try {
@@ -965,11 +834,6 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
     },
   },
   getters: {
-
-    isAuthenticated: (state) => {
-      return !!state.currentUser.token; // Convert the token to a boolean
-    },
-
     formattedCreatedAt: (state) => (createdAt) => {
       return formatCreatedAt(createdAt);
     },
@@ -985,7 +849,6 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
     getTopicById: (state) => (id) => {
       return state.topics.find((topic) => topic.id === id);
     },
-    
 
     getUserById: (state) => (id) => {
       return state.users.find((user) => user.id === id);
@@ -1024,5 +887,4 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
       return state.currentUser.farbe;
     },
   },
-}
-);
+});

@@ -17,9 +17,9 @@
         <p class="topic-text">{{ topic.text }}</p>
       </div>
     </div>
-<div class="trenn-line">
+    <div class="trenn-line">
 
-</div>
+    </div>
 
 
     <div v-if="selectedTab === 'pro'" class="kommentare">
@@ -58,7 +58,6 @@ import { computed, watchEffect } from 'vue';
 import { ref, onMounted, onBeforeUnmount, } from 'vue';
 import dayjs from 'dayjs';
 import { useRoute } from 'vue-router';
-// eslint-disable-next-line no-unused-vars
 import axios from "axios";
 
 import { onUnmounted } from 'vue';
@@ -66,7 +65,7 @@ import { onUnmounted } from 'vue';
 export default {
   props: ['id', 'commentId', 'replyId'], // Empfange die Parameter als Props
 
-/*eslint-disable*/
+  /*eslint-disable*/
   setup(props) {
     /* eslint-disable no-unused-vars */
     const route = useRoute();
@@ -79,7 +78,7 @@ export default {
     const topic = computed(() => store.getters.getTopicById(topicId.value));
     const author = computed(() => store.getters.getUserById(topic.value.author))
     const comment = topic.value.proComments.find(comment => comment.id === commentId);
-/*eslint-enable*/
+    /*eslint-enable*/
 
     // ... andere setup-Abschnitte ...
 
@@ -260,20 +259,32 @@ export default {
           downvotes: 0,
           createdAt: dayjs(), // Aktuelle Zeit hinzufügen
           parentId: this.topic.id,
+          depth: 0,
+          expandReplies: false,
+          replies: [],
+          showelement: true,
+        
           // Pfad zum Kommentar hinzufügen
         };
 
         const selectedTab = this.selectedTab; // Richtiges Property verwenden
 
         // Den Kommentar an die API senden
-
+        if (selectedTab == "pro") {
+          newComment.commentIndex = this.topic.proComments.length 
+            newComment.commentType = "pro"
+        }
+        else {
+          newComment.commentIndex = this.topic.contraComments.length 
+            newComment.commentType = "contra"
+          }
 
         // Kommentar zum Store hinzufügen
         console.log(newComment + " component")
 
         this.$store.dispatch('addCommentToTopic', { author, topicId, comment: newComment, selectedTab });
         console.log('Kommentar erfolgreich hinzugefügt:');
-    
+
 
       } catch (error) {
         console.error('Fehler beim Hinzufügen des Kommentars:', error);
@@ -422,8 +433,9 @@ p.topic-text {
     /* Größerer grauer Schatten bei Animation */
   }
 }
+
 .trenn-line {
-    width: 100%;
-    border-bottom: 1px solid lightgrey;
+  width: 100%;
+  border-bottom: 1px solid lightgrey;
 }
 </style>

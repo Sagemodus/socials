@@ -2,13 +2,18 @@
   <div class="navigation">
     <div class="tabs" ref="tabsContainer">
       <div class="tabs-inner">
-        <div v-for="tab in tabs" :key="tab.path" class="tab" @click="switchTab(tab.path)" :class="{ active: activeTab === tab.path }">
+        <div v-for="tab in tabs" :key="tab.path" class="tab" @click="switchTab(tab.path)"
+          :class="{ active: activeTab === tab.path }">
           {{ tab.name }}
         </div>
       </div>
     </div>
+    <!-- Slots für die verschiedenen Tabs -->
+  <slot :name="activeTab.slice(1)"></slot>
   </div>
 </template>
+
+
 
 <script>
 import { ref, reactive, onMounted, computed } from 'vue';
@@ -35,8 +40,7 @@ export default {
     const tabs = reactive([
       { name: 'Popular', path: '/popular' },
       { name: 'Recent', path: '/recent' },
-      { name: 'People', path: '/people' },
-      { name: 'Conversation', path: '/conversation' },
+      { name: 'Users', path: '/people' },
     ]);
 
     const activeTab = ref(tabs[0].path);
@@ -131,7 +135,7 @@ export default {
 @media (max-width: 480px) {
   .tabs {
     flex-wrap: nowrap;
-    justify-content: flex-start;
+   
     overflow-x: scroll;
   }
 

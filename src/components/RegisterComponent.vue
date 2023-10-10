@@ -1,5 +1,6 @@
 <template>
   <div>
+    <h2>Register</h2>
     <div class="row">
       <div class="card mx-auto">
         <div class="card-header text-white bg-primary">
@@ -62,7 +63,6 @@
                 v-model="confirm_password"
               >
             </div>
-            <error-messages :errors="errorMessages" v-if="errorMessages.length" />
             <button class="btn btn-primary">Register</button>
             &nbsp;&nbsp;&nbsp;&nbsp;
             <router-link to="/login" class="card-link">Already have an account?</router-link>
@@ -75,24 +75,19 @@
 
 <script>
 import { mapActions } from "vuex";
-import ErrorMessages from "@/components/ErrorMessages.vue"; // Adjust the import path as needed
 export default {
-  components:{
-    ErrorMessages,
-  },
   data() {
     return {
       username: "",
       password: "",
       confirm_password: "",
       name: "",
-      email: "",
-      errorMessages:[],
+      email: ""
     };
   },
   methods: {
   ...mapActions(["register"]),
-    async registerUser() {
+  async registerUser() {
     let user = {
       username: this.username,
       password: this.password,
@@ -101,23 +96,17 @@ export default {
       name: this.name
     };
     try {
-  const res = await this.register(user);
-  if (res.data && res.data.success) {
-    console.log(res); // Log the response
-    this.$router.push("/feed");
-  } else if (res.data && res.data.message) {
-    // Display the error message from the server
-    this.errorMessages = [res.data.message];
-  } else {
-    this.errorMessages = ["An error occurred while registering. Please try again."];
+      const res = await this.register(user);
+      if (res.data.success) {
+        this.$router.push("login");
+      }
+    } catch (error) {
+      console.error("Error registering user:", error);
+      // Handle the error (e.g., display an error message)
+    }
   }
-} catch (error) {
-  console.error("Error registering user:", error);
-  this.errorMessages = ["An error occurred while registering. Please try again."];
 }
 
-  }
-}
 };
 </script>
 

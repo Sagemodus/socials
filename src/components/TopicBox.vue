@@ -29,8 +29,8 @@
         <!--Save Button-->
         <button @click="saveChanges" class="savebutton">
 
-          <font-awesome-icon :icon="isSaved(topic.path, currentUser.id) ? ['fas', 'bookmark'] : ['far', 'bookmark']"
-            class="icon" :style="{ color: iconColor(currentUser.farbe) }" />
+          <font-awesome-icon :icon="isSaved(topic.path, currentUser.id) ? ['fas', 'bookmark'] : ['far', 'bookmark']" class="icon"
+            :style="{ color: iconColor(currentUser.farbe) }" />
         </button>
 
 
@@ -45,16 +45,16 @@
     </div>
 
 
-    <div class="balken">
-      <div class="like-bar" :class="{ liked: hasLikedTopic || hasDislikedTopic }"
-        :style="{ width: upvotePercentage + '%' }" :title="upvotePercentage + '%'" :interactive="true">
-        <p v-if="hasLikedTopic || hasDislikedTopic" class="bar-text">{{ upvotePercentage + '%' }}</p>
-      </div>
-      <div class="dislike-bar" :class="{ disliked: hasLikedTopic || hasDislikedTopic }"
-        :style="{ width: downvotePercentage + '%' }" :title="downvotePercentage + '%'" :interactive="true">
-        <p v-if="hasLikedTopic || hasDislikedTopic" class="bar-text">{{ downvotePercentage + '%' }}</p>
-      </div>
+  <div class="balken">
+    <div class="like-bar" :class="{ liked: hasLikedTopic || hasDislikedTopic }"
+      :style="{ width: upvotePercentage + '%' }" :title="upvotePercentage + '%'" :interactive="true">
+      <p v-if="hasLikedTopic || hasDislikedTopic" class="bar-text">{{ upvotePercentage + '%' }}</p>
     </div>
+    <div class="dislike-bar" :class="{ disliked: hasLikedTopic || hasDislikedTopic }"
+      :style="{ width: downvotePercentage + '%' }" :title="downvotePercentage + '%'" :interactive="true">
+      <p v-if="hasLikedTopic || hasDislikedTopic" class="bar-text">{{ downvotePercentage + '%' }}</p>
+    </div>
+  </div>
 
 
     <!--Like Button-->
@@ -78,42 +78,42 @@
       </div>
 
       <!--ConPro Button-->
-      <div v-if="!disableelements" class="disableFromBookmark">
-        <div class="tab-selection">
-          <button @click="updateTabAndColor('pro')" :class="{ 'active-tab': selectedTab === 'pro' }">Pro</button>
-          <button @click="updateTabAndColor('contra')" :class="{ 'active-tab': selectedTab === 'contra' }">Contra</button>
-
-        </div>
-
-
-        <div v-if="selectedTab === 'pro'" class="kommentare">
-          <CommentBox v-for="comment in sortedComments('pro').slice(0, 2)" :key="comment.id" :comment="comment"
-            :topic="id" />
-        </div>
-
-        <div v-else-if="selectedTab === 'contra'" class="kommentare">
-          <CommentBox v-for="comment in sortedComments('contra').slice(0, 2)" :key="comment.id" :comment="comment"
-            :topic="id" />
-        </div>
-        <!-- Anzeige, wenn keine Kommentare vorhanden sind -->
-        <div v-else>
-          <p>Noch keine Kommentare vorhanden.</p>
-        </div>
-
-
-
-        <!--Konversation Button-->
-        <div class="conversation-prompt">
-          <button @click="goToTopic" :style="{ color: iconColor(currentUser.farbe) }" class="join-button"><span>Show more
-              <font-awesome-icon :icon="['far', 'comments']" class="icon" @click="goToTopic" /> </span>
-          </button>
-
-        </div>
-
-
+<div v-if="!disableelements"   class="disableFromBookmark">
+      <div class="tab-selection">
+        <button @click="updateTabAndColor('pro')" :class="{ 'active-tab': selectedTab === 'pro' }">Pro</button>
+        <button @click="updateTabAndColor('contra')" :class="{ 'active-tab': selectedTab === 'contra' }">Contra</button>
 
       </div>
 
+
+ <div v-if="selectedTab === 'pro'" class="kommentare">
+        <CommentBox v-for="comment in sortedComments('pro').slice(0, 2)" :key="comment.id" :comment="comment"
+          :topic="id" />
+      </div>
+
+      <div v-else-if="selectedTab === 'contra'" class="kommentare">
+        <CommentBox v-for="comment in sortedComments('contra').slice(0, 2)" :key="comment.id" :comment="comment"
+          :topic="id" />
+      </div>
+      <!-- Anzeige, wenn keine Kommentare vorhanden sind -->
+      <div v-else>
+        <p>Noch keine Kommentare vorhanden.</p>
+      </div>
+
+
+
+      <!--Konversation Button-->
+      <div class="conversation-prompt">
+        <button @click="goToTopic" :style="{ color: iconColor(currentUser.farbe) }" class="join-button"><span>Show more
+            <font-awesome-icon :icon="['far', 'comments']" class="icon" @click="goToTopic" /> </span>
+        </button>
+
+      </div>
+
+
+
+</div>
+     
 
     </div>
   </div>
@@ -170,7 +170,7 @@ export default {
 
     const selectedTab = computed(() => store.state.selectedTab);
     const selectedTabColor = computed(() => store.state.selectedTabColor);
-
+  
 
     watchEffect(() => {
       document.documentElement.style.setProperty('--selectedTabColor', selectedTabColor.value);
@@ -186,17 +186,17 @@ export default {
     const goToProfile = () => {
       console.log("klickt")
       console.log(currentUser.value)
-      console.log()
+      console.log ()
       if (currentUser.value.id == topic.value.author) {
         router.push(`/profil/${topic.value.author}`);
       }
       else {
-        router.push(`/profile/${topic.value.author}`);
+      router.push(`/profile/${topic.value.author}`);
       }
 
     }
 
-
+    
 
 
 
@@ -295,48 +295,41 @@ export default {
       const currentUserId = this.currentUser.id;
 
 
-      this.$store.dispatch('addtopicToSaves', { path, currentUserId })
+      this.$store.dispatch('addtopicToSaves', {  path, currentUserId })
 
 
     },
     isSaved(topicId,) {
-      return this.$store.getters.isTopicSaved(topicId);
+      return this.$store.getters.isTopicSaved( topicId);
     },
 
     // Funktion zur Berechnung des Prozentsatzes
     shareContent() {
-      console.log(this.getTopicUrl())
       const shareData = {
-        title: `Thema: ${this.topic.title}`,
-        text: `Mehr dazu unter:`,
+        title: 'Teilen über...',
+        text: 'Der Inhalt, den du teilen möchtest.',
         url: this.getTopicUrl(),
       };
 
-      const formattedShareText = `\n${shareData.text}\n${shareData.url}`;
-
       if (navigator.share) {
-        // Verwenden Sie die Web Share API, wenn sie verfügbar ist
-        navigator.share({
-          title: shareData.title,
-          text: formattedShareText,
-          url: shareData.url
-        })
+        navigator.share(shareData)
           .then(() => {
             console.log('Inhalt erfolgreich geteilt.');
           })
           .catch((error) => {
             console.error('Fehler beim Teilen:', error);
           });
-      } else if (window.Android && typeof window.Android.share === 'function') {
-        // Verwenden Sie die native Android Teilen-Funktionalität, wenn Sie sich in der WebView befinden
-        window.Android.share(shareData.title, formattedShareText, shareData.url);
       } else {
-        console.warn('Teilen wird nicht unterstützt.');
+        console.warn('Der Browser unterstützt den "Native Share" nicht.');
       }
     },
 
+
+
+
+
     getTopicUrl() {
-      return `http://192.168.1.42:8080/topic/${this.id}`;
+      return this.$router.resolve(`/topic/${this.id}`).href;
     },
 
 

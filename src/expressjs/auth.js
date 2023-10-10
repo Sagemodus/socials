@@ -2,7 +2,7 @@ import axios from 'axios';
 import router from '../router';
 
 const state = {
-   
+    token: localStorage.getItem('token') || '',
     user: {},
     status: '',
     error: null
@@ -29,10 +29,7 @@ const actions = {
     }, user) {
         commit('auth_request');
         try {
-            let res = await axios.post(
-              "http://192.168.1.42:3000/api/users/login",
-              user
-            );
+            let res = await axios.post('http://localhost:3000/api/users/login', user)
             if (res.data.success) {
                 const token = res.data.token;
                 const user = res.data.user;
@@ -53,10 +50,7 @@ const actions = {
     }, userData) {
         try {
             commit('register_request');
-            let res = await axios.post(
-              "http://192.168.1.42:3000/api/users/register",
-              userData
-            );
+            let res = await axios.post('http://localhost:3000/api/users/register', userData);
             if (res.data.success !== undefined) {
                 commit('register_success');
             }

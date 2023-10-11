@@ -10,7 +10,6 @@ import router from './router'
 import store from './store/store'
 import Swal from 'sweetalert2';
 
-
 await store.dispatch("fetchTopics");
    
 await store.dispatch("fetchUsers");

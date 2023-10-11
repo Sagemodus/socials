@@ -1,6 +1,7 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
+require('dotenv').config();
+const express = require("express");//Server DB
+const mongoose = require("mongoose");//DB Schema
+const bcrypt = require("bcrypt"); //Passwort verschlüsselung
 const cors = require("cors"); //Für password verschlüsselung
 
 const app = express();
@@ -23,7 +24,7 @@ const nodemailer = require('nodemailer'); // For sending emails
 const httpServer = require('http').createServer(app);
 const io = require('socket.io')(httpServer);
 
-const jwtSecretKey = 'BlaBlo123'; //MUSS UMBEDINGT VERÄNDERT WERDEN .ENV FILE SICHER STELLEN
+const jwtSecretKey = process.env.JWT_SECRET;
 
 
 app.use(cors());
@@ -157,15 +158,28 @@ const User = mongoose.model(
     hashedPassword: String,
     resetPasswordToken: String,
     resetPasswordExpires: Date,
+    token:String
   })
 );
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
+
+    res.json(users); // Senden Sie die Daten als JSON an den Client
+  } catch (error) {
+    console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
+    res
+      .status(500)
+      .json({ message: "Fehler beim Abrufen der Daten aus der Datenbank" });
+  }
+});
+
 
 
   app.post("/api/addFilterUser", async (req, res) => {
     const filterSettings = req.body.filterSettings;
     const currentUserId = req.body.currentUserId;
 
-    console.log(currentUserId);
     console.log;
     if (!filterSettings || !currentUserId) {
       return res.status(400).json({
@@ -470,7 +484,18 @@ app.get("/api/topics/:topicId", async (req, res) => {
   }
 });
 
+app.get("/api/topics", async (req, res) => {
+  try {
+    const topics = await Topic.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
 
+    res.json(topics); // Senden Sie die Daten als JSON an den Client
+  } catch (error) {
+    console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
+    res
+      .status(500)
+      .json({ message: "Fehler beim Abrufen der Daten aus der Datenbank" });
+  }
+});
 
 async function getNextUserId() {
   try {
@@ -490,12 +515,13 @@ async function getNextUserId() {
 function generateAuthToken(user) {
   const payload = {
     user: {
-      _id: user._id,
-      username: user.username, // Add other user properties here
+      name: user.name,
+      password: user.hashedPassword,
+      email: user.email,
     },
   };
 
-  const token = jwt.sign(payload, jwtSecretKey, {
+  const token = jwt.sign(payload.user, jwtSecretKey, {
     expiresIn: '1h',
   });
 
@@ -542,7 +568,6 @@ app.post("/api/users/register", async (req, res) => {
     // Sanitize user input
     const sanitizedName = DOMPurify.sanitize(userData.name);
     const sanitizedPassword = DOMPurify.sanitize(userData.password);
-
     // Check if a user with the same name already exists
     const existingUser = await User.findOne({ name: sanitizedName });
     if (existingUser) {
@@ -563,24 +588,28 @@ app.post("/api/users/register", async (req, res) => {
     // Generate a salt and hash the user's password
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(sanitizedPassword, saltRounds);
-
+    
     // Replace the plain password with the hashed password
     userData.hashedPassword = hashedPassword;
 
     // Create a new user document with the sanitized data
-    const user = new User({ name: sanitizedName, hashedPassword });
+    const user = new User({ name: sanitizedName,hashedPassword:hashedPassword,joinedAt:userData.joinedAt,id:userData.id });
     await user.save();
+    
+    const token = jwt.sign({ userData }, jwtSecretKey, {
+      expiresIn:'1h',
+    });
 
-    console.log("User successfully registered");
-    res.status(200).send({ success: true, message: "User successfully registered" });
+    res.status(200).json({
+      token,
+      user:user,
+      success:true
+    });
   } catch (error) {
     console.error("Error registering user:", error);
     res.status(500).send({ success: false, message: "Error registering user" });
   }
 });
-
-
-
 
 
 
@@ -651,18 +680,6 @@ app.get("/api/topics", async (req, res) => {
   }
 });
 
-app.get("/api/users", async (req, res) => {
-  try {
-    const users = await User.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
-
-    res.json(users); // Senden Sie die Daten als JSON an den Client
-  } catch (error) {
-    console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
-    res
-      .status(500)
-      .json({ message: "Fehler beim Abrufen der Daten aus der Datenbank" });
-  }
-});
 
 
 app.post("/api/addComment", async (req, res) => {

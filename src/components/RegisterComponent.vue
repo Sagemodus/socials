@@ -8,17 +8,6 @@
         <div class="card-body">
           <form @submit.prevent="registerUser">
             <div class="form-group">
-              <label for="username">Username</label>
-              <input
-                id="username"
-                type="text"
-                placeholder="Username"
-                name="username"
-                v-model="username"
-                class="form-control"
-              >
-            </div>
-            <div class="form-group">
               <label for="name">Name</label>
               <input
                 id="name"
@@ -74,7 +63,6 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
 import ErrorMessages from "@/components/ErrorMessages.vue"; // Adjust the import path as needed
 export default {
   components:{
@@ -91,32 +79,22 @@ export default {
     };
   },
   methods: {
-  ...mapActions(["register"]),
-    async registerUser() {
-    let user = {
-      username: this.username,
-      password: this.password,
-      confirm_password: this.confirm_password,
-      email: this.email,
-      name: this.name
-    };
-    try {
-  const res = await this.register(user);
-  if (res.data && res.data.success) {
-    console.log(res); // Log the response
-    this.$router.push("/feed");
-  } else if (res.data && res.data.message) {
-    // Display the error message from the server
-    this.errorMessages = [res.data.message];
-  } else {
-    this.errorMessages = ["An error occurred while registering. Please try again."];
-  }
-} catch (error) {
-  console.error("Error registering user:", error);
-  this.errorMessages = ["An error occurred while registering. Please try again."];
-}
+      registerUser () {
 
-  }
+        try{
+      this.$store
+        .dispatch('register', {
+          password: this.password,
+          email: this.email,
+          name: this.name
+        })
+        .then(() => {
+          this.$router.push({ name: 'feed' })
+        })
+      }catch(err){
+        console.log(err+" error msg register")
+      }
+    }
 }
 };
 </script>

@@ -1,4 +1,4 @@
-import axios from 'axios';
+/*import axios from 'axios';
 import router from '../router';
 
 const state = {
@@ -45,6 +45,7 @@ const actions = {
         }
     },
     // Register User
+    
     async register({
         commit
     }, userData) {
@@ -124,4 +125,4 @@ export default {
     actions,
     mutations,
     getters
-};
+};*/

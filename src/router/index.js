@@ -33,7 +33,6 @@ import profileAndereUser from '../components/profilebutton/profileAndereUser.vue
 import PasswordForgottenComponent from '../components/PasswordForgottenComponent.vue';
 import ResetPassword from '../components/ResetPasswordComponent.vue'
 
-import store from '../store/store.js'; // Import your Vuex store
 
 
 
@@ -41,6 +40,7 @@ import store from '../store/store.js'; // Import your Vuex store
 const routes = [
   {
     path: "/feed",
+    name: "feed",
     component: FeedView,
     meta: { requiresAuth: true },
   },
@@ -166,16 +166,5 @@ const router = createRouter({
 });
 
 
-
-router.beforeEach((to, from, next) => {
-  // Check if the route requires authentication and if the user is authenticated
-  if (to.meta.requiresAuth && !store.getters.isAuthenticated) {
-    // If not authenticated, redirect to the login page
-    next('/login'); // You can specify your login route here
-  } else {
-    // Continue with the navigation
-    next();
-  }
-});
 
 export default router;

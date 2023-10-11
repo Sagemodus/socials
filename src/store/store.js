@@ -6,7 +6,6 @@ import { v4 as uuidv4 } from "uuid";
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
 import axios from "axios";
-import Auth from "../expressjs/auth";
 
 /* eslint-disable no-unused-vars */
 
@@ -32,8 +31,6 @@ export function formatCreatedAt(createdAt) {
 }
 const MAX_COMMENT_POSITION = 100;
 
-
-
 function setDepthForReplies(replies, depth) {
   if (!replies || !Array.isArray(replies) || replies.length === 0) {
     return;
@@ -52,11 +49,6 @@ function setDepthForTopics(topics) {
     setDepthForReplies(topic.proComments, 0); // Starttiefe ist 1
   }
 }
-
-
-
-
-
 
 function isCommentPositionAvailable(state, topicId, selectedTab) {
   const topic = state.topics.find((topic) => topic.id === topicId);
@@ -127,9 +119,7 @@ function searchReplyInCommentAndReplies(comment, targetReplyId) {
 }
 
 export default createStore({
-  modules: {
-    Auth,
-  },
+ 
   state() {
     const categories = [
       { main: "Sport", sub: "Fussball" },
@@ -186,15 +176,13 @@ export default createStore({
   mutations: {
     setTopics(state, topics) {
       state.topics = topics;
-      console.log("kolleg")
+      console.log("kolleg");
     },
 
     setUsers(state, users) {
       state.users = users;
       state.currentUser = users[0];
     },
-
-   
 
     updateCurrentUser(state, payload) {
       state.currentUser = { ...state.currentUser, ...payload };
@@ -549,40 +537,40 @@ export default createStore({
     },
   },
   actions: {
+    async toggleDislikeAction({ commit }, payload) {
+      try {
+        const response = await axios.post(
+          "http://192.168.1.42:3000/api/topicdislike",
+          payload
+        );
+        if (response.status === 200 && response.data.success) {
+          commit("TOGGLE_DISLIKE", payload);
+        } else {
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
+        }
+      } catch (error) {
+        console.error("Fehler beim Aktualisieren des Dislikes:", error.message);
+      }
+    },
 
-async toggleDislikeAction({ commit }, payload) {
-  try {
-    const response = await axios.post("http://192.168.1.42:3000/api/topicdislike", payload);
-    if (response.status === 200 && response.data.success) {
-      commit("TOGGLE_DISLIKE", payload);
-    } else {
-      throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
-    }
-  } catch (error) {
-    console.error("Fehler beim Aktualisieren des Dislikes:", error.message);
-  }
-},
-
-    
     async toggleLikeAction({ commit }, payload) {
-      
-      console.log(payload.topicId)
+      console.log(payload.topicId);
       // Hier können Sie zusätzliche Logik oder API-Aufrufe hinzufügen, falls erforderlich
       try {
-        const response = await axios.patch("http://192.168.1.42:3000/api/topiclike", payload);
-      if (response.status === 200 && response.data.success) {
-        commit("TOGGLE_LIKE", payload);
-      }
-      
-      else {
-        throw new Error(
-          response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+        const response = await axios.patch(
+          "http://192.168.1.42:3000/api/topiclike",
+          payload
         );
-      }
-
-
-      }
-      catch (error) {
+        if (response.status === 200 && response.data.success) {
+          commit("TOGGLE_LIKE", payload);
+        } else {
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
+        }
+      } catch (error) {
         // Behandeln Sie Fehler, z.B. durch das Anzeigen einer Fehlermeldung
         console.error(
           "Fehler beim Aktualisieren des Benutzers:",
@@ -590,7 +578,6 @@ async toggleDislikeAction({ commit }, payload) {
         );
         // Optional: Sie könnten hier auch einen Zustand setzen, um den Fehler im UI anzuzeigen
       }
-      
     },
 
     async updateCurrentUserAction({ commit }, payload) {
@@ -758,11 +745,16 @@ async toggleDislikeAction({ commit }, payload) {
 
     async upvoteComment({ commit }, payload) {
       try {
-        const response = await axios.post("http://192.168.1.42:3000/api/commentupvote", payload);
+        const response = await axios.post(
+          "http://192.168.1.42:3000/api/commentupvote",
+          payload
+        );
         if (response.status === 200 && response.data.success) {
           commit("UPVOTE_COMMENT", payload);
         } else {
-          throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
         }
       } catch (error) {
         console.error("Fehler beim Hochwerten des Kommentars:", error.message);
@@ -770,44 +762,58 @@ async toggleDislikeAction({ commit }, payload) {
       }
     },
 
-async downvoteComment({ commit }, payload) {
-  try {
-    const response = await axios.post("http://192.168.1.42:3000/api/commentdownvote", payload);
-    if (response.status === 200 && response.data.success) {
-      commit("DOWNVOTE_COMMENT", payload);
-    } else {
-      throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
-    }
-  } catch (error) {
-    console.error("Fehler beim Herabwerten des Kommentars:", error.message);
-  }
-},
-async upvoteReply({ commit }, payload) {
-  try {
-    const response = await axios.post("http://192.168.1.42:3000/api/replyupvote", payload);
-    if (response.status === 200 && response.data.success) {
-      commit("UPVOTE_REPLY", payload);
-    } else {
-      throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
-    }
-  } catch (error) {
-    console.error("Fehler beim Hochwerten der Antwort:", error.message);
-  }
-},
-async downvoteReply({ commit }, payload) {
-  try {
-    console.log(payload.commentId);
-    const response = await axios.post("http://192.168.1.42:3000/api/replydownvote", payload);
-    if (response.status === 200 && response.data.success) {
-      commit("DOWNVOTE_REPLY", payload);
-    } else {
-      throw new Error(response.data.message || "Ein unbekannter Fehler ist aufgetreten.");
-    }
-  } catch (error) {
-    console.error("Fehler beim Herunterwerten der Antwort:", error.message);
-  }
-},
-
+    async downvoteComment({ commit }, payload) {
+      try {
+        const response = await axios.post(
+          "http://192.168.1.42:3000/api/commentdownvote",
+          payload
+        );
+        if (response.status === 200 && response.data.success) {
+          commit("DOWNVOTE_COMMENT", payload);
+        } else {
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
+        }
+      } catch (error) {
+        console.error("Fehler beim Herabwerten des Kommentars:", error.message);
+      }
+    },
+    async upvoteReply({ commit }, payload) {
+      try {
+        const response = await axios.post(
+          "http://192.168.1.42:3000/api/replyupvote",
+          payload
+        );
+        if (response.status === 200 && response.data.success) {
+          commit("UPVOTE_REPLY", payload);
+        } else {
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
+        }
+      } catch (error) {
+        console.error("Fehler beim Hochwerten der Antwort:", error.message);
+      }
+    },
+    async downvoteReply({ commit }, payload) {
+      try {
+        console.log(payload.commentId);
+        const response = await axios.post(
+          "http://192.168.1.42:3000/api/replydownvote",
+          payload
+        );
+        if (response.status === 200 && response.data.success) {
+          commit("DOWNVOTE_REPLY", payload);
+        } else {
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
+        }
+      } catch (error) {
+        console.error("Fehler beim Herunterwerten der Antwort:", error.message);
+      }
+    },
 
     async fetchTopic({ commit }, topicId) {
       try {

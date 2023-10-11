@@ -58,7 +58,6 @@ import { computed, watchEffect } from 'vue';
 import { ref, onMounted, onBeforeUnmount, } from 'vue';
 import dayjs from 'dayjs';
 import { useRoute } from 'vue-router';
-import axios from "axios";
 
 import { onUnmounted } from 'vue';
 

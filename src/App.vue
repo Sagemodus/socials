@@ -10,8 +10,49 @@
 
 <script>
 import Navbar from './components/navbar_unten.vue'
+import { initializeApp } from "firebase/app";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDjimJJcGiL1O_6Swpzp2d5xaA5-AI4CpI",
+  authDomain: "procon-14ef5.firebaseapp.com",
+  projectId: "procon-14ef5",
+  storageBucket: "procon-14ef5.appspot.com",
+  messagingSenderId: "598092499566",
+  appId: "1:598092499566:web:7bdfebff0c1dd13a2df47f",
+  measurementId: "G-QX73B8G7V6"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
 
+
+// Get registration token. Initially this makes a network call, once retrieved
+// subsequent calls to getToken will return from cache.
+const messaging = getMessaging();
+
+onMessage(messaging, (payload) => {
+  console.log('Message received. ', payload);
+  // ...
+});
+
+
+
+getToken(messaging, { vapidKey: 'BJTzLLT-jiIVy-3Zse1A9ZqvQHPM8xl91xMvyAiTRtOZ_xViUWpy9G8eN9ZNm-ednER7gkg_KrYCXqfb2qz-KSI' }).then((currentToken) => {
+  if (currentToken) {
+    // Send the token to your server and update the UI if necessary
+    // ...
+    console.log(currentToken)
+  } else {
+    // Show permission request UI
+    console.log('No registration token available. Request permission to generate one.');
+    // ...
+  }
+}).catch((err) => {
+  console.log('An error occurred while retrieving token. ', err);
+  // ...
+});
 
 export default {
   components: {

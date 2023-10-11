@@ -147,8 +147,64 @@ const User = mongoose.model(
     profileImage: String,
     topicsaves: Array,
     tweets: Array,
+    fcmTokens: [String],
   })
 );
+
+app.post("/send-notification", async (req, res) => {
+  const { userId, message } = req.body;
+
+  // Hier holen Sie den Token des Benutzers aus Ihrer Datenbank (z.B. MongoDB)
+  const user = await User.findById(userId);
+  const userToken = user.fcmToken;
+
+  const fcmUrl = "https://fcm.googleapis.com/fcm/send";
+  const serverKey = process.env.FCM_SERVER_KEY;
+
+  const response = await fetch(fcmUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `key=${serverKey}`,
+    },
+    body: JSON.stringify({
+      to: userToken,
+      notification: {
+        title: "Neue Benachrichtigung",
+        body: message,
+      },
+    }),
+  });
+
+  const data = await response.json();
+  res.send(data);
+});
+
+app.post("/save-token", async (req, res) => {
+  try {
+    const { userId, token } = req.body;
+
+    // Finden Sie den Benutzer in der Datenbank
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+    console.log(user + " kolel");
+    // Fügen Sie den Token zum Benutzer hinzu, wenn er noch nicht vorhanden ist
+    if (!user.fcmTokens.includes(token)) {
+      user.fcmTokens.push(token);
+      await user.save();
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Token erfolgreich in der Datenbank gespeichert",
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.toString() });
+  }
+});
+
 function searchReplyInCommentAndReplies(comment, replyId) {
   // Überprüfen Sie zuerst den aktuellen Kommentar
   console.log(comment.id);
@@ -172,6 +228,8 @@ function searchReplyInCommentAndReplies(comment, replyId) {
   // Wenn die Antwort nicht gefunden wurde, geben Sie null zurück
   return null;
 }
+
+
 
 app.post("/api/replydownvote", async (req, res) => {
   try {

@@ -2,7 +2,7 @@
   <div>
     <div v-if="selectedComment">
       <div class="single-comment top-comment">
-        <CommentReply :reply="selectedComment"  />
+        <CommentReply :reply="selectedComment" :isSinglePage ="true" :depth="0" />
       </div>
     </div>
   </div>

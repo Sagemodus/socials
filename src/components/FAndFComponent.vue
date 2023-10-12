@@ -35,7 +35,7 @@
 
        <div class="oberer-teil">
        <h5 class="filter-title">Filtering</h5>
-             <input type="text" v-model="searchText" placeholder="Search categories"  />
+             <input type="text" v-model="searchText" placeholder="Search categories" @keyup="yourSearchFunction" />
       <div class="selected-categories">
         <div v-for="selectedCategory in selectedCategories" :key="`${selectedCategory.main}-${selectedCategory.sub}`"
           class="selected-category">
@@ -76,7 +76,7 @@
 
 
 <script>
-import { computed, ref, watch } from 'vue';
+import { computed, ref} from 'vue';
 import { useStore } from 'vuex';
 import TopicBox from './TopicBox';
 import { useRouter } from 'vue-router';
@@ -146,10 +146,11 @@ export default {
       dialogVisible.value = true;
     };
 
-    watch(searchText, () => {
+    const yourSearchFunction = () => { 
+      console.log("Function called with value:", searchText.value);
       showCategories.value = searchText.value !== '';
       selectedCategory.value = null;
-    });
+    };
 
     const filteredCategories = computed(() => {
       const searchTextLower = searchText.value.toLowerCase();
@@ -213,6 +214,7 @@ export default {
       filteredCategories,
       currentUser,
       iconColor,
+      yourSearchFunction,
       
     };
   },

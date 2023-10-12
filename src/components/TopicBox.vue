@@ -349,13 +349,13 @@ export default {
       );
     },
 
-
     dislike(event) {
       const userId = this.currentUser.id;
-      this.TOGGLE_DISLIKE({ topicId: this.id, userId });
+      this.$store.dispatch('toggleDislikeAction', { topicId: this.id, userId });
       const dislikeButton = event.target;
       this.animateButton(dislikeButton);
     },
+
 
     like(event) {
       const userId = this.currentUser.id;

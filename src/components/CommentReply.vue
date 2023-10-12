@@ -11,23 +11,33 @@
     <p class="antwort-text" @click='goToTopic(reply.topicId)'>{{ reply?.text }}</p>
     <div class="buttons-container">
       <!-- Antwort-Button anzeigen, um auf diese Antwort zu antworten -->
-      <button v-if="!showReplyForm && reply.depth < 5" @click="openReplyForm" class="action-button">
+
+
+
+      <button v-if="!showReplyForm && depth !=5"  @click="openReplyForm" class="action-button">
         <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" :icon="['fas', 'commenting']" class="icon" />
       </button>
+      
+      
+      
+      
       <!-- Upvote Button -->
-      <button @click="upvoteReplyAction(reply.id, currentUser.id, topic, commentId)" class="action-button"
+      <button @click="upvoteReplyAction(reply.id, currentUser.id, reply.topicId, commentId)" class="action-button"
         ref="upvoteButton">
         <font-awesome-icon :icon="hasLikedReply ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" class="icon"
           :style="{ color: iconColor(currentUser.farbe) }" />
         <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.upvotes }}</p>
       </button>
       <!-- Downvote Button -->
-      <button @click="downvoteReplyAction(reply.id, currentUser.id, topic, commentId)" class="action-button"
+      <button @click="downvoteReplyAction(reply.id, currentUser.id, reply.topicId, commentId)" class="action-button"
         ref="downvoteButton">
         <font-awesome-icon :icon="hasDislikedReply ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" class="icon"
           :style="{ color: iconColor(currentUser.farbe) }" />
         <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.downvotes }}</p>
       </button>
+
+
+
       <!-- eslint-disable-->
       <button v-if="reply && !showReplyForm && reply.replies && reply.replies.length > 0"
         @click="reply.expandReplies = !reply.expandReplies" :class="['action-button', depth >= 5 ? 'disabled' : '']">
@@ -36,6 +46,8 @@
         <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-else :icon="['fas', 'angle-up']" />
         <p :style="{ color: iconColor(currentUser.farbe) }">{{ replyCount + ' Replies' }}</p>
       </button>
+
+
       <!--eslint-enable-->
       <!--Aufklapp Button-->
       <router-link :style="{ color: iconColor(currentUser.farbe) }" v-if="reply && depth === 5 && reply.id"
@@ -44,10 +56,13 @@
       </router-link>
     </div>
 
+
+
+    
     <!-- Anzeige der Antworten auf diese Antwort -->
     <div v-if="reply.expandReplies && reply && reply.replies && reply.replies.length > 0" class="replies-section">
       <comment-reply v-for="nestedReply in reply.replies" :key="nestedReply.id" :reply="nestedReply" :path="reply.path"
-       :topic="topic" :commentId="reply.id"
+       :topic="topic" :commentId="reply.id" :depth="depth+1"
         @reply-clicked="$emit('reply-clicked', $event)"></comment-reply>
     </div>
     <div v-if="showReplyForm" class="reply-form">
@@ -91,7 +106,10 @@ export default {
     path: {
 
     },
-
+    isSinglePage: {
+      default: false,
+    },
+    
 
   },
 
@@ -297,7 +315,6 @@ export default {
     const goToTopic = (topicId) => {
       const differenz = commentIndex.value - displaycommentcount.value;
       const puffer = 3;
-// eslint-disable-next-line no-unused-vars
       const reply = props.reply;
 
       if (commentIndex.value == 0) {
@@ -438,7 +455,9 @@ export default {
     },
 
     upvoteReplyAction(replyId, currentUserId, topicId, commentId) {
+console.log(replyId + " reply id !")
       this.$store.dispatch('upvoteReply', { replyId, currentUserId, topicId, commentId });
+
       this.$nextTick(() => {
         this.animateButton(this.$refs.upvoteButton);
       });
@@ -485,7 +504,7 @@ export default {
           upvotes: 0,
           downvotes: 0,
           createdAt: dayjs(),
-          commentIndex: this.commentIndex + 1,
+          commentIndex: this.reply.commentIndex ,
           parentId: this.reply.id,
           path: newPath,  // Setzen Sie den neu erstellten Pfad hier
           Commentpath: this.reply.Commentpath,

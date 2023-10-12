@@ -1,5 +1,6 @@
 <template>
   <div>
+    <h2>Register</h2>
     <div class="row">
       <div class="card mx-auto">
         <div class="card-header text-white bg-primary">
@@ -51,7 +52,6 @@
                 v-model="confirm_password"
               >
             </div>
-            <error-messages :errors="errorMessages" v-if="errorMessages.length" />
             <button class="btn btn-primary">Register</button>
             &nbsp;&nbsp;&nbsp;&nbsp;
             <router-link to="/login" class="card-link">Already have an account?</router-link>
@@ -63,19 +63,14 @@
 </template>
 
 <script>
-import ErrorMessages from "@/components/ErrorMessages.vue"; // Adjust the import path as needed
 export default {
-  components:{
-    ErrorMessages,
-  },
   data() {
     return {
       username: "",
       password: "",
       confirm_password: "",
       name: "",
-      email: "",
-      errorMessages:[],
+      email: ""
     };
   },
   methods: {

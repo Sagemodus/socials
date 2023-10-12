@@ -34,7 +34,7 @@ export default {
     };
 
     // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
+    const app = initializeApp(firebaseConfig);// eslint-disable-line no-unused-vars
 
 
 

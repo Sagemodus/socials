@@ -529,13 +529,14 @@ function generateAuthToken(user) {
 }
 app.post("/api/users/login", async (req, res) => {
   try {
+
     // Sanitize user inputs
     const name = DOMPurify.sanitize(req.body.name);
     const password = DOMPurify.sanitize(req.body.password);
 
     // Find the user by name in the database
     const user = await User.findOne({ name: name });
-
+    console.log("Name:"+ user.name+ " Password: "+password)
     if (!user) {
       return res.status(401).send({ message: "User not found" });
     }

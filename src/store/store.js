@@ -6,17 +6,13 @@ import { v4 as uuidv4 } from "uuid";
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
 import axios from "axios";
-import Auth from "../expressjs/auth";
-
 
 /* eslint-disable no-unused-vars */
 
 export function formatCreatedAt(createdAt) {
   const createdAtDate = dayjs(createdAt);
   const now = dayjs();
-
   const diff = now.diff(createdAtDate, "minute");
-
   if (diff < 1) {
     return "Now";
   } else if (diff < 60) {
@@ -196,8 +192,13 @@ export default createStore({
       state.status = 'loading'; // You can set any loading state here if needed
     },
   
-    register_success(state, user) {
+    register_success(state,{user,token}) {
       state.status = 'success';
+      state.currentUser = user;
+      localStorage.setItem('user', JSON.stringify(user))
+      axios.defaults.headers.common['Authorization']=`Bearer ${
+        token
+      }`
       state.user = user; // You can store the registered user data here if needed
     },
   
@@ -210,10 +211,12 @@ export default createStore({
     },
     
     auth_success(state, { token, user }) {
-      state.status = "success";
-      state.currentUser.token = token; // Set the user's token
-      state.user = user; // Update the user data in the state
-      setAuthHeader(token); // Set the Authorization header with the token
+      state.status = 'success';
+      state.currentUser = user;
+      localStorage.setItem('user', JSON.stringify(user))
+      axios.defaults.headers.common['Authorization']=`Bearer ${
+        token
+      }`
     },
     
     auth_error(state) {
@@ -813,9 +816,11 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
 
     async login({ commit }, user) {
       commit("auth_request");
+
       try {
-        let res = await axios.post("http://localhost:3000/api/users/ldssogin", user);
+        let res = await axios.post("http://localhost:3000/api/users/login", user);
         // ...
+        console.log(res.data)
         if (res.status === 200 && res.data.success) {
           const token = res.data.token;
           const userId = res.data.userId; // Get the userId from the response
@@ -844,7 +849,13 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
         let res = await axios.post('http://localhost:3000/api/users/register', userData);
     
         if (res.data.success) {
-          commit('register_success');
+          const user = res.data.user;
+          const token = res.data.token;
+          const payload={
+            user:user,
+            token:token
+          }
+          commit('register_success',payload);
         } else {
           commit('register_error', res.data.message || 'An error occurred while registering.');
         }

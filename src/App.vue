@@ -35,9 +35,8 @@ export default {
     };
 
     // Initialize Firebase
+    // eslint-disable-next-line no-unused-vars
     const app = initializeApp(firebaseConfig);
-
-
 
     // Get registration token. Initially this makes a network call, once retrieved
     // subsequent calls to getToken will return from cache.

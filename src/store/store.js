@@ -818,7 +818,7 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
       commit("auth_request");
 
       try {
-        let res = await axios.post("http://localhost:3000/api/users/login", user);
+        let res = await axios.post("http://localhost:3000/api/users/ldssogin", user);
         // ...
         console.log(res.data)
         if (res.status === 200 && res.data.success) {
@@ -847,7 +847,6 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
       try {
         commit('register_request');
         let res = await axios.post('http://localhost:3000/api/users/register', userData);
-    
         if (res.data.success) {
           const user = res.data.user;
           const token = res.data.token;
@@ -855,11 +854,12 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
             user:user,
             token:token
           }
-          commit('register_success',payload);
+          console.log(res.data.user+" User objekt"+res.data.token+" Token")
+          commit("register_success",payload);
         } else {
           commit('register_error', res.data.message || 'An error occurred while registering.');
         }
-    
+
         return res;
       } catch (err) {
         commit('register_error', err.message || 'An error occurred while registering.');

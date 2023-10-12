@@ -1,7 +1,6 @@
 <template>
   <div>
-    <link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <navbar class="navbar-fixed" />
     <div id="app">
       <router-view />
@@ -35,8 +34,9 @@ export default {
     };
 
     // Initialize Firebase
-    // eslint-disable-next-line no-unused-vars
     const app = initializeApp(firebaseConfig);
+
+
 
     // Get registration token. Initially this makes a network call, once retrieved
     // subsequent calls to getToken will return from cache.

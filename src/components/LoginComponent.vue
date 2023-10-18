@@ -15,7 +15,7 @@
                 type="text"
                 placeholder="Username"
                 name="username"
-                v-model="username"
+                v-model="name"
                 class="form-control"
               >
             </div>
@@ -44,7 +44,7 @@
 export default {
   data() {
     return {
-      username: "",
+      name: "",
       password: ""
     };
   },

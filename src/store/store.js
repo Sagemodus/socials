@@ -210,12 +210,12 @@ export default createStore({
       state.status = 'loading';
     },
     
-    auth_success(state, { token, user }) {
+    auth_success(state, user) {
       state.status = 'success';
       state.currentUser = user;
       localStorage.setItem('user', JSON.stringify(user))
       axios.defaults.headers.common['Authorization']=`Bearer ${
-        token
+        user.token
       }`
     },
     
@@ -638,6 +638,8 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
       }
     },
 
+
+
     async addReplyPathToUser({ commit }, { userId, replyPath }) {
       try {
         const response = await axios.put(
@@ -735,6 +737,18 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
     }
   },
 
+    async verifyToken({ commit }, token) {
+      try {
+        const response = await axios.post('/verify-token', { token });
+        // Handle the response as needed
+        console.log(response.data.status)
+        return response.data.status;
+
+      } catch (error) {
+        // Handle errors
+        throw error;
+      }
+    },
 
     async submitReply({ commit }, { reply, newReply }) {
       try {
@@ -814,20 +828,21 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
     },
 
 
-    async login({ commit }, user) {
+    async login({ commit, getters }, user) {
       commit("auth_request");
 
       try {
-        let res = await axios.post("http://localhost:3000/api/users/ldssogin", user);
+        console.log(user)
+        let res = await axios.post("http://localhost:3000/api/users/login", user);
         // ...
-        console.log(res.data)
+
         if (res.status === 200 && res.data.success) {
           const token = res.data.token;
           const userId = res.data.userId; // Get the userId from the response
-          const userData = res.data.user;
-          localStorage.setItem("token", token);
-          commit("auth_success", { token, user: userData });
-          setAuthHeader(token); // Set the Authorization header
+          const user = getters.getUserById(userId)
+          user.token = token
+          console.log(user)
+          commit("auth_success", user);
           return { success: true, userId };
         } else {
           commit("auth_error");

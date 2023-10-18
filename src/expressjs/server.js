@@ -19,6 +19,7 @@ const DOMPurify = createDOMPurify(window);
 //Secure token random generate für reset token und Emailer
 const crypto = require('crypto'); // For generating random tokens
 const nodemailer = require('nodemailer'); // For sending emails
+const { FALSE, TRUE } = require('node-sass');
 
 
 const httpServer = require('http').createServer(app);
@@ -527,29 +528,44 @@ function generateAuthToken(user) {
 
   return token;
 }
-app.post("/api/users/login", async (req, res) => {
-  try {
+app.post('/verify-token', (req,res)=>{
+  const {token}=req.body;
+  if(!token){
+    return res.status(400).json({message: 'Token is missing', status:FALSE});
+  }
+  jwt.verify(token, jwtSecretKey, (err)=>{
+    if(err){
+    return res.status(401).json({message:'Token is invalid', status:FALSE});
+    } 
+    res.status(200).json({ message: 'Token is valid', status:TRUE});
+})
+})
 
+app.post("/api/users/login", async (req, res) => {
+  const {name, password} = req.body;
+
+  try {
     // Sanitize user inputs
-    const name = DOMPurify.sanitize(req.body.name);
-    const password = DOMPurify.sanitize(req.body.password);
+    const nameSanitized = DOMPurify.sanitize(name);
+    const passwordSanitized = DOMPurify.sanitize(password);
 
     // Find the user by name in the database
-    const user = await User.findOne({ name: name });
+    const user = await User.findOne({ name: nameSanitized });
+  
     console.log("Name:"+ user.name+ " Password: "+password)
     if (!user) {
       return res.status(401).send({ message: "User not found" });
     }
-
+console.log(user)
     // Compare the provided password with the hashed password
-    const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
+    const isPasswordValid = await bcrypt.compare(passwordSanitized, user.hashedPassword);
     if (!isPasswordValid) {
       return res.status(401).send({ message: "Invalid password" });
     }
 
     // Generate a JWT token
     const token = generateAuthToken(user);
-
+    
     // Send the token and user ID as a response
     console.log(user.id);
     res.status(200).send({ success: true, token, userId: user.id });

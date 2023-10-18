@@ -36,7 +36,6 @@ import ResetPassword from '../components/ResetPasswordComponent.vue'
 
 import store from '../store/store.js'; // Import your Vuex store
 */
-import store from '../store/store.js'; // Import your Vuex store
 
 
 
@@ -155,11 +154,13 @@ const router = createRouter({
   }
 });
 
-
+/*
 
 router.beforeEach((to, from, next) => {
   // Check if the route requires authentication and if the user is authenticated
-  if (to.meta.requiresAuth && !store.getters.isAuthenticated) {
+  console.log(this.store.dispatch('verifyToken',this.store.currentUser.token))
+  console.log(this.store.currentUser.token)
+  if (this.store.dispatch('verifyToken',this.store.currentUser.token)==false) {
     // If not authenticated, redirect to the login page
     next('/login'); // You can specify your login route here
   } else {
@@ -167,5 +168,5 @@ router.beforeEach((to, from, next) => {
     next();
   }
 });
-
+*/
 export default router;

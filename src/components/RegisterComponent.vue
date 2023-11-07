@@ -9,17 +9,6 @@
         <div class="card-body">
           <form @submit.prevent="registerUser">
             <div class="form-group">
-              <label for="username">Username</label>
-              <input
-                id="username"
-                type="text"
-                placeholder="Username"
-                name="username"
-                v-model="username"
-                class="form-control"
-              >
-            </div>
-            <div class="form-group">
               <label for="name">Name</label>
               <input
                 id="name"
@@ -74,7 +63,6 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
 export default {
   data() {
     return {
@@ -86,27 +74,23 @@ export default {
     };
   },
   methods: {
-  ...mapActions(["register"]),
-  async registerUser() {
-    let user = {
-      username: this.username,
-      password: this.password,
-      confirm_password: this.confirm_password,
-      email: this.email,
-      name: this.name
-    };
-    try {
-      const res = await this.register(user);
-      if (res.data.success) {
-        this.$router.push("login");
-      }
-    } catch (error) {
-      console.error("Error registering user:", error);
-      // Handle the error (e.g., display an error message)
-    }
-  }
-}
+      registerUser () {
 
+        try{
+      this.$store
+        .dispatch('register', {
+          password: this.password,
+          email: this.email,
+          name: this.name
+        })
+        .then(() => {
+          this.$router.push({ name: 'feed' })
+        })
+      }catch(err){
+        console.log(err+" error msg register")
+      }
+    }
+}
 };
 </script>
 

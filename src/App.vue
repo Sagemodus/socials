@@ -1,8 +1,10 @@
 <template>
   <div>
+
     <link rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <navbar class="navbar-fixed" v-if="showNavbar" />
+
     <div id="app">
       <router-view />
     </div>
@@ -41,7 +43,7 @@ export default {
     };
 
     // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
+    const app = initializeApp(firebaseConfig);// eslint-disable-line no-unused-vars
 
     const userfarbe = currentUser.farbe;
     const color = userfarbe ? iconColor(userfarbe) : 'gray';

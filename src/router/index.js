@@ -26,12 +26,24 @@ import ReplyPage from '../components/SingleReplyPage.vue';
 
 // Profil weiterleitungen
 import nestedReplyPage from '../components/profilebutton/nestedReplyPage.vue';
-import bookmarkSaves from '../components/profilebutton/bookmarkSaves.vue'
-import profileAndereUser from '../components/profilebutton/profileAndereUser.vue'
+import bookmarkSaves from '../components/profilebutton/bookmarkSaves.vue';
+import profileAndereUser from '../components/profilebutton/profileAndereUser.vue';
+
+//passwort vergessen
+/*
+import PasswordForgottenComponent from '../components/PasswordForgottenComponent.vue';
+import ResetPassword from '../components/ResetPasswordComponent.vue'
+
+import store from '../store/store.js'; // Import your Vuex store
+*/
+
+
+
 
 const routes = [
   {
     path: "/feed",
+    name: "feed",
     component: FeedView,
   },
   {
@@ -143,4 +155,19 @@ const router = createRouter({
   }
 });
 
+/*
+
+router.beforeEach((to, from, next) => {
+  // Check if the route requires authentication and if the user is authenticated
+  console.log(this.store.dispatch('verifyToken',this.store.currentUser.token))
+  console.log(this.store.currentUser.token)
+  if (this.store.dispatch('verifyToken',this.store.currentUser.token)==false) {
+    // If not authenticated, redirect to the login page
+    next('/login'); // You can specify your login route here
+  } else {
+    // Continue with the navigation
+    next();
+  }
+});
+*/
 export default router;

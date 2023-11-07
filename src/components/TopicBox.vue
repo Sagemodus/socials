@@ -185,6 +185,7 @@ export default {
     // Zugriff auf den currentUser aus dem Vuex-Store
 
     const author = store.getters.getUserById(topic.value.author);
+    console.log(topic.value.author)
     const currentUser = computed(() => store.state.currentUser);
 
     const selectedTab = computed(() => store.state.selectedTab);

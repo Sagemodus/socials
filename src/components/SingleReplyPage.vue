@@ -21,7 +21,6 @@
 </template>
 
 <script>
-
 import CommentReply from './CommentReply.vue';
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router';
@@ -37,10 +36,6 @@ export default {
 
     let commentId = ref(route.params.commentId);
     let selectedComment = computed(() => store.getters.getCommentById(commentId.value));
-
-
-
-
 
 
     watch(route, () => {

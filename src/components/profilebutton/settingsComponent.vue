@@ -173,7 +173,9 @@ export default {
 
 
     // Verwende computed, um currentUser reaktiv zu machen
+
     const currentUser = computed(() => store.state.users[userId - 1]);
+
 
     const showreply = false;
 

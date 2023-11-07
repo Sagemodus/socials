@@ -15,7 +15,7 @@
                 type="text"
                 placeholder="Username"
                 name="username"
-                v-model="username"
+                v-model="name"
                 class="form-control"
               >
             </div>
@@ -41,30 +41,23 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
 export default {
   data() {
     return {
-      username: "",
+      name: "",
       password: ""
     };
   },
   methods: {
-    ...mapActions(["login"]),
     loginUser() {
-      let user = {
-        username: this.username,
-        password: this.password
-      };
-      this.login(user)
-        .then(res => {
-          if (res.data.success) {
-            this.$router.push("/profile");
-          }
+      this.$store
+        .dispatch('login', {
+          password: this.password,
+          name: this.name
         })
-        .catch(err => {
-          console.log(err);
-        });
+        .then(() => {
+            this.$router.push({ name: 'feed' })       
+        })
     }
   }
 };

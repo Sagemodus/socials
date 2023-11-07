@@ -1,12 +1,14 @@
 <template>
   <div class="nav-bar">
+
     <router-link to="/feed" :key="$route.fullPath" :class="{ 'selected': $route.path === '/feed' }" :style="{ color: $route.path === '/feed' ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
+
      <span class="material-symbols-outlined">
   home
   </span>
 
     </router-link>
-    <router-link to="/search" :class="{ 'selected': $route.path === '/search' }" :style="{ color: $route.path === '/search' ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
+    <router-link to="/search" :class="{ 'selected': $route.path === '/search' }" :style="{ color: $route.path === '/search' ? 'black' : iconColor(currentUser?.farbe) }" class="nav-link">
      <span class="material-symbols-outlined">
   search
   </span>
@@ -21,12 +23,13 @@
     </router-link>
 
     <router-link to="/messages" :class="{ 'selected': $route.path === '/messages' }" :style="{ color: $route.path === '/messages' ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
+
   <span class="material-symbols-outlined">
   chat_bubble
   <span v-if="hasUnreadChats" class="notification-badge"></span>
   </span>
     </router-link>
-  <router-link :to="`/profil/${currentUserId}`" :class="{ 'selected': $route.path === `/profil/${currentUserId}` }" :style="{ color: $route.path === `/profil/${currentUserId}` ? 'black' : iconColor(currentUser.farbe) }" class="nav-link">
+  <router-link :to="`/profil/${currentUserId}`" :class="{ 'selected': $route.path === `/profil/${currentUserId}` }" :style="{ color: $route.path === `/profil/${currentUserId}` ? 'black' : iconColor(currentUser?.farbe) }" class="nav-link">
   <span class="material-symbols-outlined">
   account_circle
   </span>
@@ -53,6 +56,7 @@ export default {
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
 
     const currentUser = computed(() => store.state.currentUser);
+
     const currentUserId = computed(() => store.state.currentUser.id);
     const hasUnreadNotifications = ref(false);
     const hasUnreadChats = ref(false);
@@ -66,6 +70,7 @@ export default {
       } else {
         hasUnreadChats.value = false;
       }
+
 
 
 

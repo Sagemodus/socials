@@ -2,118 +2,137 @@
 <template>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <div v-if="topic" class="topic-box" :style="{ border: getBorderColor() }">
-    <div class="author-info">
-      <div class="left-content">
-        <div class="profilbild" @click="goToProfile(topic.author)">
-          <img :src="author.profileImage" alt="Author Profile Image" class="author-image" />
-        </div>
-        <div class="author">
+    <div class="notificantionanzeige" v-if="!disableelementsforNotifications">
+      <div class="author-info">
+        <div class="left-content">
 
-        </div>
-        <div class="author-category">
-          <span class="author-name" style="line-height: 0.8;">{{ author.name }} </span>
-          <p style=" font-size: 11px;" class="topic-text">{{ ' ' + topic.category.sub }}</p>
-        </div>
+          <h3>{{ topic.title }}</h3>
 
 
+        </div>
+
+        <!--Buttons oben rechts-->
+        <div class="right-content">
+          <p>{{ $store.getters.formattedCreatedAt(topic.createdAt) }}</p>
+          <button class="share-button" @click="shareContent">
+            <font-awesome-icon :icon="['fas', 'share-nodes']" class="icon"
+              :style="{ color: iconColor(currentUser.farbe) }" />
+          </button>
+          <!--Save Button-->
+          <button @click="saveChanges" class="savebutton">
+
+            <font-awesome-icon :icon="isSaved(topic.path, currentUser.id) ? ['fas', 'bookmark'] : ['far', 'bookmark']"
+              class="icon" :style="{ color: iconColor(currentUser.farbe) }" />
+          </button>
+
+
+        </div>
 
       </div>
-
-      <!--Buttons oben rechts-->
-      <div class="right-content">
-        <p>{{ $store.getters.formattedCreatedAt(topic.createdAt) }}</p>
-        <button class="share-button" @click="shareContent">
-          <font-awesome-icon :icon="['fas', 'share-nodes']" class="icon"
-            :style="{ color: iconColor(currentUser.farbe) }" />
-        </button>
-        <!--Save Button-->
-        <button @click="saveChanges" class="savebutton">
-
-          <font-awesome-icon :icon="isSaved(topic.path, currentUser.id) ? ['fas', 'bookmark'] : ['far', 'bookmark']" class="icon"
-            :style="{ color: iconColor(currentUser.farbe) }" />
-        </button>
-
-
+      <div class="kategorie">
+        <p style=" font-size: 11px;" class="topic-category">{{ ' ' + topic.category.sub }}</p>
       </div>
-
 
     </div>
-
 
     <div class="topic-content" @click="goToTopic">
-      <p class="topic-text">{{ topic.text }}</p>
+
+      <p class="topic-text " id="topictext">{{ trimmedTopicText }}</p>
     </div>
 
+    <!-- hier fängt der untere teil unterhalb des textes an -->
+    <div class="notificantionanzeige" v-if="!disableelementsforNotifications">
+      <div class="author-info">
 
-  <div class="balken">
-    <div class="like-bar" :class="{ liked: hasLikedTopic || hasDislikedTopic }"
-      :style="{ width: upvotePercentage + '%' }" :title="upvotePercentage + '%'" :interactive="true">
-      <p v-if="hasLikedTopic || hasDislikedTopic" class="bar-text">{{ upvotePercentage + '%' }}</p>
-    </div>
-    <div class="dislike-bar" :class="{ disliked: hasLikedTopic || hasDislikedTopic }"
-      :style="{ width: downvotePercentage + '%' }" :title="downvotePercentage + '%'" :interactive="true">
-      <p v-if="hasLikedTopic || hasDislikedTopic" class="bar-text">{{ downvotePercentage + '%' }}</p>
-    </div>
-  </div>
+        <div class="left-content">
+          <div class="profilbild" @click="goToProfile(topic.author)">
+            <img :src="author.profileImage" alt="Author Profile Image" class="author-image" />
+          </div>
+          <div class="author">
+
+          </div>
+          <div class="author-category">
+            <span class="author-name" style="line-height: 0.8;">{{ author.name }} </span>
 
 
-    <!--Like Button-->
-    <div class="interaction-bar">
+          </div>
 
-      <div class="vote">
+        </div>
 
-        <button @click="like" class="like-button">
-          <font-awesome-icon :icon="hasLikedTopic ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" class="icon"
-            :style="{ color: iconColor(currentUser.farbe) }" />
-          <p :style="{ color: iconColor(currentUser.farbe) }">{{ topic.upvotes }}</p>
-        </button>
-        <button @click="dislike" class="like-button">
-          <font-awesome-icon :icon="hasDislikedTopic ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" class="icon"
-            :style="{ color: iconColor(currentUser.farbe) }" />
-          <p :style="{ color: iconColor(currentUser.farbe) }">{{ topic.downvotes }}</p>
-        </button>
+
+      </div>
+
+      <div class="balken">
+        <div class="like-bar" :class="{ liked: hasLikedTopic || hasDislikedTopic }"
+          :style="{ width: upvotePercentage + '%' }" :title="upvotePercentage + '%'" :interactive="true">
+          <p v-if="hasLikedTopic || hasDislikedTopic" class="bar-text">{{ upvotePercentage + '%' }}</p>
+        </div>
+        <div class="dislike-bar" :class="{ disliked: hasLikedTopic || hasDislikedTopic }"
+          :style="{ width: downvotePercentage + '%' }" :title="downvotePercentage + '%'" :interactive="true">
+          <p v-if="hasLikedTopic || hasDislikedTopic" class="bar-text">{{ downvotePercentage + '%' }}</p>
+        </div>
+      </div>
+
+
+      <!--Like Button-->
+      <div class="interaction-bar">
+
+        <div class="vote">
+
+          <button @click="like" class="like-button">
+            <font-awesome-icon :icon="hasLikedTopic ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" class="icon"
+              :style="{ color: iconColor(currentUser.farbe) }" />
+            <p :style="{ color: iconColor(currentUser.farbe) }">{{ topic.upvotes }}</p>
+          </button>
+          <button @click="dislike" class="like-button">
+            <font-awesome-icon :icon="hasDislikedTopic ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" class="icon"
+              :style="{ color: iconColor(currentUser.farbe) }" />
+            <p :style="{ color: iconColor(currentUser.farbe) }">{{ topic.downvotes }}</p>
+          </button>
+
+
+
+        </div>
+
+        <!--ConPro Button-->
+        <div v-if="!disableelements" class="disableFromBookmark">
+          <div class="tab-selection">
+            <button @click="updateTabAndColor('pro')" :class="{ 'active-tab': selectedTab === 'pro' }">Pro</button>
+            <button @click="updateTabAndColor('contra')"
+              :class="{ 'active-tab': selectedTab === 'contra' }">Contra</button>
+
+          </div>
+
+
+          <div v-if="selectedTab === 'pro'" class="kommentare">
+            <CommentBox v-for="comment in sortedComments('pro').slice(0, 2)" :key="comment.id" :comment="comment"
+              :topic="id" />
+          </div>
+
+          <div v-else-if="selectedTab === 'contra'" class="kommentare">
+            <CommentBox v-for="comment in sortedComments('contra').slice(0, 2)" :key="comment.id" :comment="comment"
+              :topic="id" />
+          </div>
+        </div>
+        <!-- Anzeige, wenn keine Kommentare vorhanden sind -->
+        <div v-else>
+          <p>Noch keine Kommentare vorhanden.</p>
+        </div>
+
+
+
+        <!--Konversation Button-->
+        <div class="conversation-prompt">
+          <button @click="goToTopic" :style="{ color: iconColor(currentUser.farbe) }" class="join-button"><span>Show more
+              <font-awesome-icon :icon="['far', 'comments']" class="icon" @click="goToTopic" /> </span>
+          </button>
+
+        </div>
 
 
 
       </div>
 
-      <!--ConPro Button-->
-<div v-if="!disableelements"   class="disableFromBookmark">
-      <div class="tab-selection">
-        <button @click="updateTabAndColor('pro')" :class="{ 'active-tab': selectedTab === 'pro' }">Pro</button>
-        <button @click="updateTabAndColor('contra')" :class="{ 'active-tab': selectedTab === 'contra' }">Contra</button>
-
-      </div>
-
-
- <div v-if="selectedTab === 'pro'" class="kommentare">
-        <CommentBox v-for="comment in sortedComments('pro').slice(0, 2)" :key="comment.id" :comment="comment"
-          :topic="id" />
-      </div>
-
-      <div v-else-if="selectedTab === 'contra'" class="kommentare">
-        <CommentBox v-for="comment in sortedComments('contra').slice(0, 2)" :key="comment.id" :comment="comment"
-          :topic="id" />
-      </div>
-      <!-- Anzeige, wenn keine Kommentare vorhanden sind -->
-      <div v-else>
-        <p>Noch keine Kommentare vorhanden.</p>
-      </div>
-
-
-
-      <!--Konversation Button-->
-      <div class="conversation-prompt">
-        <button @click="goToTopic" :style="{ color: iconColor(currentUser.farbe) }" class="join-button"><span>Show more
-            <font-awesome-icon :icon="['far', 'comments']" class="icon" @click="goToTopic" /> </span>
-        </button>
-
-      </div>
-
-
-
-</div>
-     
 
     </div>
   </div>
@@ -170,7 +189,12 @@ export default {
 
     const selectedTab = computed(() => store.state.selectedTab);
     const selectedTabColor = computed(() => store.state.selectedTabColor);
-  
+    const trimmedTopicText = computed(() => {
+      if (props.disableelementsforNotifications && topic.value.text.length > 96) {
+        return topic.value.text.substring(0, 96) + '...';
+      }
+      return topic.value.text;
+    });
 
     watchEffect(() => {
       document.documentElement.style.setProperty('--selectedTabColor', selectedTabColor.value);
@@ -183,20 +207,26 @@ export default {
         props.topic.downvotePercentage < minWidthThreshold
       );
     });
+
+
+
+
+
+
     const goToProfile = () => {
       console.log("klickt")
       console.log(currentUser.value)
-      console.log ()
+      console.log()
       if (currentUser.value.id == topic.value.author) {
         router.push(`/profil/${topic.value.author}`);
       }
       else {
-      router.push(`/profile/${topic.value.author}`);
+        router.push(`/profile/${topic.value.author}`);
       }
 
     }
 
-    
+
 
 
 
@@ -211,6 +241,7 @@ export default {
       goToProfile,
       topic,
       author,
+      trimmedTopicText,
     };
   },
 
@@ -227,6 +258,9 @@ export default {
     },
     isUpVoted: {
 
+    },
+    disableelementsforNotifications: {
+      default: false,
     }
   },
   computed: {
@@ -291,16 +325,17 @@ export default {
 
     //Save button logik
     saveChanges() {
+      console.log("kolleg")
       const path = this.topic.path;
       const currentUserId = this.currentUser.id;
 
 
-      this.$store.dispatch('addtopicToSaves', {  path, currentUserId })
+      this.$store.dispatch('addtopicToSaves', { path, currentUserId })
 
 
     },
     isSaved(topicId,) {
-      return this.$store.getters.isTopicSaved( topicId);
+      return this.$store.getters.isTopicSaved(topicId);
     },
 
     // Funktion zur Berechnung des Prozentsatzes
@@ -351,7 +386,7 @@ export default {
 
     dislike(event) {
       const userId = this.currentUser.id;
-      this.$store.dispatch('toggleDislikeAction', { topicId: this.id, userId });
+      this.$store.dispatch('toggleDislikeAction', { topicId: this.id, userId, notificationType: "topicdislike", zielId: this.topic.author, benachrichtigungsElementId: this.id });
       const dislikeButton = event.target;
       this.animateButton(dislikeButton);
     },
@@ -359,7 +394,8 @@ export default {
 
     like(event) {
       const userId = this.currentUser.id;
-      this.$store.dispatch('toggleLikeAction', { topicId: this.id, userId });
+      console.log("Ziel ID " + this.topic.author)
+      this.$store.dispatch('toggleLikeAction', { topicId: this.id, userId, notificationType: "topiclike", zielId: this.topic.author, benachrichtigungsElementId: this.id });
       const likeButton = event.target;
       this.animateButton(likeButton);
     },
@@ -393,7 +429,26 @@ export default {
 
 
 
-<style lang="scss" >
+<style lang="scss" scoped >
+.right-content {
+  max-height: 42px;
+}
+
+.topic-category {
+  margin: 0px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #b0b0b0;
+  text-align: left;
+}
+
+h3 {
+  margin: 0px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
 .tab-selection {
   display: flex;
   justify-content: space-evenly;
@@ -458,9 +513,9 @@ export default {
 .right-content {
   display: flex;
   flex-direction: row;
-  min-width: 15%;
+  min-width: 30%;
   justify-content: flex-end;
-  gap: 10px;
+
 
 }
 
@@ -580,7 +635,7 @@ button.like-button {
     margin: 10px 0;
     text-align: justify;
     color: #333;
-
+    font-size: 16px;
 
   }
 
@@ -608,6 +663,7 @@ button.like-button {
   .vote {
     display: flex;
     justify-content: space-around;
+    max-height: 30px;
 
     p {
       margin-left: 0.5em;
@@ -619,16 +675,16 @@ button.like-button {
 
 
   .author-image {
-    width: 50px;
-    height: 50px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
 
   }
 
   .author-name {
     font-weight: bold;
-    font-size: 20px;
-    padding-top: 1em;
+    font-size: 12px;
+
   }
 
   .topic-content {
@@ -639,7 +695,7 @@ button.like-button {
 
   @media only screen and (max-width: 600px) {
     .right-content {
-      width: 30%;
+
       display: flex;
       justify-content: flex-end;
     }
@@ -648,13 +704,6 @@ button.like-button {
       display: flex;
       align-items: center;
 
-    }
-
-    .author-image {
-      width: 50px;
-      /* Set a smaller width for the image */
-      height: 50px;
-      /* Set a smaller height for the image */
     }
 
 
@@ -670,9 +719,7 @@ button.like-button {
       display: flex;
     }
 
-    .left-content {
-      width: 85%;
-    }
+
 
   }
 
@@ -687,7 +734,7 @@ button:focus {
 }
 
 .author-info {
-
+  gap: 10px;
   width: 100%;
 }
 
@@ -713,9 +760,8 @@ button.share-button {
 }
 
 .left-content {
-
+  text-align: LEFT;
   display: flex;
   align-items: center;
-  min-width: 85%;
-}
-</style>
+  width: 70%;
+}</style>

@@ -1,61 +1,84 @@
 <template>
   <div class="comment-box" :id="commentId">
-    <div class="user-info">
-      <div class="header-comment">
-        <img :src="author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile" />
-        <h5 class="username">{{ author?.name }}</h5>
-        <div class="month">
-          <p>{{ $store.getters.formattedCreatedAt(comment?.createdAt) }}</p>
+
+
+
+    <div class="comment-content" @click="handleRouterLinkClick(comment)">{{ trimmedCommentText }}</div>
+
+
+    <div class="fromNotification" v-if="!disableelementsforNotifications">
+      <div class="fromNotification" v-if="!disableelementsforNotifications">
+        <!-- Anzeige ausblenden wenn es in der notification view gerendert -->
+        <div class="user-info">
+          <div class="header-comment">
+            <img :src="author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile" />
+            <h5 class="username">{{ author?.name }}</h5>
+            <div class="month">
+              <p>{{ $store.getters.formattedCreatedAt(comment?.createdAt) }}</p>
+            </div>
+            <div class="badge-pro" v-if="comment.commentType == 'pro'">P</div>
+            <div class="badge-contra" v-else>C</div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="comment-content" @click="handleRouterLinkClick(comment)">{{ comment.text }}</div>
 
-    <div class="actions">
-      <button v-if="!showReplyForm" @click="showReplyForm = true" class="reply-button action-button">
-        <font-awesome-icon :icon="['fas', 'commenting']" class="icon" :style="{ color: iconColor(currentUser.farbe) }" />
-      </button>
+      <div class="actions">
 
-      <!--Vote Buttons-->
-      <button class="action-button" @click="upvoteComment(comment.id, currentUser.id, topic)" ref="upvoteButton">
-        <font-awesome-icon :icon="hasLikedComment ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" class="icon"
-          :style="{ color: iconColor(currentUser.farbe) }" />
-        <p :style="{ color: iconColor(currentUser.farbe) }">{{ comment?.upvotes }}</p>
-      </button>
-
-      <button class="action-button" @click="downvoteComment(comment.id, currentUser.id, topic)" ref="downvoteButton">
-        <font-awesome-icon :icon="hasDislikedComment ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" class="icon"
-          :style="{ color: iconColor(currentUser.farbe) }" />
-        <p :style="{ color: iconColor(currentUser.farbe) }">{{ comment?.downvotes }}</p>
-      </button>
-
-      <div v-if="anzeige"> <!--Aufklapp Button-->
-        <!--eslint-disable-->
-        <button v-if="!showReplyForm && comment.replies && comment.replies.length && comment.showelement > 0"
-          @click="comment.expandReplies = !comment.expandReplies" class="action-button">
-          <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-if="!comment.expandReplies"
-            :icon="['fas', 'angle-down']" />
-          <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-else :icon="['fas', 'angle-up']" />
-          <span :style="{ color: iconColor(currentUser.farbe) }" v-if="replyCount > 0">{{ replyCount + ' Replies'
-          }}</span>
+        <button v-if="!showReplyForm" @click="showReplyForm = true" class="reply-button action-button">
+          <font-awesome-icon :icon="['fas', 'commenting']" class="icon" :style="{ color: `var(--iconColor)` }" />
         </button>
-        <!--eslint-ensable-->
+
+
+        <!--Vote Buttons-->
+        <button class="action-button" @click="upvoteComment(comment.id, currentUser.id, topic)" ref="upvoteButton">
+          <font-awesome-icon :icon="hasLikedComment ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" class="icon"
+            :style="{ color: `var(--iconColor)` }" />
+          <p :style="{ color: `var(--iconColor)` }">{{ comment?.upvotes }}</p>
+        </button>
+
+        <button class="action-button" @click="downvoteComment(comment.id, currentUser.id, topic)" ref="downvoteButton">
+          <font-awesome-icon :icon="hasDislikedComment ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" class="icon"
+            :style="{ color: `var(--iconColor)` }" />
+          <p :style="{ color: `var(--iconColor)` }">{{ comment?.downvotes }}</p>
+        </button>
+
+        <div v-if="anzeige"> <!--Aufklapp Button-->
+          <!--eslint-disable-->
+          <button v-if="!showReplyForm && comment.replies && comment.replies.length && comment.showelement > 0"
+            @click="comment.expandReplies = !comment.expandReplies" class="action-button">
+            <font-awesome-icon :style="{ color: `var(--iconColor)` }" v-if="!comment.expandReplies"
+              :icon="['fas', 'angle-down']" />
+            <font-awesome-icon :style="{ color: `var(--iconColor)` }" v-else :icon="['fas', 'angle-up']" />
+            <span :style="{ color: `var(--iconColor)` }" v-if="replyCount > 0">{{ replyCount + ' Replies'
+            }}</span>
+          </button>
+          <!--eslint-ensable-->
+        </div>
       </div>
-    </div>
-    <div v-if="showReplyForm" class="reply-form">
-      <textarea v-model="newReply" placeholder="Write your Answer..." class="reply-textarea"></textarea>
-      <div class="reply-actions">
-        <button @click="cancelReply" class="cancel-reply-button">Cancel</button>
-        <button @click="submitReply(comment)" :style="{ backgroundColor: iconColor(currentUser.farbe) }"
-          class="submit-reply-button">Reply</button>
+      <div v-if="showReplyForm" class="reply-form">
+        <textarea v-model="newReply" placeholder="Write your Answer..." class="reply-textarea"></textarea>
+        <div class="reply-actions">
+          <button @click="cancelReply" class="cancel-reply-button">Cancel</button>
+          <button @click="submitReply(comment)" :style="{ backgroundColor: `var(--iconColor)` }"
+            class="submit-reply-button">Reply</button>
+        </div>
       </div>
+
+      <div v-if="comment.expandReplies" class="replies-section">
+        <comment-reply v-for="reply in comment.replies" :key="reply.id" :reply="reply" :topic="topic"
+          :commentId="comment.id" :depth="1"></comment-reply>
+      </div>
+
+
+
+
     </div>
 
-    <div v-if="comment.expandReplies" class="replies-section">
-      <comment-reply v-for="reply in comment.replies" :key="reply.id" :reply="reply"  :topic="topic"
-        :commentId="comment.id"  :commentIndex="commentIndex" :depth="1"
-        @reply-clicked="onReplyClicked" :id="reply.id"></comment-reply>
-    </div>
+
+
+
+
+
   </div>
 </template>
 
@@ -65,7 +88,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { mapGetters } from 'vuex';
 import CommentReply from './CommentReply.vue';
-import { iconColor } from './farben';
+
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
 import { computed, onBeforeMount, onBeforeUnmount, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
@@ -92,11 +115,14 @@ export default {
     anzeige: {
       default: 'true',
     },
+    disableelementsforNotifications: {
+      default: false,
+    }
   },
 
   setup(props) {
     const commentId = ref(props.comment.id);
-   
+
 
 
     const comment = computed(() => props.comment);
@@ -105,7 +131,7 @@ export default {
     // Zugriff auf den currentUser aus dem Vuex-Store
     const currentUser = computed(() => store.state.currentUser);
     const selectedTab = computed(() => store.state.selectedTab);
-    const displaycommentcount = computed(() => store.state.displayedCommentCount + 1);
+    const displayedCommentCount = computed(() => store.state.displayedCommentCount);
     const topicobjekt = store.getters.getTopicById(props.topic);
 
     const author = computed(() => store.getters.getUserById(props.comment.author))
@@ -113,6 +139,12 @@ export default {
     const findCommentIndex = (commentId, commentsArray) => {
       return commentsArray.findIndex(comment => comment.id === commentId);
     };
+    const trimmedCommentText = computed(() => {
+      if (props.disableelementsforNotifications && comment.value.text.length > 96) {
+        return comment.value.text.substring(0, 96) + '...';
+      }
+      return comment.value.text;
+    });
 
     onUnmounted(() => {
       comment.value.expandReplies = false;
@@ -176,17 +208,17 @@ export default {
 
 
     return {
-      iconColor,
+
       currentUser,
       selectedTab,
       store,
-      displaycommentcount,
+      displayedCommentCount,
       topicobjekt,
       commentIndex,
       commentId,
       goToProfile,
       author,
-
+      trimmedCommentText,
 
     };
   },
@@ -224,11 +256,16 @@ export default {
 
     handleRouterLinkClick(comment) {
 
-      comment.commentIndex = this.commentIndex
-      const differenz = this.commentIndex - this.displaycommentcount;
+
+      const differenz = this.comment.commentIndex + 1 - this.displayedCommentCount;
       const puffer = 3;
 
-      if (this.commentIndex >= this.displaycommentcount) {
+      console.log("commentIndex: ", this.comment.commentIndex)
+      console.log("displayedCommentCount: ", this.displayedCommentCount)
+      console.log("differenz: ", differenz)
+
+      if (differenz > 0) {
+        console.log("wird erweitert")
         this.$store.commit('incrementDisplayedCommentCount', differenz + puffer);
       }
 
@@ -242,29 +279,29 @@ export default {
         this.$store.state.selectedTabColor = 'red';
       }
 
-     
-        this.$router.push({
-          name: 'topic-ganze-seite',
-          params: {
-            id: comment.topicId,
-            commentId: comment.id
-          }
-        });
 
-  
+      this.$router.push({
+        name: 'topic-ganze-seite',
+        params: {
+          id: comment.topicId,
+          commentId: comment.id
+        }
+      });
+
+
 
 
     },
 
     upvoteComment(commentId, currentUserId, topicId) {
-      this.$store.dispatch('upvoteComment', { commentId, currentUserId, topicId });
+      this.$store.dispatch('upvoteComment', { commentId, currentUserId, topicId, notificationType: "commentlike", zielId: this.comment.author, benachrichtigungsElementId: commentId });
       this.$nextTick(() => {
         this.animateButton(this.$refs.upvoteButton);
       });
     },
 
     downvoteComment(commentId, currentUserId, topicId) {
-      this.$store.dispatch('downvoteComment', { commentId, currentUserId, topicId });
+      this.$store.dispatch('downvoteComment', { commentId, currentUserId, topicId, notificationType: "commentdislike", zielId: this.comment.author, benachrichtigungsElementId: commentId });
       this.$nextTick(() => {
         this.animateButton(this.$refs.downvoteButton);
       });
@@ -292,12 +329,15 @@ export default {
         expandReplies: false,
         depth: comment.depth + 1,
         replytype: "reply",
+        commentobjektId: this.comment.id,
       };
 
       try {
         // Rufe die Aktion in deinem Store auf, um die Antwort hinzuzufügen
-        this.$store.dispatch('addReplyAction', { newReply, comment } );
+        this.$store.dispatch('addReplyAction', { newReply, comment, notificationType: "replyAddToComment", zielId: this.comment.author, benachrichtigungsElementId: newReply.id, userId: this.currentUser.id, topicId: comment.topicId });
+
         this.newReply = "";
+        this.showReplyForm = false;
         // Überprüfe, ob die Tiefe (depth) 5 erreicht hat
         if (this.depth >= 5) {
           this.$emit('reply-clicked', comment.id);
@@ -342,6 +382,43 @@ export default {
 </script>
 
 <style lang="scss" >
+.badge-pro {
+  font-weight: bold;
+  font-size: 13px;
+  color: green;
+}
+
+.badge-contra {
+  font-size: 13px;
+  color: red;
+  font-weight: 700;
+
+}
+
+.green-badge {
+  background-color: green;
+  /* Hintergrundfarbe für den grünen Badge */
+  color: white;
+  /* border: 1px solid green; */
+  height: 10px;
+  width: 10px;
+  border-radius: 20px;
+}
+
+.red-badge {
+  background-color: red;
+  /* Hintergrundfarbe für den roten Badge */
+  color: white;
+  /* border: 1px solid green; */
+  height: 0px;
+  width: 20px;
+  border-radius: 20px;
+}
+
+.comment-content {
+  padding-top: 10px;
+}
+
 .reply-form {
   margin-top: 10px;
 
@@ -390,6 +467,7 @@ export default {
   padding-left: 1vh;
   border-left: 2px solid #ccc;
 
+
   &:last-child {
     border-bottom: none;
   }
@@ -406,10 +484,14 @@ export default {
 
     .comment-content {
       flex-grow: 1; // Nimmt den gesamten verfügbaren Platz ein
+      padding-top: 10px;
+      font-size: 16px;
+      word-break: break-word;
 
       .comment-text {
         font-size: 12px;
         color: #1c1c1c;
+
       }
     }
 
@@ -419,14 +501,15 @@ export default {
 
   .profile-image {
     border-radius: 50%;
-    max-width: 90%;
+    width: 20px;
 
   }
 
   .actions {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 18px;
+    height: 20px;
   }
 
   .action-button {
@@ -440,6 +523,7 @@ export default {
     color: #878a8c;
     font-size: 13px;
     cursor: pointer;
+    padding: 0px;
 
     .icon {
       color: #878a8c;
@@ -477,6 +561,11 @@ export default {
           font-size: 14px;
           font-weight: bold;
           color: #333;
+
+        }
+
+        h5.username {
+          margin: 0px;
         }
 
         .comment-content {
@@ -489,9 +578,10 @@ export default {
     }
   }
 
-.comment-reply:not(:last-child) {
+  .comment-reply:not(:last-child) {
     border-bottom: 1px solid #ccc;
-}
+  }
+
   .expand-button {
     display: flex;
     align-items: center;
@@ -502,9 +592,7 @@ export default {
     /* Die Höhe des Buttons festlegen */
     font-size: 1.5rem;
   }
-.comment-content {
-    padding-top: 10px;
-}
+
 
   .reply-form {
     margin-top: 10px;
@@ -533,7 +621,7 @@ export default {
   .header-comment {
     display: flex;
     gap: 0.5em;
-
+    padding: 5px 0px 5px 0px;
     align-items: center;
     max-height: 50px;
     flex-wrap: wrap;
@@ -543,10 +631,15 @@ export default {
 }
 
 .comment-box h5 {
-  font-size: 13px;
+  font-size: 12px;
+  margin: 0px;
 }
 
 .month {
   font-size: 11px;
+}
+
+.month p {
+  margin: 0px;
 }
 </style>

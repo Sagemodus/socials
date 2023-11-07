@@ -55,11 +55,11 @@
             <template #replies>
                 <comment-reply v-for="reply in replySuche" :key="reply.id" :reply="reply"  :topic="reply.topicId"
                     
-                    :commentIndex="reply.commentIndex" :id="reply.id"></comment-reply>
+                ></comment-reply>
 
                 <comment-reply v-for="reply in nestedReplySuche" :key="reply.id" :reply="reply" 
                     :topic="reply.topicId" 
-                    :commentIndex="reply.commentIndex" :id="reply.id"></comment-reply>
+                    ></comment-reply>
             </template>
 
             <!-- Inhalte für den "Likes"-Tab -->
@@ -126,7 +126,6 @@ export default {
 
         const procreatedComments = computed(() => currentUser.value.procreated);
         const contracreatedComments = computed(() => currentUser.value.contracreated);
-        const repliescreated = computed(() => currentUser.value.createdReplies);
 
         const bookmarkrouting = () => {
             router.push(`/bookmarksaves/${userId}`)
@@ -200,12 +199,6 @@ export default {
 
 
 
-        const repliescreatedCommentsList = computed(() => {
-            return repliescreated.value.map(commentId => {
-                return store.getters.getCommentById(commentId);
-
-            });
-        });
 
         const procreatedCommentList = computed(() => {
             return procreatedComments.value.map(commentId => {
@@ -256,7 +249,6 @@ export default {
             procreatedCommentList,
             contracreatedCommentsList,
             state,
-            repliescreatedCommentsList,
             TopicUpVotes,
             TopicDownVotes,
             showreply,

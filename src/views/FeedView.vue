@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount,markRaw, shallowRef } from 'vue';
+import { ref, onMounted, onBeforeUnmount, markRaw, shallowRef } from 'vue';
 import PublicComponent from '../components/PublicComponent.vue';
 import FAndFComponent from '../components/FAndFComponent.vue';
 import SwipeNavigationComponent from '../components/SwipeNavigationComponent.vue';
@@ -18,7 +18,7 @@ export default {
   name: 'FeedView',
   components: {
     SwipeNavigationComponent,
-    
+
     FAndFComponent,
     PublicComponent: markRaw(PublicComponent),
   },
@@ -29,13 +29,13 @@ export default {
   },
 
   setup() {
-  
+
     const tabs = [
       { path: '/public', component: PublicComponent },
       { path: '/fandf', component: FAndFComponent },
-     
+
     ];
-    const currentTab = ref('/public');
+    const currentTab = ref(sessionStorage.getItem('currentTab') || '/public');
     const currentComponent = shallowRef(tabs.find((tab) => tab.path === currentTab.value));
     const lastScrollPosition = ref(0);
     const isTabBarSticky = ref(false);
@@ -43,6 +43,7 @@ export default {
 
     const switchTab = (path) => {
       currentTab.value = path;
+      sessionStorage.setItem('currentTab', path); // Speichere den aktuellen Tab im Local Storage
       currentComponent.value = tabs.find((tab) => tab.path === path);
     };
 
@@ -73,13 +74,15 @@ export default {
 </script>
 
 <style lang="scss" >
-.topic-box + .topic-box {
+.topic-box+.topic-box {
   margin-top: 40px; // Füge hier den gewünschten Abstand hinzu
 }
+
 .comment-reply .action-button {
   font-size: 13px;
 }
-.comment-reply .buttons-container{
+
+.comment-reply .buttons-container {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -87,18 +90,18 @@ export default {
 
 
 }
-.comment-box{
-  width: 100%;
-  max-width: 95%;
+
+.comment-box {
+
+  max-width: 96%;
 }
 
 
 .actions {
-    gap: 10px;
+  gap: 10px;
 }
-.topic-text{
 
-}
+.topic-text {}
 
 .sticky-tab-bar {
   position: relative;

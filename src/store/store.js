@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
 import axios from "axios";
+import io from "socket.io-client";
 
 /* eslint-disable no-unused-vars */
 
@@ -84,18 +85,6 @@ function searchCommentInArray(comments, commentId) {
   return null;
 }
 
-function numberReplies(replies, path = "") {
-  replies.forEach((reply, index) => {
-    const newPath = `${path}/${index}`;
-    reply.path = `${reply.Commentpath}${newPath}`;
-    reply.authorPath = reply.author.nestedReplies.push(reply.path);
-    if (reply.replies.length > 0) {
-      reply.replies = numberReplies(reply.replies, newPath);
-    }
-  });
-  return replies;
-}
-
 function generateFakeProfileImage(name) {
   return `https://fakeimg.pl/50x50/?text=${name[0]}&font=lobster`;
 }
@@ -119,7 +108,6 @@ function searchReplyInCommentAndReplies(comment, targetReplyId) {
 }
 
 export default createStore({
- 
   state() {
     const categories = [
       { main: "Sport", sub: "Fussball" },
@@ -165,23 +153,36 @@ export default createStore({
       selectedTab: "pro",
       selectedTabColor: "green",
       sessionId: null,
-      displayedCommentCount: 3,
+      displayedCommentCount: 4,
       comment: null, // Comment object
       reply: null, // Reply object
       commentReplyAnzeige: 5,
       categories,
+      onlineUsers: [],
+      showNavbar: true,
     };
   },
 
   mutations: {
+    setShowNavbar(state, value) {
+      state.showNavbar = value;
+    },
+    SET_USER_ONLINE(state, userId) {
+      const user = state.users.find((u) => u.id === userId);
+      if (user) {
+        user.online = true;
+      }
+    },
+
     setTopics(state, topics) {
       state.topics = topics;
-      console.log("kolleg");
     },
 
     setUsers(state, users) {
       state.users = users;
-      state.currentUser = users[0];
+      state.currentUser = users[1];
+
+      // Überprüfen, ob der aktuelle Benutzer ungelesene Benachrichtigungen hat
     },
 
     updateCurrentUser(state, payload) {
@@ -193,7 +194,7 @@ export default createStore({
     },
 
     resetDisplayedCommentCount(state) {
-      state.displayedCommentCount = 3; // Set it to the desired initial value
+      state.displayedCommentCount = 4; // Set it to the desired initial value
     },
     incrementDisplayedCommentCount(state, incrementAmount) {
       state.displayedCommentCount += incrementAmount;
@@ -205,6 +206,7 @@ export default createStore({
     },
 
     SET_SELECTED_TAB_COLOR(state, color) {
+      console.log("colorMutation: ", color);
       state.selectedTabColor = color;
     },
 
@@ -472,7 +474,6 @@ export default createStore({
           });
         }
       }
-      console.log("nid gfunde amk");
     },
 
     ADD_TOPIC_TO_SAVES(state, topicPath) {
@@ -492,6 +493,9 @@ export default createStore({
 
     SET_SELECTED_TAB(state, tab) {
       state.selectedTab = tab;
+      const selectedTabColor = state.selectedTab === "pro" ? "green" : "red";
+      sessionStorage.setItem("selectedTab", tab);
+      sessionStorage.setItem("selectedTabColor", selectedTabColor);
     },
     comment_und_reply2(state, { comment, reply }) {
       console.log("kolleg2");
@@ -514,69 +518,316 @@ export default createStore({
     },
 
     addReplyMutation(state, { newReply, comment }) {
+      const currentUser = state.currentUser;
       // Füge die neue Antwort zum Kommentar hinzu
       if (!comment.replies) {
         comment.replies = [];
       }
       comment.expandReplies = true;
       comment.replies.push(newReply);
+      currentUser.nestedReplies.push(newReply.path);
     },
 
     ADD_REPLY(state, { reply, newReply }) {
+      const currentUser = state.currentUser;
       if (!reply.replies) {
         reply.replies = [];
       }
       reply.replies.push(newReply);
+      currentUser.nestedReplies.push(newReply.path);
     },
 
-    ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
-      const user = state.users.find((user) => user.id === userId);
-      if (user) {
-        user.nestedReplies.push(replyPath);
+    ADD_NOTIFICATION_TO_USER(state, notificationsObjekt) {
+      try {
+        console.log(notificationsObjekt);
+        const user = state.users.find(
+          (user) => user.id === notificationsObjekt.zielId
+        );
+        if (!user) {
+          throw new Error(
+            `User with ID ${notificationsObjekt.zielId} not found.`
+          );
+        }
+        user.notifications.push(notificationsObjekt);
+      } catch (error) {
+        console.error("Error adding notification to user:", error);
       }
+    },
+    UPDATE_ALL_READ(state, payload) {
+      const { readArray, currentUserId } = payload;
+      try {
+        const user = state.users.find((user) => user.id === currentUserId);
+
+        // Überprüfen Sie, ob der Benutzer gefunden wurde und ob er ein notifications-Array hat
+        if (!user) {
+          throw new Error(`User with ID ${currentUserId} not found.`);
+        }
+        if (!user.notifications || !Array.isArray(user.notifications)) {
+          throw new Error(
+            `User with ID ${currentUserId} does not have a valid notifications array.`
+          );
+        }
+
+        if (readArray.length > 0) {
+          user.notifications.forEach((element) => {
+            if (readArray.includes(element.messageId)) {
+              element.read = true;
+            } else {
+            }
+          });
+        } else {
+        }
+      } catch (error) {
+        console.error("Error updating notification read status:", error);
+      }
+    },
+
+    UPDATE_READ(state, payload) {
+      try {
+        const notification = state.currentUser.notifications.find(
+          (notif) => notif.messageId === payload.messageId
+        );
+        if (!notification) {
+          throw new Error(
+            `Notification with ID ${payload.messageId} not found.`
+          );
+        } else {
+          notification.read = true;
+        }
+
+        // Überprüfen Sie, ob noch ungelesene Benachrichtigungen vorhanden sind
+        const hasUnread = state.currentUser.notifications.some(
+          (notif) => !notif.read
+        );
+
+        // Setzen Sie den Status entsprechend
+        state.currentUser.hasUnreadNotifications = hasUnread;
+      } catch (error) {
+        console.error("Error updating notification read status:", error);
+      }
+    },
+
+    SET_AKTIVE_CHATS(state, payload) {
+      try {
+        state.chats = payload;
+      } catch (error) {
+        console.error("Fehler beim Setzen der aktiven Chats:", error);
+      }
+    },
+
+    CREATE_CHAT(state, payload) {
+      const currentUserObjekt = state.currentUser;
+      console.log(payload);
+      try {
+        currentUserObjekt.activeChats.push(payload.chat.chatId);
+        state.chats.push(payload.chat);
+      } catch (error) {
+        console.log(
+          "Beim hinzufügen in den State ist ein fehler aufgetreten: ",
+          error
+        );
+      }
+    },
+    ADD_MESSAGE(state, message) {
+      console.log("bruder");
+      const chats = state.chats;
+      try {
+        const currentChat = chats.find((chat) => chat.chatId == message.chatId);
+        if (!currentChat) {
+          console.log("currentChat nicht gefunden");
+        } else {
+          currentChat.messages.push(message);
+        }
+      } catch (error) {}
+    },
+
+    UPDATE_READCHAT(state, payload) {
+      console.log(payload, " payload");
+      const chats = state.chats;
+      try {
+        const currentChat = chats.find(
+          (chat) => chat.chatId === payload.chatId
+        );
+        if (!currentChat) {
+          console.log("Chats nicht gefunden");
+        } else {
+          currentChat.read = true;
+        }
+      } catch (error) {
+        console.error("Fehler beim aktualisieren des Chatreads", error.message);
+      }
+    },
+    ADD_CHAT(state, chat) {
+      state.chats.push(chat);
+    },
+    REMOVE_CHAT(state, payload) {
+      console.log("hallo");
+      console.log(payload);
+      const currentUserId = payload.currentUserId;
+      console.log(currentUserId);
+      try {
+        const currentUser = state.currentUser;
+        const chatId = payload.chatId;
+
+        if (!currentUser) {
+          throw new Error("Der User wurde nicht gefunden", currentUser);
+        } else {
+          currentUser.activeChats = currentUser.activeChats.filter(
+            (chat) => chat !== chatId
+          );
+          state.chats = state.chats.filter((chat) => chat.chatId !== chatId);
+        }
+      } catch (error) {
+        console.error("Ein fehler ist aufgetreten ", error);
+      }
+    },
+
+    UPDATE_CHATARRAY(state, chatId) {
+      console.log("vorher: ", state.currentUser.activeChats);
+      state.currentUser.activeChats.push(chatId);
+      console.log("nacher: ", state.currentUser.activeChats);
+    },
+
+    ACCEPT_REQUEST(state, chatId) {
+      const chat = state.chats.find((chat) => chat.chatId == chatId);
+      chat.isPending = false;
+    },
+    UPDATE_BIO(state, payload) {
+      const { editableBiOhneValue, userId } = payload;
+
+      try {
+        const chat = state.users.find((user) => (user.id = userId));
+        if (!chat) {
+          console.error("Something went wrong");
+        } else {
+          chat.bio = editableBiOhneValue;
+          console.log("erfolgreich");
+        }
+      } catch (error) {}
     },
   },
+
   actions: {
-    async toggleDislikeAction({ commit }, payload) {
+    async updateBio({ commit, state }, payload) {
+      console.log("payload: ", payload);
+      const user = state.users.find((user) => (user.id = payload.userId));
+      if (!user) {
+        console.error("User nicht gefunden");
+      }
       try {
         const response = await axios.post(
-          "http://192.168.1.42:3000/api/topicdislike",
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/updateBio",
           payload
         );
         if (response.status === 200 && response.data.success) {
-          commit("TOGGLE_DISLIKE", payload);
+          commit("UPDATE_BIO", payload);
         } else {
           throw new Error(
             response.data.message || "Ein unbekannter Fehler ist aufgetreten."
           );
         }
       } catch (error) {
-        console.error("Fehler beim Aktualisieren des Dislikes:", error.message);
-      }
-    },
-
-    async toggleLikeAction({ commit }, payload) {
-      console.log(payload.topicId);
-      // Hier können Sie zusätzliche Logik oder API-Aufrufe hinzufügen, falls erforderlich
-      try {
-        const response = await axios.patch(
-          "http://192.168.1.42:3000/api/topiclike",
-          payload
-        );
-        if (response.status === 200 && response.data.success) {
-          commit("TOGGLE_LIKE", payload);
-        } else {
-          throw new Error(
-            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
-          );
-        }
-      } catch (error) {
-        // Behandeln Sie Fehler, z.B. durch das Anzeigen einer Fehlermeldung
         console.error(
           "Fehler beim Aktualisieren des Benutzers:",
           error.message
         );
-        // Optional: Sie könnten hier auch einen Zustand setzen, um den Fehler im UI anzuzeigen
+      }
+    },
+
+    initializeStore({ commit }) {
+      const savedTab = sessionStorage.getItem("selectedTab");
+      const savedTabColor = sessionStorage.getItem("selectedTabColor");
+      console.log("color1: ", savedTabColor);
+      if (savedTab) {
+        commit("SET_SELECTED_TAB", savedTab); // Lädt den Tab aus dem Local Storage
+      }
+      if (savedTabColor) {
+        console.log("color: ", savedTabColor);
+        commit("SET_SELECTED_TAB_COLOR", savedTabColor);
+      }
+    },
+    async updateActiveChats({ commit, state }, chatId) {
+      const currentUserId = state.currentUser.id;
+      const payload = { chatId, currentUserId };
+      try {
+        const response = await axios.post(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/updatechatsid",
+          payload
+        );
+        if (response.status === 200 && response.data.success) {
+          console.log("erfolgreich updated");
+        } else {
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Fehler beim Aktualisieren des Benutzers:",
+          error.message
+        );
+      }
+    },
+
+    async removeChat({ commit, state }, payload) {
+      console.log(payload);
+      try {
+        const response = await axios.post(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/removeChat",
+          payload
+        );
+        if (response.status === 200 && response.data.success) {
+          commit("REMOVE_CHAT", payload);
+        } else {
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Fehler beim Aktualisieren des Benutzers:",
+          error.message
+        );
+      }
+    },
+
+    async checkAndFetchChat({ state, commit }, chatId) {
+      // Überprüfen, ob der Chat bereits im Zustand vorhanden ist
+      const chatExists = state.chats.some((chat) => chat.chatId === chatId);
+
+      if (!chatExists) {
+        try {
+          // Fetch den Chat vom Server
+          const response = await axios.get(
+            `https://c964nzv2-3000.euw.devtunnels.ms/chats/${chatId}`
+          );
+          const chat = response.data;
+
+          // Führen Sie die Mutation aus, um den Chat zum Zustand hinzuzufügen
+          commit("ADD_CHAT", chat);
+        } catch (error) {
+          console.error("Fehler beim Fetchen des Chats:", error);
+          // Weitere Fehlerbehandlung hier
+        }
+      }
+    },
+
+    async readChat({ commit }, payload) {
+      try {
+        const response = await axios.post(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/updatereadChat",
+          payload
+        );
+        if (response.status === 200 && response.data.success) {
+          console.log("response.data_: ", response.data.message);
+          commit("UPDATE_READCHAT", payload);
+        } else {
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
+        }
+      } catch (error) {
+        console.error("Fehler beim Aktualisieren des reads:", error.message);
       }
     },
 
@@ -589,7 +840,7 @@ export default createStore({
         console.log(currentUserId);
         // Senden Sie die Daten an den API-Endpunkt
         const response = await axios.post(
-          "http://192.168.1.42:3000/api/addFilterUser",
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/addFilterUser",
           {
             filterSettings: filterSettings,
             currentUserId: currentUserId,
@@ -616,10 +867,228 @@ export default createStore({
       }
     },
 
+    fetchOnlineUsers({ commit }) {
+      axios
+        .get("https://c964nzv2-3000.euw.devtunnels.ms/api/online-status")
+        .then((response) => {
+          const onlineUserIds = response.data; // Angenommen, die API gibt eine Liste von Benutzer-IDs zurück
+
+          onlineUserIds.forEach((userId) => {
+            commit("SET_USER_ONLINE", userId);
+          });
+        })
+        .catch((error) => {
+          console.error("Error fetching online users:", error);
+        });
+    },
+
+    async createChat({ commit }, payload) {
+      console.log(payload, " Moruk");
+      try {
+        const response = await axios.post(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/createchat",
+          payload
+        );
+        if (response.status === 200 && response.data.success) {
+          payload.chat = response.data.chat;
+          console.log("payload mit chatId: ", payload);
+          commit("CREATE_CHAT", payload);
+          return response.data.chat; // Hier geben Sie den Chat zurück
+        } else {
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
+        }
+      } catch (error) {
+        console.error("Fehler beim Aktualisieren des reads:", error.message);
+        throw error; // Werfen Sie den Fehler, damit er im catch-Block des Dispatch-Aufrufs erfasst werden kann
+      }
+    },
+    async readAllUnreadNotifications({ commit }, payload) {
+      try {
+        const response = await axios.post(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/updateAllRead",
+          payload
+        );
+        if (response.status === 200 && response.data.success) {
+          commit("UPDATE_ALL_READ", payload);
+        } else {
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
+        }
+      } catch (error) {
+        console.error("Fehler beim Aktualisieren des reads:", error.message);
+      }
+    },
+
+    async updateRead({ commit }, payload) {
+      // Im payload ist : currentUserID und isUnread
+
+      try {
+        const response = await axios.post(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/updateRead",
+          payload
+        );
+        if (response.status === 200 && response.data.success) {
+          commit("UPDATE_READ", payload);
+        } else {
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
+        }
+      } catch (error) {
+        console.error("Fehler beim Aktualisieren des reads:", error.message);
+      }
+    },
+
+    async toggleDislikeAction({ commit, dispatch, state }, payload) {
+      console.log(" payload aciton: ", payload);
+      const userProfile = state.users.find(
+        (user) => user.id === payload.userId
+      );
+      console.log(userProfile + " userprofile");
+      const isAlreadyLiked = userProfile.hasdislikedtopic.includes(
+        payload.topicId
+      );
+      console.log(isAlreadyLiked + " is liked");
+      try {
+        const response = await axios.post(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/topicdislike",
+          payload
+        );
+        if (response.status === 200 && response.data.success) {
+          commit("TOGGLE_DISLIKE", payload);
+        } else {
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
+        }
+      } catch (error) {
+        console.error("Fehler beim Aktualisieren des Dislikes:", error.message);
+      }
+      if (!isAlreadyLiked) {
+        try {
+          await dispatch("sendNotification", {
+            userId: payload.userId,
+            message: "Ihr Thema wurde disliked!",
+            notificationType: payload.notificationType,
+            zielId: payload.zielId,
+            benachrichtigungsElementId: payload.benachrichtigungsElementId,
+          });
+        } catch (error) {
+          console.error("Fehler beim Senden der Benachrichtigung:", error);
+        }
+      }
+    },
+
+    async toggleLikeAction({ commit, dispatch, state }, payload) {
+      console.log(payload);
+
+      const userProfile = state.users.find(
+        (user) => user.id === payload.userId
+      );
+      console.log(userProfile + " userprofile");
+      const isAlreadyLiked = userProfile.haslikedtopic.includes(
+        payload.topicId
+      );
+      console.log(isAlreadyLiked + " is liked");
+      // Hier können Sie zusätzliche Logik oder API-Aufrufe hinzufügen, falls erforderlich
+      try {
+        const response = await axios.patch(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/topiclike",
+          payload
+        );
+        if (response.status === 200 && response.data.success) {
+          commit("TOGGLE_LIKE", payload);
+        } else {
+          throw new Error(
+            response.data.message || "Ein unbekannter Fehler ist aufgetreten."
+          );
+        }
+      } catch (error) {
+        // Behandeln Sie Fehler, z.B. durch das Anzeigen einer Fehlermeldung
+        console.error(
+          "Fehler beim Aktualisieren des Benutzers:",
+          error.message
+        );
+        // Optional: Sie könnten hier auch einen Zustand setzen, um den Fehler im UI anzuzeigen
+      }
+      console.log(payload.zielId);
+      if (!isAlreadyLiked) {
+        try {
+          await dispatch("sendNotification", {
+            userId: payload.userId,
+            message: "Ihr Thema wurde geliked!",
+            notificationType: payload.notificationType,
+            zielId: payload.zielId,
+            benachrichtigungsElementId: payload.benachrichtigungsElementId,
+          });
+        } catch (error) {
+          console.error("Fehler beim Senden der Benachrichtigung:", error);
+        }
+      }
+    },
+    async sendNotification(
+      { commit },
+      {
+        userId,
+        message,
+        notificationType,
+        zielId,
+        benachrichtigungsElementId,
+        topicId,
+      }
+    ) {
+      try {
+        const response = await fetch(
+          "https://c964nzv2-3000.euw.devtunnels.ms/send-notification",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: userId,
+              message: message,
+              notificationType: notificationType,
+              benachrichtigungsElementId: benachrichtigungsElementId,
+              zielId: zielId,
+              topicId: topicId,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Netzwerkantwort war nicht ok.");
+        }
+
+        const data = await response.json();
+        console.log("Benachrichtigung gesendet:", data);
+        if (data.message === "Benachrichtigung bereits gesendet") {
+          console.log("Benachrichtigung wurde bereits gesendet.");
+          return; // Beendet die Funktion frühzeitig
+        } else {
+          const notification = data.objekt;
+          console.log(data.objekt + data + " kolelg");
+          console.log(notification + " action notification");
+
+          // Nach erfolgreichem Senden der Benachrichtigung, führen Sie die Mutation aus
+          commit("ADD_NOTIFICATION_TO_USER", notification);
+        }
+      } catch (error) {
+        console.error(
+          "Es gab einen Fehler beim Senden der Benachrichtigung:",
+          error
+        );
+        // Hier können Sie weitere Aktionen durchführen, z.B. einen Fehlerstatus setzen
+      }
+    },
+
     async addReplyPathToUser({ commit }, { userId, replyPath }) {
       try {
         const response = await axios.put(
-          `http://192.168.1.42:3000/api/users/${userId}/addReplyPath`,
+          `https://c964nzv2-3000.euw.devtunnels.ms/api/users/${userId}/addReplyPath`,
           { replyPath }
         );
 
@@ -630,25 +1099,40 @@ export default createStore({
       }
     },
 
-    async submitReply({ commit }, { reply, newReply }) {
+    async submitReply({ state, commit, dispatch }, payload) {
+      const { reply, newReply } = payload;
+      const currentUser = state.currentUser;
       try {
         const response = await axios.post(
-          "http://192.168.1.42:3000/api/replies",
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/replies",
           newReply
         );
         if (response.data && response.data.success) {
           commit("ADD_REPLY", { reply, newReply });
+          await dispatch("addReplyPathToUser", {
+            userId: currentUser.id,
+            replyPath: newPath,
+          });
+          await dispatch("sendNotification", {
+            userId: payload.userId,
+            message: "Ihr Thema wurde geliked!",
+            notificationType: payload.notificationType,
+            zielId: payload.zielId,
+            benachrichtigungsElementId: payload.benachrichtigungsElementId,
+            topicId: payload.topicId,
+          });
         }
       } catch (error) {
         console.error("Fehler beim Senden der Antwort an den Server:", error);
       }
     },
 
-    async addReplyAction({ commit }, { newReply, comment }) {
+    async addReplyAction({ commit, dispatch, state }, payload) {
+      const { newReply, comment } = payload;
       try {
         // Simuliere den Serveraufruf
         const response = await axios.post(
-          "http://192.168.1.42:3000/api/addReply",
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/addReply",
           newReply
         );
         const antwort = response.data;
@@ -657,17 +1141,29 @@ export default createStore({
         // Überprüfe die Serverantwort
         if (response.data && response.data.success) {
           // Commit der Mutation, um die Antwort zum Kommentar hinzuzufügen
-          commit("addReplyMutation", { newReply, comment });
+
           // Hier könnten Sie den Aufruf zum Hinzufügen des Replies zum Benutzerprofil einfügen
           const userReplyResponse = await axios.post(
-            "http://192.168.1.42:3000/api/addUserReply",
+            "https://c964nzv2-3000.euw.devtunnels.ms/api/addUserReply",
             {
               comment,
               reply: newReply,
             }
           );
+
           if (userReplyResponse.data && userReplyResponse.data.success) {
             console.log("Reply erfolgreich zum Benutzerprofil hinzugefügt");
+
+            commit("addReplyMutation", { newReply, comment });
+
+            await dispatch("sendNotification", {
+              userId: payload.userId,
+              message: "Auf Ihr Kommentar wurde geantworted!",
+              notificationType: payload.notificationType,
+              zielId: payload.zielId,
+              topicId: payload.topicId,
+              benachrichtigungsElementId: payload.benachrichtigungsElementId,
+            });
           } else {
             console.error(
               "Fehler beim Hinzufügen des Replies zum Benutzerprofil"
@@ -675,7 +1171,7 @@ export default createStore({
           }
         } else {
           throw new Error(
-            response.data.error ||
+            response.dACCEPT_REQUESTata.error ||
               "Unbekannter Fehler beim Hinzufügen der Antwort"
           );
         }
@@ -688,12 +1184,40 @@ export default createStore({
       }
     },
 
-    async fetchUsers({ commit }) {
+    async acceptRequest({ commit, state }, chatId) {
+      console.log(chatId, " : Actions");
       try {
-        const response = await axios.get("http://192.168.1.42:3000/api/users");
+        const response = await axios.post(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/acceptRequest",
+          { chatId: chatId }
+        );
+        if (response.data.success == true) {
+          commit("ACCEPT_REQUEST", chatId);
+        } else {
+          console.log("failed " + response.data.error);
+        }
+      } catch (error) {
+        console.error(error.message + ": ", error);
+      }
+    },
+
+    async fetchUsers({ commit, state }) {
+      try {
+        const response = await axios.get(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/users"
+        );
         const users = response.data;
-        console.log(users);
         commit("setUsers", users);
+        const currentUserChats = state.currentUser.activeChats;
+        const responseChats = await axios.post(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/chats",
+          { currentUserChats: currentUserChats }
+        );
+        if (responseChats.data.success == true) {
+          commit("SET_AKTIVE_CHATS", responseChats.data.chats);
+        } else {
+          console.log("failed " + resonse.data.error);
+        }
       } catch (error) {
         console.error("Fehler beim Abrufen der Daten:", error);
       }
@@ -701,7 +1225,9 @@ export default createStore({
 
     async fetchTopics({ commit }) {
       try {
-        const response = await axios.get("http://192.168.1.42:3000/api/topics");
+        const response = await axios.get(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/topics"
+        );
         const topics = response.data;
         commit("setTopics", topics);
       } catch (error) {
@@ -715,14 +1241,21 @@ export default createStore({
     async addtopicToSaves({ commit }, { path, currentUserId }) {
       console.log(currentUserId);
       console.log(path);
-      const response = await axios.post(
-        "http://192.168.1.42:3000/api/addTopicToSaves",
-        { path: path, currentUserId: currentUserId }
-      );
-      if (response.data.success == true) {
-        commit("ADD_TOPIC_TO_SAVES", path);
-      } else {
-        console.log("failed " + resonse.data.error);
+
+      try {
+        const response = await axios.post(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/addTopicToSaves",
+          { path: path, currentUserId: currentUserId }
+        );
+
+        if (response.data.success === true) {
+          commit("ADD_TOPIC_TO_SAVES", path);
+        } else {
+          console.log("Fehler: " + response.data.error);
+        }
+      } catch (error) {
+        console.error("Fehler beim Hinzufügen des Themas:", error);
+        // Hier können Sie zusätzliche Fehlerbehandlung hinzufügen, falls benötigt.
       }
     },
 
@@ -743,11 +1276,17 @@ export default createStore({
       commit("UPDATE_TOPIC_PERCENTAGES", { topicId });
     },
 
-    async upvoteComment({ commit }, payload) {
+    async upvoteComment({ commit, dispatch, state }, payload) {
+      const userProfile = state.users.find(
+        (user) => user.id === payload.currentUserId
+      );
       try {
         const response = await axios.post(
-          "http://192.168.1.42:3000/api/commentupvote",
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/commentupvote",
           payload
+        );
+        const isAlreadyLiked = userProfile.haslikedcomment.includes(
+          payload.topicId
         );
         if (response.status === 200 && response.data.success) {
           commit("UPVOTE_COMMENT", payload);
@@ -756,16 +1295,36 @@ export default createStore({
             response.data.message || "Ein unbekannter Fehler ist aufgetreten."
           );
         }
+        if (!isAlreadyLiked) {
+          try {
+            await dispatch("sendNotification", {
+              userId: payload.currentUserId,
+              message: "Ihr Kommentar wurde upvoted!",
+              notificationType: payload.notificationType,
+              zielId: payload.zielId,
+              benachrichtigungsElementId: payload.benachrichtigungsElementId,
+            });
+          } catch (error) {
+            console.error("Fehler beim Senden der Benachrichtigung:", error);
+          }
+        }
       } catch (error) {
         console.error("Fehler beim Hochwerten des Kommentars:", error.message);
         // Optional: Sie könnten hier auch einen Zustand setzen, um den Fehler im UI anzuzeigen
       }
     },
 
-    async downvoteComment({ commit }, payload) {
+    async downvoteComment({ commit, dispatch, state }, payload) {
+      console.log("kolleg : ", payload);
+      const userProfile = state.users.find(
+        (user) => user.id === payload.currentUserId
+      );
+      const isAlreadyLiked = userProfile.hasdislikedcomment.includes(
+        payload.topicId
+      );
       try {
         const response = await axios.post(
-          "http://192.168.1.42:3000/api/commentdownvote",
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/commentdownvote",
           payload
         );
         if (response.status === 200 && response.data.success) {
@@ -775,14 +1334,34 @@ export default createStore({
             response.data.message || "Ein unbekannter Fehler ist aufgetreten."
           );
         }
+        if (!isAlreadyLiked) {
+          try {
+            await dispatch("sendNotification", {
+              userId: payload.currentUserId,
+              message: "Ihr Kommentar wurde downvoted",
+              notificationType: payload.notificationType,
+              zielId: payload.zielId,
+              benachrichtigungsElementId: payload.benachrichtigungsElementId,
+            });
+          } catch (error) {
+            console.error("Fehler beim Senden der Benachrichtigung:", error);
+          }
+        }
       } catch (error) {
         console.error("Fehler beim Herabwerten des Kommentars:", error.message);
       }
     },
-    async upvoteReply({ commit }, payload) {
+    async upvoteReply({ commit, dispatch, state }, payload) {
+      console.log(payload);
+      const userProfile = state.users.find(
+        (user) => user.id === payload.currentUserId
+      );
+      const isAlreadyLiked = userProfile.haslikedreply.includes(
+        payload.replyId
+      );
       try {
         const response = await axios.post(
-          "http://192.168.1.42:3000/api/replyupvote",
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/replyupvote",
           payload
         );
         if (response.status === 200 && response.data.success) {
@@ -795,12 +1374,33 @@ export default createStore({
       } catch (error) {
         console.error("Fehler beim Hochwerten der Antwort:", error.message);
       }
+      if (!isAlreadyLiked) {
+        try {
+          await dispatch("sendNotification", {
+            userId: payload.currentUserId,
+            message: "Ihre Antwort wurde upvoted",
+            notificationType: payload.notificationType,
+            zielId: payload.zielId,
+            benachrichtigungsElementId: payload.benachrichtigungsElementId,
+            topicId: payload.topicId,
+          });
+        } catch (error) {
+          console.error("Fehler beim Senden der Benachrichtigung:", error);
+        }
+      }
     },
-    async downvoteReply({ commit }, payload) {
+    async downvoteReply({ commit, dispatch, state }, payload) {
+      console.log(payload);
+      const userProfile = state.users.find(
+        (user) => user.id === payload.currentUserId
+      );
+      const isAlreadyLiked = userProfile.hasdislikedreply.includes(
+        payload.replyId
+      );
       try {
         console.log(payload.commentId);
         const response = await axios.post(
-          "http://192.168.1.42:3000/api/replydownvote",
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/replydownvote",
           payload
         );
         if (response.status === 200 && response.data.success) {
@@ -813,13 +1413,27 @@ export default createStore({
       } catch (error) {
         console.error("Fehler beim Herunterwerten der Antwort:", error.message);
       }
+      if (!isAlreadyLiked) {
+        try {
+          await dispatch("sendNotification", {
+            userId: payload.currentUserId,
+            message: "Ihre Antwort wurde upvoted",
+            notificationType: payload.notificationType,
+            zielId: payload.zielId,
+            benachrichtigungsElementId: payload.benachrichtigungsElementId,
+            topicId: payload.topicId,
+          });
+        } catch (error) {
+          console.error("Fehler beim Senden der Benachrichtigung:", error);
+        }
+      }
     },
 
     async fetchTopic({ commit }, topicId) {
       try {
         console.log(topicId);
         const response = await axios.get(
-          `http://192.168.1.42:3000/api/topics/${topicId}`
+          `https://c964nzv2-3000.euw.devtunnels.ms/api/topics/${topicId}`
         );
         const topicData = response.data;
         console.log(topicData);
@@ -830,13 +1444,41 @@ export default createStore({
       }
     },
 
-    async addCommentToTopic(
-      { commit },
-      { author, topicId, comment, selectedTab }
-    ) {
-      commit("ADD_COMMENT_TO_TOPIC", { author, topicId, comment, selectedTab });
-      console.log(comment + " store");
-      await axios.post("http://192.168.1.42:3000/api/addComment", comment);
+    async addCommentToTopic({ commit, dispatch, state }, payload) {
+      const { author, topicId, comment, selectedTab } = payload;
+      console.log(payload, " store");
+
+      try {
+        const response = await axios.post(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/addComment",
+          payload
+        );
+
+        if (response.status !== 200) {
+          throw new Error(
+            response.data.message || "Fehler beim Hinzufügen des Kommentars."
+          );
+        }
+
+        await dispatch("sendNotification", {
+          userId: payload.userId,
+          message: "Sie haben einen neuen Kommentar",
+          notificationType: payload.notificationType,
+          zielId: payload.zielId,
+          benachrichtigungsElementId: payload.benachrichtigungsElementId,
+          topicId: payload.topicId,
+        });
+
+        commit("ADD_COMMENT_TO_TOPIC", {
+          author,
+          topicId,
+          comment,
+          selectedTab,
+        });
+      } catch (error) {
+        console.error("Fehler:", error.message);
+        // Hier können Sie weiteren Code hinzufügen, um den Fehler z.B. im Zustand zu speichern oder den Benutzer zu informieren.
+      }
     },
   },
   getters: {

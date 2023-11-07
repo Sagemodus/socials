@@ -16,7 +16,7 @@ firebase.initializeApp({
   storageBucket: "procon-14ef5.appspot.com",
   messagingSenderId: "598092499566",
   appId: "1:598092499566:web:7bdfebff0c1dd13a2df47f",
-  measurementId: "G-QX73B8G7V6"
+  measurementId: "G-QX73B8G7V6",
 });
 
 // Retrieve an instance of Firebase Messaging so that it can handle background
@@ -27,13 +27,22 @@ messaging.onBackgroundMessage((payload) => {
   console.log(
     "[firebase-messaging-sw.js] Received background message ",
     payload
-  );
+    );
+    console.log(payload)
   // Customize notification here
-  const notificationTitle = payload.notification.title;
+  const notificationTitle = payload.data.title;
   const notificationOptions = {
-    body: payload.notification.body,
+    body: payload.data.body,
     icon: "/barcelona.png",
+    data: { url: payload.data.link }, // Speichern Sie die URL in den Daten der Benachrichtigung
   };
-
+  console.log(notificationTitle + " titel");
+  console.log(notificationOptions + " paar sache");
   self.registration.showNotification(notificationTitle, notificationOptions);
+});
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close(); // Schließen Sie die Benachrichtigung
+
+  // Verarbeiten Sie den Klick: Öffnen Sie die URL in einem neuen Tab
+  event.waitUntil(clients.openWindow(event.notification.data.url));
 });

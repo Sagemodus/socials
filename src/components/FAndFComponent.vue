@@ -12,7 +12,7 @@
 
     <div class="zahnrad">
       <button @click="openSearchPopup" class="filter-zahnrad">
-        <font-awesome-icon icon="cog"  :style="{ color: iconColor(currentUser.farbe) }"/>
+        <font-awesome-icon :style="{ color: `var(--iconColor)` }" :icon="['fas', 'sliders']" />
       </button>
 
     </div>
@@ -80,7 +80,6 @@ import { computed, ref} from 'vue';
 import { useStore } from 'vuex';
 import TopicBox from './TopicBox';
 import { useRouter } from 'vue-router';
-import { iconColor } from '../components/farben';
 
 export default {
   components: {
@@ -213,7 +212,7 @@ export default {
       selectedCategory,
       filteredCategories,
       currentUser,
-      iconColor,
+
       yourSearchFunction,
       
     };
@@ -241,7 +240,7 @@ export default {
 
 /* Stile für das Popup und das Overlay */
 .selected-categories {
-    display: flex;
+display: flex;
     flex-wrap: wrap;
     gap: 5px;
     margin-top: 5px;
@@ -250,6 +249,8 @@ export default {
     justify-content: center;
     max-width: 100%;
     margin-top: 15px;
+    overflow-y: auto;
+    max-height: 210px;
 }
 
 .selected-category {
@@ -321,7 +322,7 @@ li span{
     flex-direction: column;
     justify-content: space-between;
     max-width: 90%;
-    max-height: 90%;
+
 }
 /* Stile für die Filterkategorien */
 .filter-categories {

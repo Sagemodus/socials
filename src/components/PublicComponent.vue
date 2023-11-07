@@ -1,8 +1,13 @@
 <template>
-  <div>
-    <button @click="szene">Topics</button>
-    <button @click="szene2"> Users</button>
-    <button @click="szene3"> titel</button>
+  <div ref="feedListRef">
+  <button
+    v-if="showScrollButton"
+    @click="scrollToBottom"
+    class="back-to-top"
+    :style="{ opacity: buttonOpacity }"
+  >
+    <font-awesome-icon class="arrow" :icon="['fas', 'arrow-up']" size="2xl" />
+  </button>
     <!-- Loop through the data and create TopicBox components for each topic -->
     <TopicBox v-for="topic in sortedTopics.slice()" :key="topic.id" :id="topic.id" />
   </div>
@@ -15,107 +20,51 @@ import TopicBox from './TopicBox'; // Make sure to adjust the path accordingly
 import axios from "axios";
 import { useStore } from 'vuex';
 import { computed } from 'vue';
-import { ref, onMounted } from "vue";
+import { ref, onMounted, nextTick } from "vue";
+import { onBeforeUnmount } from 'vue';
 
 export default {
 
   setup() {
+    const buttonOpacity = ref(1);
     const store = useStore();
     const topics = store.state.topics;
     const users = store.state.topics;
+    const feedListRef = ref(null);
+     const showScrollButton = ref(false);
     // Laden Sie die Daten beim Komponentenstart
-
-
-    const szene3 = () => {
-      const topicList = store.state.topics; // Holen Sie die Liste der Topics
-      console.log(topicList);
-
-      // Iterieren Sie durch jedes Element in der Topic-Liste mit forEach
-      topicList.forEach(topicData => {
-        console.log(topicData);
-
-        // Setzen Sie einen zufälligen Titel für das aktuelle Topic
-        topicData.title = "Zufälliger Titel " + Math.floor(Math.random() * 1000);
-
-        addTopicsToDatabase(topicData); // Rufen Sie die Funktion auf, um das Topic in die Datenbank einzufügen
+    const scrollToBottom = () => {
+      nextTick(() => {
+        if (feedListRef.value) {
+          window.scrollTo(0, 0);
+        }
       });
     };
 
-
-    const szene2= () => {
-      const users = store.state.users; // Holen Sie die Liste der Topics
-      console.log(users)
-      // Iterieren Sie durch jedes Element in der Topic-Liste
-      for (let i = 0; i < users.length; i++) {
-        const data = users[i]; // Holen Sie das aktuelle Topic-Objekt
-        console.log(data)
-        addUsersToDatabase(data); // Rufen Sie die Funktion auf, um das Topic in die Datenbank einzufügen
+    const checkScroll = () => {
+      // Aktualisieren Sie den Wert von showScrollButton basierend auf der Scroll-Position
+      if (feedListRef.value) {
+        const containerHeight = feedListRef.value.scrollHeight;
+        showScrollButton.value = window.scrollY > containerHeight - 2500;
+         buttonOpacity.value = window.scrollY > 200 ? 0.65 : 1;
       }
     };
+    onMounted(() => {
+      window.addEventListener('scroll', checkScroll);
+    });
 
-    async function addUsersToDatabase(data) {
-
-
-
-      try {
-
-        console.log(data + "amk")
-        // Senden Sie das gesamte Topics-Array an Ihre API-Route
-        await axios.post("http://localhost:3000/api/addUsers", data);
-
-        console.log("Topics erfolgreich in die Datenbank gespeichert");
-      } catch (error) {
-        console.error("Fehler beim Speichern der Topics in die Datenbank:", error);
-        // Hier können Sie geeignete Fehlermeldungen oder Aktionen hinzufügen
-      }
-    }
-
-
-
-
-
-
-
-
-   
-
-    const szene = () => {
-      const topicList = store.state.topics; // Holen Sie die Liste der Topics
-console.log(topicList)
-      // Iterieren Sie durch jedes Element in der Topic-Liste
-      for (let i = 0; i < topicList.length; i++) {
-        const topicData = topics[i]; // Holen Sie das aktuelle Topic-Objekt
-        console.log(topicData)
-        addTopicsToDatabase(topicData); // Rufen Sie die Funktion auf, um das Topic in die Datenbank einzufügen
-      }
-    };
-   
-
-
-    async function addTopicsToDatabase(topicData) {
-
-
-
-      try {
-
-        console.log(topicData + "amk")
-        // Senden Sie das gesamte Topics-Array an Ihre API-Route
-        await axios.post("http://localhost:3000/api/addTopics", topicData);
-
-        console.log("Topics erfolgreich in die Datenbank gespeichert");
-      } catch (error) {
-        console.error("Fehler beim Speichern der Topics in die Datenbank:", error);
-        // Hier können Sie geeignete Fehlermeldungen oder Aktionen hinzufügen
-      }
-    }
+    onBeforeUnmount(() => {
+      window.removeEventListener('scroll', checkScroll);
+    });
 
 
     return {
-      addTopicsToDatabase,
       topics,
-      szene,
-      szene2,
-      szene3
+      feedListRef,
+      scrollToBottom,  // Hinzugefügt
+      showScrollButton,
+      buttonOpacity,
+
     }
   },
 
@@ -149,5 +98,24 @@ console.log(topicList)
 </script>
 
 <style scoped>
-/* Add your component-specific styles here */
+button.back-to-top {
+    position: fixed;
+    bottom: 60px;
+    right: 20px;
+    background-color: var(--iconColor);
+    border: none;
+    padding :5px 20px 5px 20px;
+border-bottom-left-radius: 9999px;
+border-bottom-right-radius: 9999px;
+border-top-left-radius :9999px;
+border-top-right-radius: 9999px;
+min-height: 26px;
+min-width: 26px;
+box-shadow: rgba(217, 217, 217, 0.2) 0px 0px 5px, rgba(217, 217, 217, 0.25) 0px 1px 4px 1px;
+}
+
+svg.svg-inline--fa.fa-arrow-up.fa-2xl.arrow {
+    color: white;
+}
+
 </style>

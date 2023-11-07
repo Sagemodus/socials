@@ -1,7 +1,15 @@
 <template>
+    <div class="bookmark-page" >
+      <div class="header">
+        <button class="zurück-button" @click="$router.go(-1)"> <font-awesome-icon :icon="['fas', 'arrow-left']"
+            size="lg" /></button>
+
+      </div>
     <div>
         <TopicBox v-for="topic in topicsSuche" :key="topic.id" :id="topic.id" :disableelements="true" />
     </div>
+    </div>
+
 </template>
 
 <script>
@@ -59,6 +67,22 @@ export default {
 };
 </script>
 
-<style>
-/* Deine CSS-Stile hier */
+<style scoped>
+button.zurück-button {
+    background-color: transparent;
+    border: none;
+    display: flex; 
+          padding-left: 10px;
+
+}
+.header {
+    background-color: white;
+    position: fixed;
+    height: 35px;
+    display: flex;
+    min-width: 100%;
+    flex-direction: row;
+    align-items: center;
+      top: 0px;
+}
 </style>

@@ -1,7 +1,10 @@
 <template>
   <div>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <navbar class="navbar-fixed" />
+
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <navbar class="navbar-fixed" v-if="showNavbar" />
+
     <div id="app">
       <router-view />
     </div>
@@ -13,7 +16,10 @@ import Navbar from './components/navbar_unten.vue'
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import { useStore } from 'vuex';
-
+import SocketService from './services/SocketService';
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+import { iconColor } from '../src/components/farben';
 
 export default {
   components: {
@@ -22,7 +28,10 @@ export default {
   },
   setup() {
     const store = useStore();
-
+    const currentUser = store.state.currentUser;
+    const route = useRoute();
+    SocketService.init(currentUser.id);
+    const showNavbar = computed(() => store.state.showNavbar);
     const firebaseConfig = {
       apiKey: "AIzaSyDjimJJcGiL1O_6Swpzp2d5xaA5-AI4CpI",
       authDomain: "procon-14ef5.firebaseapp.com",
@@ -36,7 +45,9 @@ export default {
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);// eslint-disable-line no-unused-vars
 
-
+    const userfarbe = currentUser.farbe;
+    const color = userfarbe ? iconColor(userfarbe) : 'gray';
+    document.documentElement.style.setProperty('--iconColor', color);
 
     // Get registration token. Initially this makes a network call, once retrieved
     // subsequent calls to getToken will return from cache.
@@ -44,16 +55,23 @@ export default {
 
     onMessage(messaging, (payload) => {
       console.log('Message received. ', payload);
+      const notificationObject = JSON.parse(payload.data.objekt);
+      
+      try {
+        store.commit("ADD_NOTIFICATION_TO_USER", notificationObject);
+        
+      } catch (error) {
+        console.error(error)
+      }
       // ...
     });
 
-    console.log(store.state)
     getToken(messaging, { vapidKey: 'BJTzLLT-jiIVy-3Zse1A9ZqvQHPM8xl91xMvyAiTRtOZ_xViUWpy9G8eN9ZNm-ednER7gkg_KrYCXqfb2qz-KSI' }).then((currentToken) => {
       if (currentToken) {
         console.log(currentToken);
 
         // Send the token to your server
-        fetch('http://localhost:3000/save-token', {
+        fetch('https://c964nzv2-3000.euw.devtunnels.ms/save-token', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -74,8 +92,10 @@ export default {
     }).catch((err) => {
       console.log('An error occurred while retrieving token. ', err);
     });
+
     return {
       store,
+      showNavbar,
     };
   }
 
@@ -83,19 +103,34 @@ export default {
 </script>
 
 <style lang="scss">
+.bookmark-page {
+  padding-top: 10px;
+}
+
 body {
   margin: 0;
   padding: 0;
 }
 
-#app p, span, h5,h4,h3,h2,h1  {
+svg.svg-inline--fa.fa-arrow-left.fa-lg {
+  height: 16px;
+  width: 15px;
+}
+
+#app p,
+span,
+h5,
+h4,
+h3,
+h2,
+h1 {
   font-family: Arial, Helvetica, sans-serif;
 }
 
 .navbar-fixed {
   position: fixed;
   bottom: 0;
-
+  height: 35px;
   width: 100%;
   z-index: 999;
   background-color: #ffffff;
@@ -108,7 +143,7 @@ body {
 }
 
 #app {
-font-family: Arial, Helvetica, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
@@ -120,10 +155,23 @@ font-family: Arial, Helvetica, sans-serif;
 
 #app .topic-text {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 16px;
 
 
 
+
+}
+
+#app .benachrichtigungTopic .topic-box {
+
+  display: flex;
+  flex-direction: column;
+  padding: 0px;
+  margin: 0px auto;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 0px 0px rgba(1, 18, 251, 0.1);
+  max-width: 100%;
+  transition: transform 0.3s ease-in-out;
 }
 
 #app .comment-text {
@@ -136,18 +184,6 @@ font-family: Arial, Helvetica, sans-serif;
   text-align: left;
 }
 
-#app .antwort-text {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 12px;
-  margin-top: 5px;
-  margin-top: 0px;
-  padding-left: 8px;
-
-  padding-bottom: 0px;
-  margin-bottom: 0px;
-  text-align: left;
-  padding-top: 5px;
-}
 
 
 #app .conversation-prompt {
@@ -155,6 +191,21 @@ font-family: Arial, Helvetica, sans-serif;
   max-height: 1%;
   text-align: center;
   justify-content: center;
+}
+
+.comment-content {
+  font-size: 14px;
+  text-align: justify;
+  word-break: break-word;
+}
+
+p#topictext {
+  text-align: justify;
+  font-size: 14px;
+}
+
+#antworttext {
+  text-align: justify;
 }
 
 /* Restlicher CSS-Code bleibt unverändert */

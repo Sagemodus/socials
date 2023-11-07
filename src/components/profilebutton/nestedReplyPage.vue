@@ -1,26 +1,40 @@
 <template>
-  <div class="topic-container">
-    <!-- Laden und Anzeigen von Themen -->
-    <div v-if="topic" class="topic-ganzeseite">
-      <div class="author-info">
-        <img :src="author.profileImage" alt="Author Profile Image" class="author-image" />
-        <span class="author-name">{{ author.name }}</span>
-      </div> 
-      <div class="topic-content">
-        <p class="topic-text">{{ topic.text }}</p>
+  <div class="header">
+
+    <button class="zurück-button" @click="$router.go(-1)"> <font-awesome-icon :icon="['fas', 'arrow-left']"
+        size="lg" /></button>
+
+  </div>
+  <div class="nested-reply-page">
+
+
+    <div class="topic-container">
+
+      <div v-if="topic" class="topic-ganzeseite">
+        <div class="author-info">
+          <img :src="author.profileImage" alt="Author Profile Image" class="author-image" />
+          <span class="author-name">{{ author.name }}</span>
+        </div>
+        <div class="topic-content">
+          <p class="topic-text">{{ topic.text }}</p>
+        </div>
       </div>
     </div>
+
+    <CommentBox v-if="comment" :key="comment.id" :comment="comment" :topic="comment.topicId" />
+
+
+
+    <CommentReply :key="reply.id" :reply="reply" :topic="topic.id" :commentId="comment.id"
+      :commentIndex="reply.commentIndex" :id="reply.id"></CommentReply>
+
+    <div v-if="lastElement.replytype == 'nested'">
+      <CommentReply :key="lastElement.id" :reply="lastElement" :topic="topic.id" :commentId="comment.id"
+        :commentIndex="lastElement.commentIndex" :id="lastElement.id"></CommentReply>
+    </div>
+
+
   </div>
-
-  <CommentBox v-if="comment" :key="comment.id" :comment="comment" :topic="comment.topicId" />
-
-
-
-  <CommentReply :key="reply.id" :reply="reply" :topic="topic.id" :commentId="comment.id"
-    :commentIndex="reply.commentIndex" :id="reply.id"></CommentReply>
-
-  <CommentReply :key="lastElement.id" :reply="lastElement" :topic="topic.id" :commentId="comment.id"
-    :commentIndex="lastElement.commentIndex" :id="lastElement.id"></CommentReply>
 </template>
 
 
@@ -133,9 +147,40 @@ function getValuesFromPath(data, pathArray) {
 
 
 <style scoped>
+svg.svg-inline--fa.fa-arrow-left.fa-lg {
+  height: 16px;
+  width: 15px;
+}
+
+.header {
+  background-color: white;
+  position: fixed;
+  height: 35px;
+  display: flex;
+  min-width: 100%;
+  flex-direction: row;
+  align-items: center;
+
+}
+
+button.zurück-button {
+  display: flex;
+  background-color: transparent;
+  border: none;
+  position: sticky;
+  padding-left: 10px;
+  padding-top: 1px;
+}
+
+
+.nested-reply-page {
+  padding: 5px;
+  padding-top: 25px;
+  padding-bottom: 0px;
+}
+
 p.topic-text {
   font-size: 16px;
-  line-height: 1.5;
   text-align: justify;
   padding: 10px;
   padding-top: 0px;

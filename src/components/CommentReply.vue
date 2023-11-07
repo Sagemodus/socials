@@ -1,69 +1,76 @@
 // CommentReply.vue
 <template>
   <div class="comment-reply" v-if="reply">
-    <div class="profile-info">
-      <img :src="author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile" />
-      <h5 class="profile-name">{{ author?.name }}</h5>
-      <div class="month">
-        <p>{{ $store.getters.formattedCreatedAt(reply.createdAt) }}</p>
+
+
+    <p class="antwort-text" id="antworttext" @click='goToTopic(reply.topicId)'>{{ reply?.text }}</p>
+    <div class="fromNotification" v-if="!disableelementsforNotifications">
+            <div class="profile-info">
+          <img :src="author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile" />
+          <h5 class="profile-name">{{ author?.name }}</h5>
+          <div class="month">
+            <p>{{ $store.getters.formattedCreatedAt(reply.createdAt) }}</p>
+          </div>
+        </div>
+      <div class="buttons-container">
+        <!-- Antwort-Button anzeigen, um auf diese Antwort zu antworten -->
+
+
+
+        <button v-if="!showReplyForm && depth != 5" @click="openReplyForm" class="action-button">
+          <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" :icon="['fas', 'commenting']"
+            class="icon" />
+        </button>
+
+
+
+
+        <!-- Upvote Button -->
+        <button @click="upvoteReplyAction(reply.id, currentUser.id, reply.topicId, reply.commentobjektId)"
+          class="action-button" ref="upvoteButton">
+          <font-awesome-icon :icon="hasLikedReply ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" class="icon"
+            :style="{ color: iconColor(currentUser.farbe) }" />
+          <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.upvotes }}</p>
+        </button>
+        <!-- Downvote Button -->
+        <button @click="downvoteReplyAction(reply.id, currentUser.id, reply.topicId, reply.commentobjektId)"
+          class="action-button" ref="downvoteButton">
+          <font-awesome-icon :icon="hasDislikedReply ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" class="icon"
+            :style="{ color: iconColor(currentUser.farbe) }" />
+          <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.downvotes }}</p>
+        </button>
+
+
+
+        <!-- eslint-disable-->
+        <button v-if="reply && !showReplyForm && reply.replies && reply.replies.length > 0"
+          @click="reply.expandReplies = !reply.expandReplies" :class="['action-button', depth >= 5 ? 'disabled' : '']">
+          <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-if="!reply.expandReplies"
+            :icon="['fas', 'angle-down']" />
+          <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-else :icon="['fas', 'angle-up']" />
+          <p :style="{ color: iconColor(currentUser.farbe) }">{{ replyCount + ' Replies' }}</p>
+        </button>
+
+
+        <!--eslint-enable-->
+        <!--Aufklapp Button-->
+        <router-link :style="{ color: iconColor(currentUser.farbe) }" v-if="reply && depth === 5 && reply.id"
+          :to="`/reply/${reply.id}`" class="more-link">
+          Show more..
+        </router-link>
+
       </div>
-    </div>
-    <p class="antwort-text" @click='goToTopic(reply.topicId)'>{{ reply?.text }}</p>
-    <div class="buttons-container">
-      <!-- Antwort-Button anzeigen, um auf diese Antwort zu antworten -->
 
 
-
-      <button v-if="!showReplyForm && depth !=5"  @click="openReplyForm" class="action-button">
-        <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" :icon="['fas', 'commenting']" class="icon" />
-      </button>
-      
-      
-      
-      
-      <!-- Upvote Button -->
-      <button @click="upvoteReplyAction(reply.id, currentUser.id, reply.topicId, commentId)" class="action-button"
-        ref="upvoteButton">
-        <font-awesome-icon :icon="hasLikedReply ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" class="icon"
-          :style="{ color: iconColor(currentUser.farbe) }" />
-        <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.upvotes }}</p>
-      </button>
-      <!-- Downvote Button -->
-      <button @click="downvoteReplyAction(reply.id, currentUser.id, reply.topicId, commentId)" class="action-button"
-        ref="downvoteButton">
-        <font-awesome-icon :icon="hasDislikedReply ? ['fas', 'thumbs-down'] : ['far', 'thumbs-down']" class="icon"
-          :style="{ color: iconColor(currentUser.farbe) }" />
-        <p :style="{ color: iconColor(currentUser.farbe) }">{{ reply?.downvotes }}</p>
-      </button>
-
-
-
-      <!-- eslint-disable-->
-      <button v-if="reply && !showReplyForm && reply.replies && reply.replies.length > 0"
-        @click="reply.expandReplies = !reply.expandReplies" :class="['action-button', depth >= 5 ? 'disabled' : '']">
-        <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-if="!reply.expandReplies"
-          :icon="['fas', 'angle-down']" />
-        <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" v-else :icon="['fas', 'angle-up']" />
-        <p :style="{ color: iconColor(currentUser.farbe) }">{{ replyCount + ' Replies' }}</p>
-      </button>
-
-
-      <!--eslint-enable-->
-      <!--Aufklapp Button-->
-      <router-link :style="{ color: iconColor(currentUser.farbe) }" v-if="reply && depth === 5 && reply.id"
-        :to="`/reply/${reply.id}`" class="more-link">
-        Show more..
-      </router-link>
     </div>
 
 
 
-    
+
     <!-- Anzeige der Antworten auf diese Antwort -->
     <div v-if="reply.expandReplies && reply && reply.replies && reply.replies.length > 0" class="replies-section">
       <comment-reply v-for="nestedReply in reply.replies" :key="nestedReply.id" :reply="nestedReply" :path="reply.path"
-       :topic="topic" :commentId="reply.id" :depth="depth+1"
-        @reply-clicked="$emit('reply-clicked', $event)"></comment-reply>
+        :topic="topic" :depth="depth + 1"></comment-reply>
     </div>
     <div v-if="showReplyForm" class="reply-form">
       <textarea v-model="newReply" placeholder="Write your answer..." class="reply-textarea"></textarea>
@@ -109,13 +116,15 @@ export default {
     isSinglePage: {
       default: false,
     },
-    
+    disableelementsforNotifications: {
+      default: false,
+    }
 
   },
 
 
   setup(props) {
-    const displaycommentcount = computed(() => store.state.displayedCommentCount);
+    const displayedCommentCount = computed(() => store.state.displayedCommentCount);
 
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     // Zugriff auf den currentUser aus dem Vuex-Store
@@ -143,7 +152,7 @@ export default {
     const topics = store.state.topics;
 
     onUnmounted(() => {
-     reply.value.expandReplies = false;
+      reply.value.expandReplies = false;
     });
 
 
@@ -289,7 +298,7 @@ export default {
 
 
     /*eslint-disable*/
-  
+
     /*eslint-enable */
     if (!reply.value.replies) {
       reply.value.replies = [];
@@ -312,72 +321,30 @@ export default {
 
 
 
-    const goToTopic = (topicId) => {
-      const differenz = commentIndex.value - displaycommentcount.value;
-      const puffer = 3;
-      const reply = props.reply;
-
-      if (commentIndex.value == 0) {
-        commentIndex.value = comment.value.commentIndex
-      }
-
-
-      if (reply.replytype == "nested") {
-   
-      
-          comment.value.expandReplies = false;
-  
+    const goToTopic = () => {
 
 
 
 
 
 
-        console.log(props.reply)
-        router.push({
-          name: 'nested-reply-page',
-          params: {
-            path: props.reply.path
-          }
-        });
-
-      }
-      else {
-
-        console.log(commentIndex.value)
-        console.log(displaycommentcount.value)
+      comment.value.expandReplies = false;
 
 
-        console.log(differenz);
-        comment.value.expandReplies = true;
 
-        if (commentIndex.value > displaycommentcount.value) {
-          store.commit('incrementDisplayedCommentCount', differenz + puffer);
+
+
+
+
+      console.log(props.reply)
+      router.push({
+        name: 'nested-reply-page',
+        params: {
+          path: props.reply.path
         }
-
-        if (comment.value.commentType === 'pro') {
-          store.state.selectedTab = 'pro';
-          store.state.selectedTabColor = 'green';
-        } else {
-          store.state.selectedTab = 'contra';
-          store.state.selectedTabColor = 'red';
-        }
-
-        router.push({
-          name: 'topic-ganze-seite', // Der Name der Route (stellen Sie sicher, dass Sie diesen Namen in Ihrer Route-Definition haben)
-          params: {
-            id: topicId,
-            commentId: comment.value.id || props.commentId, // Falls commentId nicht vorhanden ist, setzen Sie ihn auf null (optional)
-            replyId: props.reply.id || null, // Falls replyId nicht vorhanden ist, setzen Sie ihn auf null (optional)
-
-          },
-        });
+      });
 
 
-
-
-
-      }
 
 
 
@@ -434,9 +401,7 @@ export default {
 
     ...mapActions(['upvoteComment', 'downvoteComment', 'removeUpvoteComment', 'removeDownvoteComment',]),
 
-    isCreatedByCurrentUser(reply) {
-      return this.currentUser.createdReplies.includes(reply.id);
-    },
+
 
     openReplyForm() {
       this.showReplyForm = true;
@@ -455,8 +420,8 @@ export default {
     },
 
     upvoteReplyAction(replyId, currentUserId, topicId, commentId) {
-console.log(replyId + " reply id !")
-      this.$store.dispatch('upvoteReply', { replyId, currentUserId, topicId, commentId });
+      console.log(replyId + " reply id !")
+      this.$store.dispatch('upvoteReply', { replyId, currentUserId, topicId, commentId, notificationType: "replylike", zielId: this.reply.author, benachrichtigungsElementId: replyId, });
 
       this.$nextTick(() => {
         this.animateButton(this.$refs.upvoteButton);
@@ -464,7 +429,7 @@ console.log(replyId + " reply id !")
     },
 
     downvoteReplyAction(replyId, currentUserId, topicId, commentId) {
-      this.$store.dispatch('downvoteReply', { replyId, currentUserId, topicId, commentId });
+      this.$store.dispatch('downvoteReply', { replyId, currentUserId, topicId, commentId, notificationType: "replydislike", zielId: this.reply.author, benachrichtigungsElementId: replyId, });
       this.$nextTick(() => {
         this.animateButton(this.$refs.downvoteButton);
       });
@@ -487,7 +452,7 @@ console.log(replyId + " reply id !")
     },
 
     // Funktion zum Einreichen einer Antwort auf diese Antwort
-    async submitReply() {
+   submitReply() {
       try {
         // Bestimmen Sie den Index der aktuellen Antwort basierend auf der Anzahl der bereits vorhandenen Antworten
         const currentReplyIndex = this.reply.replies ? this.reply.replies.length : 0;
@@ -504,12 +469,14 @@ console.log(replyId + " reply id !")
           upvotes: 0,
           downvotes: 0,
           createdAt: dayjs(),
-          commentIndex: this.reply.commentIndex ,
+          commentIndex: this.reply.commentIndex,
           parentId: this.reply.id,
           path: newPath,  // Setzen Sie den neu erstellten Pfad hier
           Commentpath: this.reply.Commentpath,
           depth: this.reply.depth + 1,
           replytype: "nested",
+          commentobjektId: this.reply.commentobjektId,
+          expandReplies: false,
         };
         // Fügt die neue Antwort zu den Antworten dieser Antwort hinzu
         /* eslint-disable */
@@ -519,11 +486,8 @@ console.log(replyId + " reply id !")
 
         this.reply.expandReplies = true;
         // Setzt das Antwort-Formular zurück
-        await this.$store.dispatch('submitReply', { reply: this.reply, newReply });
-        this.$store.dispatch('addReplyPathToUser', {
-          userId: this.currentUser.id,
-          replyPath: newPath,
-        });
+        this.$store.dispatch('submitReply', { reply: this.reply, newReply, notificationType: "replyAddToReply", zielId: this.reply.author, benachrichtigungsElementId: newReply.id, userId: this.currentUser.id, topicId: this.reply.topicId });
+      
         this.newReply = "";
         this.showReplyForm = false;
 
@@ -550,6 +514,10 @@ console.log(replyId + " reply id !")
 </script>
 
 <style lang="scss" scoped>
+.antwort-text {
+  padding-left: 5px;
+}
+
 .month {
   font-size: 11px;
   padding-left: 10px;
@@ -558,21 +526,21 @@ console.log(replyId + " reply id !")
 
 
 .comment-reply {
-  border-left: 1px solid #ccc;
-
+  border-left: 2px solid #ccc;
+padding-left: 5px;
   position: static;
 
   /* Setze die Position auf static */
   .profile-info {
     display: flex;
     align-items: center;
-    padding-left: 7px;
+    padding-left: 5px;
 
   }
 
   .profile-image {
-    width: 30px;
-    height: 30px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     object-fit: cover;
     margin-right: 10px;
@@ -580,7 +548,7 @@ console.log(replyId + " reply id !")
 
   .profile-name {
     color: #000000;
-    font-size: 14px;
+    font-size: 12px;
     margin: 0;
   }
 
@@ -660,7 +628,8 @@ console.log(replyId + " reply id !")
     display: flex;
     gap: 18px;
     padding-right: 1px;
-
+    margin: 0px;
+    padding-bottom: 5px;
   }
 
   .action-button {
@@ -671,9 +640,11 @@ console.log(replyId + " reply id !")
     display: flex;
     align-items: center;
     gap: 5px;
-    padding-left: 10px;
+       padding-left: 5px;
   }
-
+.action-button p {
+    margin: 0px;
+}
   .action-button:hover {
     color: #0079d3;
   }
@@ -681,6 +652,23 @@ console.log(replyId + " reply id !")
   .icon {
     font-size: 1.3em;
   }
+
+  .antwort-text {
+    overflow-wrap: break-word; // Damit lange Worte nicht aus dem Container laufen
+    word-wrap: break-word; // Für ältere Browser
+    font-size: 14px;
+    font-family: Arial, Helvetica, sans-serif;
+
+    margin-top: 5px;
+    margin-top: 0px;
+
+
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+    text-align: left;
+    padding-top: 10px;
+  }
+
 
   .right-aligned-button {
     margin-left: auto;
@@ -691,4 +679,14 @@ console.log(replyId + " reply id !")
     pointer-events: none;
   }
 }
-</style>
+
+.profile-info {
+  height: 25px;
+  padding-top: 5px;
+      padding-bottom: 5px;
+
+}
+
+.antworttext {
+  padding-left: 5px;
+}</style>

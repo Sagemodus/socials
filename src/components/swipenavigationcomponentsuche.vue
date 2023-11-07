@@ -76,7 +76,7 @@ export default {
   // Setze die Farbe basierend auf dem currentUser
       const userfarbe = currentUser.value.farbe;
       const color = userfarbe ? iconColor(userfarbe) : 'gray';
-      document.documentElement.style.setProperty('--iconColor', color);
+
     });
 
     return { activeTab, nextTab, previousTab, switchTab, tabs };

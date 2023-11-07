@@ -18,7 +18,7 @@
               <button class="bookmark-button" @click="bookmarkrouting">
                 <div class="Buttons-profilepage">
                   <font-awesome-icon :icon="['fas', 'bookmark']" class="icon"
-                    :style="{ color: iconColor(currentUser.farbe) }" />
+                    :style="{ color: iconColor(currentUser?.farbe) }" />
                 </div>
                 <h3>Bookmarks</h3>
               </button>
@@ -31,7 +31,7 @@
               <button class="friends-button">
                 <div class="Buttons-profilepage">
                   <font-awesome-icon :icon="['fas', 'gear']" class="icon"
-                    :style="{ color: iconColor(currentUser.farbe) }" />
+                    :style="{ color: iconColor(currentUser?.farbe) }" />
                 </div>
                 <h3>Settings</h3>
               </button>
@@ -39,10 +39,10 @@
 
           </li>
           <li>
-            <button class="logout-button">
+            <button @click="logout" class="logout-button">
 
               <font-awesome-icon :icon="['fas', 'right-from-bracket']" class="icon"
-                :style="{ color: iconColor(currentUser.farbe) }" />
+                :style="{ color: iconColor(currentUser?.farbe) }" />
               <h3>Sign Out</h3>
             </button>
           </li>
@@ -52,7 +52,7 @@
 
 
 
-    <img :src="currentUser.profileImage" alt="Profilbild" class="profile-image">
+    <img :src="currentUser?.profileImage" alt="Profilbild" class="profile-image">
 
 
 
@@ -187,9 +187,9 @@ export default {
  
 
    
-    const procreatedComments = computed(() => currentUser.value.procreated);
-    const contracreatedComments = computed(() => currentUser.value.contracreated);
-    const repliescreated = computed(() => currentUser.value.createdReplies);
+    const procreatedComments = computed(() => currentUser?.value.procreated);
+    const contracreatedComments = computed(() => currentUser?.value.contracreated);
+    const repliescreated = computed(() => currentUser?.value.createdReplies);
 
     const bookmarkrouting = () => {
       router.push(`/bookmarksaves/${userId}`)
@@ -244,7 +244,6 @@ export default {
       nestedRepliesPaths.value.forEach(path => {
         const ids = parseId(path);
         const nestedreply = navigateData(ids, topics); // topics sollte Ihre Hauptdatenquelle sein
-
         const depth = Object.keys(ids).length - 1;
         if (depth === 1) {
           topicsSuche.push(nestedreply);
@@ -257,6 +256,7 @@ export default {
         }
       });
     }
+
 
 
     getLastElementFromPath();
@@ -288,7 +288,7 @@ const contracreatedCommentsList = computed(() => {
 });
 
     const TopicDownVotes = computed(() => {
-      return currentUser.value.hasdislikedtopic.map(commentId => {
+      return currentUser?.value.hasdislikedtopic.map(commentId => {
         return store.getters.getTopicById(commentId);
 
       });
@@ -296,7 +296,7 @@ const contracreatedCommentsList = computed(() => {
 
 
     const TopicUpVotes = computed(() => {
-      return currentUser.value.haslikedtopic.map(commentId => {
+      return currentUser?.value.haslikedtopic.map(commentId => {
         return store.getters.getTopicById(commentId);
 
       });
@@ -310,7 +310,9 @@ const contracreatedCommentsList = computed(() => {
       showDropdown.value = !showDropdown.value;
     };
 
-
+    const logout = () => {
+      store.dispatch('logout')
+    }
     return {
       iconColor,
       currentUser,
@@ -328,7 +330,7 @@ const contracreatedCommentsList = computed(() => {
       commentSuche,
       nestedReplySuche,
       bookmarkrouting,
-
+      logout,
 
     };
   },

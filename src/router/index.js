@@ -8,37 +8,30 @@ import Profile_view from '../views/Profile_view.vue';
 // Components für Feed
 import Public from '../components/PublicComponent.vue';
 import FAndF from '../components/FAndFComponent.vue';
-
 import TopicComponentGanzeSeite from '../components/TopicComponentsGanzeSeite.vue';
-
 //Components für Search
 import PopularComponent from '../components/PopularComponent.vue';
 import RecentComponent from '../components/RecentComponent.vue';
 import PeopleComponent from '../components/PeopleComponent.vue';
-
 //Components für Benachrichtigung
-
 import SearchbarComponent from '../components/SearchbarComponent.vue';
 // Swipe-Profil-Komponente
 import SwipeProfilComponent from '../components/SwipeProfilComponent.vue';
 //CommentPage
 import ReplyPage from '../components/SingleReplyPage.vue';
-
 // Profil weiterleitungen
 import nestedReplyPage from '../components/profilebutton/nestedReplyPage.vue';
 import bookmarkSaves from '../components/profilebutton/bookmarkSaves.vue';
 import profileAndereUser from '../components/profilebutton/profileAndereUser.vue';
-
+import store from '../store/store.js'
 //passwort vergessen
+
 /*
 import PasswordForgottenComponent from '../components/PasswordForgottenComponent.vue';
 import ResetPassword from '../components/ResetPasswordComponent.vue'
 
 import store from '../store/store.js'; // Import your Vuex store
 */
-
-
-
 
 const routes = [
   {
@@ -103,7 +96,6 @@ const routes = [
     name: "People",
     component: PeopleComponent,
   },
-
   {
     path: "/searchbar",
     name: "Searchbar",
@@ -141,7 +133,6 @@ const routes = [
     component: bookmarkSaves,
   },
 ];
-
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
@@ -154,19 +145,14 @@ const router = createRouter({
   }
 });
 
-/*
-
 router.beforeEach((to, from, next) => {
-  // Check if the route requires authentication and if the user is authenticated
-  console.log(this.store.dispatch('verifyToken',this.store.currentUser.token))
-  console.log(this.store.currentUser.token)
-  if (this.store.dispatch('verifyToken',this.store.currentUser.token)==false) {
-    // If not authenticated, redirect to the login page
-    next('/login'); // You can specify your login route here
+  const token = store.state.currentUser?.token;
+  // If the route is not the login route and there's no token, redirect to the login route
+  if (to.path !== '/login' && !token) {
+    next('/login');
   } else {
-    // Continue with the navigation
     next();
   }
 });
-*/
+
 export default router;

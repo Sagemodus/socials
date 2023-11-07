@@ -10,7 +10,6 @@
       </div>
     </div>
     <div class="comment-content" @click="handleRouterLinkClick(comment)">{{ comment.text }}</div>
-
     <div class="actions">
       <button v-if="!showReplyForm" @click="showReplyForm = true" class="reply-button action-button">
         <font-awesome-icon :icon="['fas', 'commenting']" class="icon" :style="{ color: iconColor(currentUser.farbe) }" />
@@ -29,6 +28,16 @@
         <p :style="{ color: iconColor(currentUser.farbe) }">{{ comment?.downvotes }}</p>
       </button>
 
+      <button v-if="isAdmin" @click="deleteComment(comment)" class="delete-button action-button">
+        <font-awesome-icon :icon="['fas', 'trash']" class="icon" />
+      </button>
+
+      <div class="comment-box">
+        <button @click="toggleOptionsMenu">...</button>
+        <div v-if="showOptionsMenu" class="options-menu">
+          <comment-options-menu></comment-options-menu>
+        </div>
+      </div>
       <div v-if="anzeige"> <!--Aufklapp Button-->
         <!--eslint-disable-->
         <button v-if="!showReplyForm && comment.replies && comment.replies.length && comment.showelement > 0"
@@ -62,6 +71,7 @@
 
 <script>
 /* eslint-disable no-unused-vars */
+import CommentOptionsMenu from './CommentOptionsMenu.vue';
 import { v4 as uuidv4 } from 'uuid';
 import { mapGetters } from 'vuex';
 import CommentReply from './CommentReply.vue';
@@ -77,6 +87,7 @@ import axios from "axios";
 export default {
   components: {
     CommentReply,
+    CommentOptionsMenu
   },
 
   props: {
@@ -97,8 +108,6 @@ export default {
   setup(props) {
     const commentId = ref(props.comment.id);
    
-
-
     const comment = computed(() => props.comment);
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
     const router = useRouter();
@@ -132,7 +141,6 @@ export default {
       }
 
     }
-
 
     // Je nach props.comment. das entsprechende Array durchsuchen
     const commentArrayToSearch = computed(() => {
@@ -173,8 +181,6 @@ export default {
       comment.value = updatedComment;
     }
 
-
-
     return {
       iconColor,
       currentUser,
@@ -186,15 +192,15 @@ export default {
       commentId,
       goToProfile,
       author,
-
-
     };
   },
 
   data() {
     return {
+      showOptionsMenu: false,
       showReplyForm: false,
       newReply: "",
+      isAdmin:false,
     };
   },
 
@@ -220,20 +226,50 @@ export default {
   },
   methods: {
 
+    toggleOptionsMenu() {
+      this.showOptionsMenu = !this.showOptionsMenu;
+    },
 
+    blockUser() {
+      this.$store.commit('ADD_USER_TO_BLOCKLIST', this.$store.currentUserId);
+    },
+
+    async checkAdmin() {
+          this.$store
+      .dispatch('checkAdmin')
+      .then(() => {
+        // 'checkAdmin' action has completed successfully; user is an admin
+        // You can add any additional logic here for admin users
+      })
+      .catch(error => {
+        if (error.response && error.response.status === 403) {
+          // The server responded with a 403 status (Forbidden)
+          console.error('Access denied. User is not an admin.');
+          // Handle this case as needed, e.g., display an error message
+        } else {
+          // Handle other errors
+          console.error('Error checking admin status:', error);
+        }
+      });
+    },
+
+    deleteComment(comment) {
+    try {
+      // Make an HTTP DELETE request to delete the comment on the server
+      // You can call your store's deleteComment action here
+      this.$store.dispatch('deleteComment', comment);
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  },
 
     handleRouterLinkClick(comment) {
-
       comment.commentIndex = this.commentIndex
       const differenz = this.commentIndex - this.displaycommentcount;
       const puffer = 3;
-
       if (this.commentIndex >= this.displaycommentcount) {
         this.$store.commit('incrementDisplayedCommentCount', differenz + puffer);
       }
-
-
-
       if (comment.commentType === 'pro') {
         this.$store.state.selectedTab = 'pro';
         this.$store.state.selectedTabColor = 'green';
@@ -241,8 +277,6 @@ export default {
         this.$store.state.selectedTab = 'contra';
         this.$store.state.selectedTabColor = 'red';
       }
-
-     
         this.$router.push({
           name: 'topic-ganze-seite',
           params: {
@@ -250,10 +284,6 @@ export default {
             commentId: comment.id
           }
         });
-
-  
-
-
     },
 
     upvoteComment(commentId, currentUserId, topicId) {
@@ -337,6 +367,11 @@ export default {
         }
       );
     },
+  },
+
+  created() {
+    // Check if the user is an admin when the component is created
+    this.checkAdmin();
   },
 };
 </script>

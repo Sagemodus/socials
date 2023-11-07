@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
 import axios from "axios";
+import router from '../router/index.js'
 
 /* eslint-disable no-unused-vars */
 
@@ -49,10 +50,6 @@ function setDepthForTopics(topics) {
     setDepthForReplies(topic.proComments, 0); // Starttiefe ist 1
   }
 }
-
-
-
-
 
 
 function isCommentPositionAvailable(state, topicId, selectedTab) {
@@ -177,11 +174,35 @@ export default createStore({
       categories,
       currentUser:{
         token: localStorage.getItem("token") || null,
-      }
+      },
+      isAdmin:false,
     };
   },
 
   mutations: {
+      SET_ADMIN_STATUS(state, isAdmin) {
+        state.isAdmin = isAdmin;
+      },
+    ADD_USER_TO_BLOCKLIST(state, userId) {
+      // Check if currentUser and blocklist are defined
+      if (state.currentUser && state.currentUser.blocklist) {
+        const index = state.currentUser.blocklist.indexOf(userId);
+        if (index === -1) {
+          // User is not in the blocklist, so add them
+          state.currentUser.blocklist.push(userId);
+          console.log("User successfully added to the blocklist.");
+        } else {
+          // User is already in the blocklist, so remove them
+          state.currentUser.blocklist.splice(index, 1);
+          console.log("User successfully removed from the blocklist.");
+        }
+      }
+    },
+
+    deleteComment(state, commentToDelete) {
+      state.comments = state.comments.filter(comment => comment.id !== commentToDelete.id);
+    },
+
     setTopics(state, topics) {
       state.topics = topics;
       console.log("kolleg")
@@ -208,6 +229,16 @@ export default createStore({
     
     auth_request(state) {
       state.status = 'loading';
+    },
+    auth_logout(state){
+      try{
+      delete axios.defaults.headers.common['Authorization'] 
+      localStorage.removeItem('CurrentUser')
+      localStorage.removeItem('user')
+      state.currentUser = null
+      }catch(err){
+        console.log(err)
+      }
     },
     
     auth_success(state, user) {
@@ -334,6 +365,7 @@ export default createStore({
       }
     },
 
+
     UPVOTE_REPLY(state, { replyId, currentUserId, topicId, commentId }) {
       const topic = state.topics.find((topic) => topic.id === topicId);
       const comment =
@@ -408,7 +440,7 @@ export default createStore({
           // Add the dislike
           reply.downvotes += 1;
           user.hasdislikedreply.push(replyId);
-
+          
           // Remove the like, if present
           if (user.haslikedreply.includes(replyId)) {
             reply.upvotes -= 1;
@@ -582,7 +614,6 @@ export default createStore({
       reply.replies.push(newReply);
     },
 
-
 ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
     const user = state.users.find(user => user.id === userId);
     if (user) {
@@ -591,11 +622,45 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
     },
   },
 
-
   actions: {
 
+    async checkAdmin() {
+      try {
+        console.log("check admin vor api call")
+        const response = await axios.get('http://localhost:3000/api/check-admin');
+        console.log("check admin nach api call")
+        if (response.data.isAdmin) {
+          // User is an admin
+          this.$store.commit('SET_ADMIN_STATUS', true); // Commit the mutation
+        }
+      } catch (error) {
+        // Handle any errors, e.g., show an error message
+        console.error('Error checking admin status:', error);
+      }
+    },
+    
 
+    blockUser({ commit }, userId) {
+      // Perform an API call or other necessary logic to add the user to the blocklist.
+      // Replace this with your actual implementation.
+  
+      // Simulate blocking the user by adding them to the blocklist.
+      commit('ADD_USER_TO_BLOCKLIST', userId);
+    },
 
+    
+    async deleteComment({ commit, state }, commentToDelete) {
+      try {
+        // Make an HTTP DELETE request to your server to delete the comment
+        await axios.delete(`/api/comments/${commentToDelete.id}`);
+        
+        // If the deletion was successful on the server, commit the mutation
+        commit('deleteComment', commentToDelete);
+      } catch (error) {
+        // Handle any errors that occur during the HTTP request (e.g., network errors)
+        console.error('Error deleting comment:', error);
+      }
+    },
     
     async toggleLikeAction({ commit }, payload) {
       // Hier können Sie zusätzliche Logik oder API-Aufrufe hinzufügen, falls erforderlich
@@ -821,10 +886,10 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
     
 
     logout({ commit }) {
-      // Clear the user's token and other data
+      console.log("logout")
+      commit("updateCurrentUser", { token: null });
       commit("auth_logout");
-      // Clear the Authorization header
-      delete axios.defaults.headers.common['Authorization'];
+      router.push('/login');
     },
 
 
@@ -886,10 +951,11 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
   async fetchUsers({ commit, state }) {
     try {
       // Check if the user is authenticated (has a token)
+      /*
       if (state.currentUser.token) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${state.currentUser.token}`;
       }
-  
+  */
       const response = await axios.get("http://localhost:3000/api/users");
       const users = response.data;
       console.log(users);
@@ -1081,4 +1147,12 @@ ADD_REPLY_PATH_TO_USER(state, { userId, replyPath }) {
       return state.currentUser.farbe;
     },
   },
+  computed: {
+    isAdmin() {
+      return this.$store.state.isAdmin;
+    },
+  },
+
+
+
 });

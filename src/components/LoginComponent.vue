@@ -1,21 +1,20 @@
 <template>
   <div>
-    <h2>Login</h2>
     <div class="row">
       <div class="card mx-auto">
         <div class="card-header text-white bg-primary">
           <h4>Login</h4>
         </div>
         <div class="card-body">
-          <form @submit.prevent="loginUser">
+          <form @submit.prevent="loginUser" class="center-form">
             <div class="form-group">
-              <label for="username">Username</label>
+              <label for="email">E-Mail</label>
               <input
-                id="username"
+                id="email"
                 type="text"
-                placeholder="Username"
-                name="username"
-                v-model="name"
+                placeholder="email"
+                name="email"
+                v-model="email"
                 class="form-control"
               >
             </div>
@@ -53,7 +52,7 @@ export default {
       this.$store
         .dispatch('login', {
           password: this.password,
-          name: this.name
+          email: this.email
         })
         .then(() => {
             this.$router.push({ name: 'feed' })       
@@ -62,36 +61,63 @@ export default {
   }
 };
 </script>
-
 <style scoped>
-.login {
+.center-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.registration {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
+  background-color: #f5f5f5;
 }
 
-.login-title {
+.registration-title {
   text-align: center;
+  color: #333;
+  font-size: 24px;
+  margin-bottom: 20px;
 }
 
-.login-card {
+.registration-card {
   width: 60%;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.card {
-  border-radius: 0;
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.form-label {
+  width: 100%;
+  font-weight: bold;
+  color: #555;
+}
+
+.form-control {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  max-width: 300px; /* Add max-width property to limit the width */
+}
+
+.form-control:focus {
+  border-color: #007bff;
 }
 
 .btn {
   border-radius: 0;
 }
 
-.form-control {
-  border-radius: 0;
-}
-
 .registration-form {
-  padding: 20px;
+  margin: 0 auto;
+  max-width: 400px; /* Add a max width to limit the form's width */
 }
 </style>

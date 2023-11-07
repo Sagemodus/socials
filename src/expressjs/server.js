@@ -134,6 +134,7 @@ const User = mongoose.model(
   new mongoose.Schema({
     name: String,
     bio: String,
+    role: String,
     contracreated: Array,
     createdReplies: Array,
     email: String,
@@ -159,9 +160,70 @@ const User = mongoose.model(
     hashedPassword: String,
     resetPasswordToken: String,
     resetPasswordExpires: Date,
-    token:String
+    blocklist: [Number],
   })
 );
+
+// Define your isAdmin middleware
+function isAdmin(req, res, next) {
+  const user = req.user; // Assuming you have user data in the request object
+
+  if (user && user.role === 'admin') {
+    // User is an admin; allow access
+    next();
+  } else {
+    // User is not an admin; deny access
+    res.status(403).json({ error: 'Access denied. Admin role required.' });
+  }
+}
+
+app.get('/api/check-admin', isAdmin, (req, res) => {
+  res.json({ isAdmin: true });
+});
+
+// Add the isAdmin middleware to the app.delete route
+app.delete('/api/comments/:commentId', isAdmin, async (req, res) => {
+  const commentId = req.params.commentId;
+
+  try {
+    // Find the comment by its ID
+    const topic = await Topic.findOne({
+      $or: [
+        { 'proComments.id': commentId },
+        { 'contraComments.id': commentId },
+        { 'proComments.replies.id': commentId },
+        { 'contraComments.replies.id': commentId },
+      ],
+    });
+
+    if (!topic) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    const updateCommentText = (comments) => {
+      for (const comment of comments) {
+        if (comment.id === commentId) {
+          comment.text = "[This has been deleted]";
+        }
+        if (comment.replies.length > 0) {
+          updateCommentText(comment.replies);
+        }
+      }
+    };
+    updateCommentText(topic.proComments);
+    updateCommentText(topic.contraComments);
+
+    await topic.save();
+
+    res.status(200).json({ message: 'Comment updated successfully' });
+  } catch (error) {
+    console.error('Error updating comment:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+
 app.get("/api/users", async (req, res) => {
   try {
     const users = await User.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
@@ -172,6 +234,31 @@ app.get("/api/users", async (req, res) => {
     res
       .status(500)
       .json({ message: "Fehler beim Abrufen der Daten aus der Datenbank" });
+  }
+});
+
+// Add a user to the blocklist
+app.post('/api/users/add-to-blocklist', async (req, res) => {
+  const userId = req.body.userId; // User ID to block
+  const currentUserId = req.body.currentUserId; // ID of the user adding to the blocklist
+
+  try {
+    const currentUser = await User.findOne({ id: currentUserId });
+
+    if (!currentUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Add the user to the blocklist if not already there
+    if (!currentUser.blocklist.includes(userId)) {
+      currentUser.blocklist.push(userId);
+      await currentUser.save();
+    }
+
+    res.status(200).json({ message: 'User added to blocklist' });
+  } catch (error) {
+    console.error('Error adding user to blocklist:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -528,6 +615,7 @@ function generateAuthToken(user) {
 
   return token;
 }
+
 app.post('/verify-token', (req,res)=>{
   const {token}=req.body;
   if(!token){
@@ -541,18 +629,20 @@ app.post('/verify-token', (req,res)=>{
 })
 })
 
-app.post("/api/users/login", async (req, res) => {
-  const {name, password} = req.body;
 
+
+app.post("/api/users/login", async (req, res) => {
+  const {email, password} = req.body;
+console.log(req.body)
   try {
     // Sanitize user inputs
-    const nameSanitized = DOMPurify.sanitize(name);
+    const emailSanitized = DOMPurify.sanitize(email);
     const passwordSanitized = DOMPurify.sanitize(password);
 
     // Find the user by name in the database
-    const user = await User.findOne({ name: nameSanitized });
+    const user = await User.findOne({ email: emailSanitized });
   
-    console.log("Name:"+ user.name+ " Password: "+password)
+    console.log("Email:"+ email+ " Password: "+password)
     if (!user) {
       return res.status(401).send({ message: "User not found" });
     }

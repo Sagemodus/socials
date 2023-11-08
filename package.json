@@ -23,9 +23,7 @@
     "cors": "^2.8.5",
     "crypto-browserify": "^3.12.0",
     "dayjs": "^1.11.10",
-
     "dompurify": "^3.0.5",
-
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
@@ -35,12 +33,10 @@
     "hammerjs": "^2.0.8",
     "mongodb": "^6.1.0",
     "mongoose": "^7.5.2",
-
     "node-cron": "^3.0.2",
+    "nodemailer": "^6.9.5",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.7.2",
-
-    "nodemailer": "^6.9.5",
     "stream-browserify": "^3.0.0",
     "sweetalert2": "^11.6.13",
     "util": "^0.12.5",

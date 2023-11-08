@@ -332,7 +332,7 @@ export default {
       sortedCommentList,
       showSettings,
       toggleSettings,
-            editMode,
+      editMode,
       editableBio,
       enableEditMode,
       disableEditMode,

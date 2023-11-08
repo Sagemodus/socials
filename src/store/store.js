@@ -837,9 +837,7 @@ export default createStore({
       }
     },
     
-    async toggleLikeAction({ commit }, payload) {
-      // Hier können Sie zusätzliche Logik oder API-Aufrufe hinzufügen, falls erforderlich
-      commit("TOGGLE_LIKE", payload);
+
     async updateBio({ commit, state }, payload) {
       console.log("payload: ", payload);
       const user = state.users.find((user) => (user.id = payload.userId));

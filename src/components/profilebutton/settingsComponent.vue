@@ -24,20 +24,15 @@
               </button>
             </div>
           </li>
-
-
           <li>
-            <div class="friends-container">
-              <button class="friends-button">
-                <div class="Buttons-profilepage">
-                  <font-awesome-icon :icon="['fas', 'gear']" class="icon"
-                    :style="{ color: iconColor(currentUser?.farbe) }" />
-                </div>
-                <h3>Settings</h3>
-              </button>
-            </div>
-
+            <button class="setting-button" @click="toggleSettings">
+              <font-awesome-icon :icon="['fas', 'gear']" :style="{ color: iconColor(currentUser.farbe) }" />
+              <h3>Settings</h3>
+            </button>
           </li>
+
+
+
           <li>
             <button @click="logout" class="logout-button">
 
@@ -47,7 +42,31 @@
             </button>
           </li>
         </ul>
+
+
       </div>
+
+      <div class="settings-modal" v-if="showSettings">
+                    <button @click="toggleSettings" class="back-button"><font-awesome-icon :icon="['fas', 'arrow-left']"
+                      size="lg" /></button>
+        
+        <h2>Einstellungen</h2>
+        <div class="buttons-setting">
+          <button class="button-4" role="button" @click="resetPassword">
+            <font-awesome-icon :icon="['fas', 'key']" />
+            Passwort zurücksetzen
+          </button>
+          <button class="button-4" role="button" @click="deleteAccount">
+            <font-awesome-icon :icon="['fas', 'trash']" />
+            Konto löschen
+          </button>
+
+        </div>
+        <h5>You can reach us at
+          Support@Companyname.com</h5>
+      </div>
+
+
     </div>
 
 
@@ -55,83 +74,58 @@
     <img :src="currentUser?.profileImage" alt="Profilbild" class="profile-image">
 
 
-
-    <div class="profile-content">
-
-
-      <div>
-        <h5>{{ currentUser?.name }}</h5>
+  <div class="profile-content">
+    <div>
+      <h5>{{ currentUser?.name }}</h5>
+      <!-- Umschalten zwischen Anzeige und Bearbeitungsmodus -->
+      <div class="edit-mode" v-if="!editMode">
         <p>{{ currentUser?.bio }}</p>
-        <p> <font-awesome-icon :icon="['far', 'calendar-days']" class="icon" /> {{ " " + 'Joined ' + currentUser?.joinedAt
-        }}
-        </p>
-
-<!--         <div class="follow-container">
-          <button class="following-buttons">
-            <p>{{ currentUser?.following.length + ' Following' }}</p>
-          </button>
-
-          <button class="following-buttons">
-            <p>{{ currentUser?.followers.length + ' Followers' }}</p>
-          </button>
-        </div> -->
-
+        <font-awesome-icon :icon="['fas', 'pencil-alt']" class="icon edit-icon" @click="enableEditMode"/>
       </div>
-
+      <div v-else>
+        <textarea v-model="editableBio" class="bio-edit"></textarea>
+        <div class="edit-actions">
+          <font-awesome-icon :icon="['fas', 'times']" class="icon cancel-icon" @click="disableEditMode"/>
+          <font-awesome-icon :icon="['fas', 'save']" class="icon save-icon" @click="saveBio"/>
+        </div>
+      </div>
+      <p> <font-awesome-icon :icon="['far', 'calendar-days']" class="icon" /> {{ " " + 'Joined ' + currentUser?.joinedAt }}</p>
     </div>
+  </div>
 
     <SwipeProfilComponentVue>
 
 
       <template #comments>
         <div>
-          <div v-for="comment in procreatedCommentList"  :key="comment.id">
+          <div v-for="comment in sortedCommentList" :key="comment.id">
             <!-- Hier kannst du die Inhalte der procreated Topics anzeigen -->
-            <CommentBox :comment="comment" :topic="comment.topicId" :showreply ="showreply" :anzeige="false"  />
+            <CommentBox :comment="comment" :topic="comment.topicId" :showreply="showreply" :anzeige="false" />
           </div>
-          <div v-for="comment in contracreatedCommentsList" :key="comment.id" :topic="comment.topicId">
-            <!-- Hier kannst du die Inhalte der contracreated Topics anzeigen -->
-            <CommentBox :comment="comment" :topic="comment.topicId" :anzeige="false"  />
-          </div>
+
         </div>
       </template>
 
 
       <!-- Inhalte für den "Replies"-Tab -->
       <template #replies>
-    <comment-reply
-            v-for="reply in replySuche"
-             :key="reply.id"
-              :reply="reply"
-              :topic="reply.topicId"
+        <comment-reply v-for="reply in replySuche.reverse()" :key="reply.id" :reply="reply"
+          :topic="reply.topicId"></comment-reply>
 
-             :commentIndex="reply.commentIndex"
-            :id ="reply.id"
-          ></comment-reply>
 
-           <comment-reply
-              v-for="reply in nestedReplySuche"
-              
-               :key="reply.id"
-                :reply="reply"
-                :topic="reply.topicId"
-
-               :commentIndex="reply.commentIndex"
-              :id ="reply.id"
-            ></comment-reply>
       </template>
 
       <!-- Inhalte für den "Likes"-Tab -->
       <template #votes>
         <div>
-          <div v-for="topic in TopicUpVotes" :key="topic.id" :id="topic.id">
-            <TopicBox :key="topic.id" :id="topic.id" :disableelements ="true"  />
+          <div v-for="topic in TopicUpVotes.reverse()" :key="topic.id" :id="topic.id">
+            <TopicBox :key="topic.id" :id="topic.id" :disableelements="true" />
           </div>
 
         </div>
         <div>
-          <div v-for="topic in TopicDownVotes" :key="topic.id" :id="topic.id">
-            <TopicBox :key="topic.id" :id="topic.id" :disableelements ="true"/>
+          <div v-for="topic in TopicDownVotes.reverse()" :key="topic.id" :id="topic.id">
+            <TopicBox :key="topic.id" :id="topic.id" :disableelements="true" />
           </div>
 
         </div>
@@ -156,7 +150,7 @@ import CommentBox from '../CommentBox.vue'
 import CommentReply from '../CommentReply.vue'
 import TopicBox from '../TopicBox.vue'; // Hier importiere TopicBox
 import { useRoute, useRouter } from 'vue-router';
-import {  onMounted } from "vue";
+import { onMounted } from "vue";
 
 export default {
   components: {
@@ -166,30 +160,35 @@ export default {
     TopicBox,
   },
   setup() {
-    
+
     const route = useRoute();
     const store = useStore();
     const state = store.state;
-     const topics = store.state.topics;
-
+    const topics = store.state.topics;
+    const showSettings = ref(false);
     // Laden Sie die Daten beim Komponentenstart
 
     const userId = route.params.currentUserId;
     const router = useRouter();
-    
+
 
     // Verwende computed, um currentUser reaktiv zu machen
-    const currentUser = computed(() => store.state.currentUser);
+
+    const currentUser = computed(() => store.state.users[userId - 1]);
+
 
     const showreply = false;
 
-     // Erhalte Zugriff auf den Vuex-Store
- 
+    // Erhalte Zugriff auf den Vuex-Store
 
-   
-    const procreatedComments = computed(() => currentUser?.value.procreated);
-    const contracreatedComments = computed(() => currentUser?.value.contracreated);
-    const repliescreated = computed(() => currentUser?.value.createdReplies);
+    const toggleSettings = () => {
+      console.log("geklickt laan")
+      showSettings.value = !showSettings.value;
+    };
+
+    const procreatedComments = computed(() => currentUser.value.procreated);
+    const contracreatedComments = computed(() => currentUser.value.contracreated);
+
 
     const bookmarkrouting = () => {
       router.push(`/bookmarksaves/${userId}`)
@@ -249,10 +248,8 @@ export default {
           topicsSuche.push(nestedreply);
         } else if (depth === 2) {
           commentSuche.push(nestedreply);
-        } else if (depth === 3) {
+        } else if (depth >= 3) {
           replySuche.push(nestedreply);
-        } else if (depth > 3) {
-          nestedReplySuche.push(nestedreply);
         }
       });
     }
@@ -263,29 +260,32 @@ export default {
 
 
 
-    const repliescreatedCommentsList = computed(() => {
-      return repliescreated.value.map(commentId => {
-        return store.getters.getCommentById(commentId);
 
+    const procreatedCommentsList = computed(() => {
+      return procreatedComments.value.map(commentId => {
+        const comment = store.getters.getCommentById(commentId);
+        return comment;
       });
     });
 
-   const procreatedCommentList = computed(() => {
-     return procreatedComments.value.map(commentId => {
-   const comment = store.getters.getCommentById(commentId);
+    const contracreatedCommentsList = computed(() => {
+      return contracreatedComments.value.map(commentId => {
+        const comment = store.getters.getCommentById(commentId);
+        return comment;
+      });
+    });
 
-   
-    return comment;
-  });
-});
+    // Fügen Sie die beiden Listen zusammen
+    const mergedCommentList = computed(() => {
+      return procreatedCommentsList.value.concat(contracreatedCommentsList.value);
+    });
 
-const contracreatedCommentsList = computed(() => {
-  return contracreatedComments.value.map(commentId => {
-    const comment = store.getters.getCommentById(commentId);
 
-    return comment;
-  });
-});
+
+    // Sortieren Sie die Liste nach comment.createdAt absteigend (neuestes zuerst)
+    const sortedCommentList = mergedCommentList.value.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+
 
     const TopicDownVotes = computed(() => {
       return currentUser?.value.hasdislikedtopic.map(commentId => {
@@ -301,7 +301,8 @@ const contracreatedCommentsList = computed(() => {
 
       });
     });
-    
+
+
 
 
     const showDropdown = ref(false);
@@ -318,10 +319,7 @@ const contracreatedCommentsList = computed(() => {
       currentUser,
       showDropdown,
       toggleDropdown,
-      procreatedCommentList,
-      contracreatedCommentsList,
       state,
-      repliescreatedCommentsList,
       TopicUpVotes,
       TopicDownVotes,
       showreply,
@@ -331,18 +329,146 @@ const contracreatedCommentsList = computed(() => {
       nestedReplySuche,
       bookmarkrouting,
       logout,
+      sortedCommentList,
+      showSettings,
+      toggleSettings,
+            editMode,
+      editableBio,
+      enableEditMode,
+      disableEditMode,
+      saveBio,
 
     };
   },
 
 
 
-  }
-  
+}
+
 
 </script>
 
 <style scoped>
+.edit-icon {
+  cursor: pointer;
+}
+
+.edit-mode {
+    display: flex;
+    align-items: center;
+    align-content: center;
+    justify-content: left;
+    gap: 10px;
+}
+
+.bio-edit {
+  width: 100%;
+  /* Passen Sie die Breite nach Bedarf an */
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: space-around;
+  padding: 5px;
+}
+
+.cancel-icon, .save-icon {
+  cursor: pointer;
+}
+button.back-button {
+
+    left: 10px;
+    position: fixed;
+    border: none;
+    background-color: transparent;
+    padding: 10px 0px 0px 20px;
+    z-index: 999;
+    /* top: 10px; */
+}
+
+
+button.button-4 {
+    min-width: 55%;
+}
+.buttons-setting {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    align-content: center;
+    gap: 10px;
+}
+.button-4 {
+  appearance: none;
+  background-color: #FAFBFC;
+  border: 1px solid rgba(27, 31, 35, 0.15);
+  border-radius: 6px;
+  box-shadow: rgba(27, 31, 35, 0.04) 0 1px 0, rgba(255, 255, 255, 0.25) 0 1px 0 inset;
+  box-sizing: border-box;
+  color: #24292E;
+  cursor: pointer;
+  display: inline-block;
+  font-family: -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  padding: 6px 16px;
+  position: relative;
+  transition: background-color 0.2s cubic-bezier(0.3, 0, 0.5, 1);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.button-4:hover {
+  background-color: #F3F4F6;
+  text-decoration: none;
+  transition-duration: 0.1s;
+}
+
+.button-4:disabled {
+  background-color: #FAFBFC;
+  border-color: rgba(27, 31, 35, 0.15);
+  color: #959DA5;
+  cursor: default;
+}
+
+.button-4:active {
+  background-color: #EDEFF2;
+  box-shadow: rgba(225, 228, 232, 0.2) 0 1px 0 inset;
+  transition: none 0s;
+}
+
+.button-4:focus {
+  outline: 1px transparent;
+}
+
+.button-4:before {
+  display: none;
+}
+
+.button-4:-webkit-details-marker {
+  display: none;
+}
+
+.settings-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  height: 100%;
+  width: 100%;
+
+}
+
 .following-buttons {
   display: flex;
   flex-direction: row;
@@ -452,6 +578,26 @@ img {
   font-size: 15px;
 }
 
+
+
+
+.setting-button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  font-size: 25px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.setting-button h3 {
+  font-size: 15px;
+}
+
+
 .bookmark-button {
   display: flex;
   flex-direction: row;
@@ -461,6 +607,7 @@ img {
   font-size: 25px;
   border: none;
   background: transparent;
+  cursor: pointer;
 }
 
 .bookmark-button h3 {
@@ -494,7 +641,7 @@ img {
   font-size: 25px;
   border: none;
   background: transparent;
-
+  cursor: pointer;
 }
 
 
@@ -524,7 +671,8 @@ img {
   position: absolute;
   top: 100%;
   /* Direkt unter dem Button positionieren */
-  z-index: 999; /* Hier können Sie den gewünschten z-index-Wert einstellen */
+  z-index: 999;
+  /* Hier können Sie den gewünschten z-index-Wert einstellen */
 }
 
 .dropdown-menu {
@@ -539,7 +687,7 @@ img {
 
 .dropdown-menu li {
   padding: 10px;
-  cursor: pointer;
+
   transition: background-color 0.3s;
 }
 
@@ -549,11 +697,12 @@ img {
 
 
 
-.comment-box:last-child{
+.comment-box:last-child {
   border-bottom: 1px solid #ccc;
   border-left: none;
 }
-.comment-reply{
+
+.comment-reply {
   border-left: none;
   border-bottom: #ccc 1px solid;
   margin-top: 10px;

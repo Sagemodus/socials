@@ -5,7 +5,7 @@
       <div class="textarea-container">
         <textarea
           v-model="newComment"
-          placeholder="Schreibe einen Kommentar..."
+          placeholder="Write a comment..."
           rows="1"
           class="comment-textarea"
           ref="textarea"
@@ -13,7 +13,7 @@
       </div>
       <button
         type="submit"
-        :style="{ color: iconColor(currentUser.farbe)}"
+    
         class="comment-button"
       >
         <font-awesome-icon :icon="['fas', 'paper-plane']" />
@@ -25,7 +25,7 @@
 
 <script>
 
-import { iconColor } from './farben'; // Überprüfen Sie bitte den korrekten Pfad
+
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
 import { computed } from 'vue'; /// Importiere das computed-Hook
 import autosize from 'autosize';
@@ -42,7 +42,7 @@ export default {
 
 
     return {
-      iconColor,
+
       currentUser, // Mache den currentUser verfügbar
     
     };
@@ -59,9 +59,12 @@ export default {
   methods: {
  
     submitComment() {
-    this.$emit('add-comment', this.newComment);
-    this.newComment = "";
-  },
+      this.$emit('add-comment', this.newComment);
+      this.newComment = "";
+      this.$nextTick(() => {
+        autosize.update(this.$refs.textarea);
+      });
+    }
   
   },
 };
@@ -81,9 +84,8 @@ export default {
   align-items: center;
   border: 1px solid #ccc;
   border-radius: 30px;
-  padding: 8px;
   position: fixed;
-  bottom: 44px;
+  bottom: 45px;
  left: 0;
  right:0;
  background-color: white;
@@ -107,5 +109,6 @@ width: 100%;
   cursor: pointer;
   transition: background-color 0.3s ease;
   font-size: 20px;
+  color:var(--iconColor)
 }
 </style>

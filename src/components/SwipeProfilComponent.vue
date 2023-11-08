@@ -20,32 +20,29 @@
 </template>
   
 
-    <script>
-import { ref, reactive, onMounted, computed } from 'vue';
+<script>
+import { ref, reactive, onMounted, computed, onUnmounted } from 'vue';
 import Hammer from 'hammerjs';
 import { iconColor } from './farben'
 import { useStore } from 'vuex';
-import { onUnmounted } from 'vue';
 
 export default {
- 
-  
   setup(props) {
     const store = useStore();
     const currentUser = computed(() => store.state.currentUser);
 
     const tabs = reactive([
-    { name: 'Comments', path: 'comments' },
+      { name: 'Comments', path: 'comments' },
       { name: 'Replies', path: 'replies' },
       { name: 'Votes', path: 'votes' },
-      
     ]);
 
-    const activeTab = ref(tabs[0].path);
+    // Versuche, das aktive Tab aus dem Session Storage zu laden oder setze das erste Tab als Standard
+    const activeTab = ref(sessionStorage.getItem('activeTab') || tabs[0].path);
 
     const switchTab = (path) => {
-     
       activeTab.value = path;
+      sessionStorage.setItem('activeTab', path); // Speichere das aktive Tab im Session Storage
       if (typeof props.onTabSwitch === 'function') {
         props.onTabSwitch(path);
       }
@@ -67,38 +64,35 @@ export default {
     };
 
     let hammer;
-onMounted(() => {
-  const el = document;
-  hammer = new Hammer(el); // Entfernen Sie das "const" hier
-  hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
-  hammer.on('swiperight', () => {
-    previousTab();
-  });
-  hammer.on('swipeleft', () => {
-    nextTab();
-  });
-});
+    onMounted(() => {
+      const el = document;
+      hammer = new Hammer(el);
+      hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
+      hammer.on('swiperight', () => {
+        previousTab();
+      });
+      hammer.on('swipeleft', () => {
+        nextTab();
+      });
+    });
 
-onUnmounted(() => {
-  if (hammer) {
-    hammer.off('swiperight');
-    hammer.off('swipeleft');
-    hammer.destroy();
-    hammer = null;
-  }
-});
-      
-       // Setze die Farbe basierend auf dem currentUser
-      const userfarbe = currentUser.value.farbe;
-      const color = userfarbe ? iconColor(userfarbe) : 'gray';
-      document.documentElement.style.setProperty('--iconColor', color);
-      
-  
-      return { activeTab, nextTab, previousTab, switchTab, tabs };
-    },
-  };
-  </script>
-  
+    onUnmounted(() => {
+      if (hammer) {
+        hammer.off('swiperight');
+        hammer.off('swipeleft');
+        hammer.destroy();
+        hammer = null;
+      }
+    });
+
+    // Setze die Farbe basierend auf dem currentUser
+    const userfarbe = currentUser.value.farbe;
+    const color = userfarbe ? iconColor(userfarbe) : 'gray';
+
+    return { activeTab, nextTab, previousTab, switchTab, tabs };
+  },
+};
+</script>
   
   <style scoped>
   .swipe-navigation {

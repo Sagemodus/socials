@@ -1,11 +1,16 @@
 // TopicComponentGanzeSeite.vue
 <template>
-  <div class="sticky-tab-bar" :class="{ 'sticky': isTabBarSticky, 'scrolled': isScrolled }">
+  <div class="header"> <button class="zurück-button" @click="$router.go(-1)"> <font-awesome-icon
+        :icon="['fas', 'arrow-left']" size="lg" /></button>
     <div class="tab-selection">
+
       <button @click="updateTabAndColor('pro')" :class="{ 'active-tab': selectedTab === 'pro' }">Pro</button>
       <button @click="updateTabAndColor('contra')" :class="{ 'active-tab': selectedTab === 'contra' }">Contra</button>
     </div>
+
+
   </div>
+
   <div class="topic-container">
     <!-- Laden und Anzeigen von Themen -->
     <div v-if="topic" class="topic-ganzeseite">
@@ -23,15 +28,15 @@
 
 
     <div v-if="selectedTab === 'pro'" class="kommentare">
-      <CommentBox v-for="comment in topic.proComments.slice(0, displayedCommentCount)" :key="comment.id"
+      <CommentBox v-for="comment in sortedProComments.slice(0, displayedCommentCount)" :key="comment.id"
         :comment="comment" :topic="comment.topicId" />
-      <button v-if="displayedCommentCount < topic.proComments.length" @click="showMoreComments">Mehr anzeigen</button>
+      <button v-if="displayedCommentCount < sortedProComments.length" @click="showMoreComments">Mehr anzeigen</button>
     </div>
 
     <div v-else-if="selectedTab === 'contra'" class="kommentare">
-      <CommentBox v-for="comment in topic.contraComments.slice(0, displayedCommentCount)" :key="comment.id"
+      <CommentBox v-for="comment in sortedContraComments.slice(0, displayedCommentCount)" :key="comment.id"
         :comment="comment" :topic="comment.topicId" />
-      <button v-if="displayedCommentCount < topic.contraComments.length" @click="showMoreComments">Mehr anzeigen</button>
+      <button v-if="displayedCommentCount < sortedContraComments.length" @click="showMoreComments">Mehr anzeigen</button>
     </div>
     <!-- Anzeige, wenn keine Kommentare vorhanden sind -->
     <div v-else>
@@ -78,8 +83,8 @@ export default {
     const author = computed(() => store.getters.getUserById(topic.value.author))
     const comment = topic.value.proComments.find(comment => comment.id === commentId);
     /*eslint-enable*/
-
-    // ... andere setup-Abschnitte ...
+    const sortedProComments = computed(() => sortCommentsWithIndex(topic.value.proComments));
+    const sortedContraComments = computed(() => sortCommentsWithIndex(topic.value.contraComments));
 
     const selectedTab = computed(() => store.state.selectedTab);
     const displayedCommentCount = computed(() => store.state.displayedCommentCount);
@@ -151,7 +156,30 @@ export default {
       }
     });
 
+    function sortCommentsWithIndex(comments) {
+      // Zuerst sortieren wir alle Kommentare nach der Summe von Upvotes und Downvotes
+      const sortedByVotes = [...comments].sort((a, b) => {
+        const votesA = a.upvotes + a.downvotes;
+        const votesB = b.upvotes + b.downvotes;
+        return votesB - votesA;
+      });
 
+      // Wir nehmen die ersten 3 Kommentare
+      const topComments = sortedByVotes.slice(0, 3);
+
+      // Den Rest der Kommentare sortieren wir nach dem Erstellungsdatum
+      const sortedByDate = sortedByVotes.slice(3).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      // Schließlich kombinieren wir die beiden Arrays
+      const sortedComments = [...topComments, ...sortedByDate];
+
+      // Füge den Index als commentIndex zu jedem Kommentar hinzu
+      sortedComments.forEach((comment, index) => {
+        comment.commentIndex = index;
+      });
+
+      return sortedComments;
+    }
 
     onBeforeUnmount(() => {
       store.commit('resetDisplayedCommentCount');
@@ -180,7 +208,8 @@ export default {
       author,
       topics,
       users,
-
+      sortedContraComments,
+      sortedProComments,
 
 
     };
@@ -244,7 +273,7 @@ export default {
     async addComment(commentText) {
       const author = this.user;
       const topicId = this.topic.id;
-
+      const currentUserId = this.$store.state.currentUser.id;
       try {
         // Zuerst das Thema abrufen
         await this.$store.dispatch('fetchTopic', topicId);
@@ -262,7 +291,7 @@ export default {
           expandReplies: false,
           replies: [],
           showelement: true,
-        
+
           // Pfad zum Kommentar hinzufügen
         };
 
@@ -270,18 +299,18 @@ export default {
 
         // Den Kommentar an die API senden
         if (selectedTab == "pro") {
-          newComment.commentIndex = this.topic.proComments.length 
-            newComment.commentType = "pro"
+          newComment.commentIndex = this.topic.proComments.length
+          newComment.commentType = "pro"
         }
         else {
-          newComment.commentIndex = this.topic.contraComments.length 
-            newComment.commentType = "contra"
-          }
+          newComment.commentIndex = this.topic.contraComments.length
+          newComment.commentType = "contra"
+        }
 
         // Kommentar zum Store hinzufügen
-        console.log(newComment + " component")
+        console.log(this.author.id + " component")
 
-        this.$store.dispatch('addCommentToTopic', { author, topicId, comment: newComment, selectedTab });
+        this.$store.dispatch('addCommentToTopic', { author, topicId, comment: newComment, selectedTab, notificationType: "commentaddtotopic", zielId: this.author.id, benachrichtigungsElementId: newComment.id, userId: currentUserId });
         console.log('Kommentar erfolgreich hinzugefügt:');
 
 
@@ -339,7 +368,7 @@ p.topic-text {
   margin-bottom: 120px;
   padding-left: 5px;
   padding-right: 5px;
-  padding-top: 10px;
+  padding-top: 40px;
 }
 
 
@@ -364,11 +393,22 @@ p.topic-text {
   margin-top: 10px;
 }
 
+button.zurück-button {
+  position: fixed;
+  z-index: 1000;
+  left: 10px;
+  top: 10px;
+  background-color: transparent;
+  border: none;
+  padding: 0px;
+}
 
 .tab-selection {
   display: flex;
   justify-content: space-evenly;
+  position: fixed;
   background-color: white;
+  min-width: 100%;
 
 
   button {
@@ -408,7 +448,7 @@ p.topic-text {
 }
 
 .highlighted {
-  box-shadow: 0 0 5px rgba(144, 144, 144, 0.7);
+  box-shadow: 0 0 15px rgba(80, 79, 79, 0.7);
   /* Leichter grauer Schatten für Hervorhebung */
   transition: box-shadow 0.3s ease-in-out;
   /* Schattenübergangseffekt */

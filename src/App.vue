@@ -21,14 +21,26 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { iconColor } from '../src/components/farben';
 
+
 export default {
   components: {
     Navbar,
 
   },
   setup() {
+/*eslint-disable*/
+ 
+
     const store = useStore();
     const currentUser = store.state.currentUser;
+    const userId = currentUser.id;
+/* 
+    onBeforeUnmount(() => {
+        console.log(userId)
+      SocketService.disconnect(currentUser.id);
+    }); */
+
+    // eslint-disable-next-line
     const route = useRoute();
     SocketService.init(currentUser.id);
     const showNavbar = computed(() => store.state.showNavbar);

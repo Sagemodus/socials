@@ -8,10 +8,9 @@ const admin = require("firebase-admin");
 const serviceAccount = require("./procon-14ef5-firebase-adminsdk-nmd71-7131b1ec7a.json");
 const http = require("http"); // Neu hinzugefügt
 const Chat = require("./models/Chat");
-const Topic = require("./models/Topic"); 
+const Topic = require("./models/Topic");
 const User = require("./models/User");
 const cron = require("node-cron");
-
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -31,10 +30,7 @@ const bodyParser = require("body-parser");
 
 app.use(
   cors({
-    origin: [
-      "https://c964nzv2-8080.euw.devtunnels.ms",
-      "*",
-    ], // Replace with actual domains
+    origin: ["https://c964nzv2-8080.euw.devtunnels.ms", "*"], // Replace with actual domains
     credentials: true, // If your frontend needs to send cookies or use authentication, set this to true
   })
 );
@@ -56,14 +52,6 @@ db.once("open", () => {
 db.on("error", (err) => {
   console.error("Fehler bei der Verbindung zur MongoDB:", err);
 });
-
-
-
-
-
-
-
-
 
 const clean = async () => {
   const thirtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 30));
@@ -105,12 +93,6 @@ const clean = async () => {
     console.error("Error during cleanup:", error);
   }
 };
-
-
-
-
-
-
 
 app.post("/api/removeChat", async (req, res) => {
   const { chatId, currentUserId } = req.body;
@@ -230,7 +212,6 @@ const onlineUsers = [];
 io.on("connection", (socket) => {
   console.log("Ein Benutzer ist verbunden:", socket.id);
 
-  // Wenn ein Benutzer sich verbindet, sendet er seine Benutzer-ID
   socket.on("register", (userId) => {
     if (!userSockets[userId]) {
       userSockets[userId] = [];
@@ -246,36 +227,29 @@ io.on("connection", (socket) => {
   socket.on("send-message", async (message) => {
     try {
       console.log("hellizu");
-      // Finden Sie den Chat anhand der chatId
       const chat = await Chat.findOne({ chatId: message.chatId });
 
       console.log(message.chatId);
       if (chat) {
-        // Fügen Sie die neue Nachricht zu den Nachrichten des Chats hinzu
         chat.messages.push({
           text: message.text,
           senderId: message.senderId,
           timestamp: new Date(),
           chatId: message.chatId,
         });
-
-        // Speichern Sie die Änderungen
         await chat.save();
         console.log("Nachricht zu einem bestehenden Chat hinzugefügt");
         console.log(chat.participants, "Teilnehmer");
-
-        // Bestimmen Sie den Empfänger der Nachricht
-        const recipientId = chat.participants.find(
-          (id) => id !== message.senderId
-        );
-                if (!recipientId) {
+        const recipientId =
+          chat.participants.find((id) => id === message.senderId) ||
+          chat.participants.find((id) => id !== message.senderId);
+        if (!recipientId) {
           console.log("Nachricht an sich selbst gesendet.");
           io.to(socket.id).emit("update-frontend", message);
-          return; // Beenden Sie die Verarbeitung, da es keinen anderen Empfänger gibt
-        } 
+          return;
+        }
         console.log(recipientId, " :id");
         console.log(userSockets, " usersockets");
-        // Senden Sie die Nachricht nur an den gewünschten Benutzer
         const recipientSocketId = userSockets[recipientId];
         console.log("versueche", recipientSocketId);
 
@@ -298,20 +272,28 @@ io.on("connection", (socket) => {
     }
   });
 
+
   socket.on("disconnect", () => {
-    const userId = Object.keys(userSockets).find(
-      (key) => userSockets[key] === socket.id
-    );
-    if (userId) {
-      const index = onlineUsers.indexOf(userId);
-      if (index > -1) {
-        onlineUsers.splice(index, 1); // Benutzer-ID aus dem Array entfernen
+    console.log(userSockets);
+  console.log("Ein Benutzer wurde getrennt:", socket.id);
+  for (let userId in userSockets) {
+    const index = userSockets[userId].indexOf(socket.id);
+    if (index !== -1) {
+      userSockets[userId].splice(index, 1);
+      if (userSockets[userId].length === 0) {
+        delete userSockets[userId];
+          console.log(userSockets);
+        const onlineIndex = onlineUsers.indexOf(userId);
+        if (onlineIndex !== -1) {
+          onlineUsers.splice(onlineIndex, 1);
+        }
       }
-      console.log("Ein Benutzer hat sich getrennt:", socket.id);
-      delete userSockets[userId];
-      
+      break;
     }
-  });
+    }
+    
+});
+  
 });
 app.get("/api/online-status", (req, res) => {
   res.json(onlineUsers);
@@ -542,19 +524,7 @@ app.post("/send-notification", async (req, res) => {
       console.log("Benutzer nicht gefunden");
       return res.status(404).json({ error: "Benutzer nicht gefunden" });
     }
-    const existingNotification = user.notifications.find(
-      (notification) =>
-        notification.userId === userId &&
-        notification.benachrichtigungsElementId ===
-          benachrichtigungsElementId &&
-        notification.notificationType === notificationType
-    );
-       if (existingNotification) {
-      console.log("Benachrichtigung bereits gesendet");
-      return res
-        .status(200)
-        .json({ message: "Benachrichtigung bereits gesendet" });
-    } 
+
     const userTokens = user.fcmTokens;
     // Benachrichtigung in der Datenbank speichern
     const notification = {
@@ -568,6 +538,7 @@ app.post("/send-notification", async (req, res) => {
       userId: userId,
       topicId: topicId,
     };
+
     const message2 = {
       data: {
         title: "",
@@ -704,40 +675,89 @@ app.post("/send-notification", async (req, res) => {
         body = "Sie haben eine neue Benachrichtigung erhalten.";
         break;
     }
+const minutesThreshold = 1; // Setzen Sie hier die gewünschten Minuten ein
 
-    // Benachrichtigung an FCM senden
+const existingNotification = user.notifications.find(
+  (notification) =>
+    notification.userId === userId &&
+    notification.benachrichtigungsElementId === benachrichtigungsElementId &&
+    notification.notificationType === notificationType &&
+    notification.sentAt
+);
+
+let isWithinTimeThreshold = false;
+
+if (existingNotification) {
+  const now = new Date();
+  const sendAt = new Date(existingNotification.sentAt); // Stellen Sie sicher, dass sendAt ein Date-Objekt ist
+  const diffInMinutes = (now - sendAt) / (1000 * 60);
+  isWithinTimeThreshold = diffInMinutes < minutesThreshold;
+}
+
+if (
+
+  existingNotification &&
+    !notificationType.startsWith("chat") &&
+    isWithinTimeThreshold 
+) {
+  console.log(
+    "Benachrichtigung bereits gesendet und ist weniger als 5 Minuten her."
+  );
+  return res.status(200).json({
+    message:
+      "Benachrichtigung bereits gesendet und ist weniger als 5 Minuten her.",
+  });
+}
+
 
     message2.data.objekt = JSON.stringify(notification);
 
-    admin
-      .messaging()
-      .sendMulticast(message2)
-      .then(async (response) => {
-        // Response enthält den gesamten Pfad der messageId
+ if (!message2.token) {
+   console.warn(
+     "Warnung: Der Benutzer hat die Benachrichtigung nicht autorisiert."
+   );
+   // Optional: Senden Sie eine Antwort zurück, dass kein Token vorhanden ist, aber als Warnung, nicht als Fehler
+   return res.status(200).json({
+     warning: "Der Benutzer hat die Benachrichtigung nicht autorisiert.",
+   });
+ } else {
+   // Senden der Benachrichtigung, wenn das Token vorhanden ist
+   admin
+     .messaging()
+     .sendMulticast(message2)
+     .then(async (response) => {
+       // Response enthält den gesamten Pfad der messageId
 
-        // Extrahieren Sie nur den ID-Teil der messageId
-        notification.messageId = uuidv4();
-        user.notifications.push(notification);
+       // Extrahieren Sie nur den ID-Teil der messageId
+       notification.messageId = uuidv4();
+       user.notifications.push(notification);
 
-        await user.save();
-        res.status(200).json({
-          success: true,
-          message: "Benachrichtigung erfolgreich gesendet",
-          objekt: notification,
-        });
-      })
-      .catch((error) => {
-        console.log("Error sending message:", error);
-      });
-  } catch (error) {
+       await user.save();
+       res.status(200).json({
+         success: true,
+         message: "Benachrichtigung erfolgreich gesendet",
+         objekt: notification,
+       });
+     })
+     .catch((error) => {
+       console.log("Error sending message:", error);
+     });
+ }
+  
+   
+}
+   
+  
+  
+  catch (error) {
     console.error("Fehler beim Senden der Benachrichtigung:", error);
     res.status(500).json({ error: "Fehler beim Senden der Benachrichtigung" });
   }
 });
 
 app.post("/api/updateBio", async (req, res) => {
-  const  { editableBiOhneValue, userId } = req.body;
-console.log("amk")
+  const { editableBiOhneValue, userId } = req.body;
+  console.log("amk");
   try {
     const user = await User.findOne({ id: userId });
 
@@ -750,13 +770,13 @@ console.log("amk")
 
     user.bio = editableBiOhneValue;
 
-    user.save()
-      // Deine Logik hier
+    user.save();
+    // Deine Logik hier
 
-      res.status(200).send({
-        success: true,
-        message: "Operation successful",
-      });
+    res.status(200).send({
+      success: true,
+      message: "Operation successful",
+    });
   } catch (error) {
     console.error("Error message", error);
     res.status(500).send({
@@ -764,8 +784,6 @@ console.log("amk")
     });
   }
 });
-
-
 
 app.post("/save-token", async (req, res) => {
   try {

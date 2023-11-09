@@ -1060,6 +1060,7 @@ export default createStore({
         );
 
         if (!response.ok) {
+          console.log(response)
           throw new Error("Netzwerkantwort war nicht ok.");
         }
 
@@ -1068,14 +1069,7 @@ export default createStore({
         if (data.message === "Benachrichtigung bereits gesendet") {
           console.log("Benachrichtigung wurde bereits gesendet.");
           return; // Beendet die Funktion frühzeitig
-        } else {
-          const notification = data.objekt;
-          console.log(data.objekt + data + " kolelg");
-          console.log(notification + " action notification");
-
-          // Nach erfolgreichem Senden der Benachrichtigung, führen Sie die Mutation aus
-          commit("ADD_NOTIFICATION_TO_USER", notification);
-        }
+        } 
       } catch (error) {
         console.error(
           "Es gab einen Fehler beim Senden der Benachrichtigung:",
@@ -1111,7 +1105,7 @@ export default createStore({
           commit("ADD_REPLY", { reply, newReply });
           await dispatch("addReplyPathToUser", {
             userId: currentUser.id,
-            replyPath: newPath,
+            replyPath: newReply.path,
           });
           await dispatch("sendNotification", {
             userId: payload.userId,
@@ -1277,6 +1271,7 @@ export default createStore({
     },
 
     async upvoteComment({ commit, dispatch, state }, payload) {
+      console.log(payload)
       const userProfile = state.users.find(
         (user) => user.id === payload.currentUserId
       );
@@ -1286,7 +1281,7 @@ export default createStore({
           payload
         );
         const isAlreadyLiked = userProfile.haslikedcomment.includes(
-          payload.topicId
+          payload.commentId
         );
         if (response.status === 200 && response.data.success) {
           commit("UPVOTE_COMMENT", payload);
@@ -1295,6 +1290,7 @@ export default createStore({
             response.data.message || "Ein unbekannter Fehler ist aufgetreten."
           );
         }
+        console.log(isAlreadyLiked);
         if (!isAlreadyLiked) {
           try {
             await dispatch("sendNotification", {
@@ -1320,8 +1316,9 @@ export default createStore({
         (user) => user.id === payload.currentUserId
       );
       const isAlreadyLiked = userProfile.hasdislikedcomment.includes(
-        payload.topicId
+        payload.commentId
       );
+      console.log(isAlreadyLiked);
       try {
         const response = await axios.post(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/commentdownvote",
@@ -1359,6 +1356,7 @@ export default createStore({
       const isAlreadyLiked = userProfile.haslikedreply.includes(
         payload.replyId
       );
+      console.log(isAlreadyLiked);
       try {
         const response = await axios.post(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/replyupvote",
@@ -1398,7 +1396,7 @@ export default createStore({
         payload.replyId
       );
       try {
-        console.log(payload.commentId);
+        console.log(isAlreadyLiked);
         const response = await axios.post(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/replydownvote",
           payload

@@ -52,6 +52,7 @@ export default {
             await store.dispatch("readChat", props.chat)
         });
         if (props.chat?.participants[0] === props.chat?.participants[1]) {
+            // eslint-disable-next-line
             userId = props.chat?.participants[0];
         }
         else {

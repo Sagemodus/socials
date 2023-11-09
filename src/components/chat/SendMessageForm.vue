@@ -12,6 +12,7 @@
 import autosize from 'autosize';
 import { useStore } from 'vuex';
 import { computed } from 'vue';
+// eslint-disable-next-line
 import { iconColor } from '../farben';
 
 

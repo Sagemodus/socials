@@ -341,9 +341,10 @@ export default {
 
     // Funktion zur Berechnung des Prozentsatzes
     shareContent() {
+      console.log(this.topic.title)
       const shareData = {
-        title: 'Teilen über...',
-        text: 'Der Inhalt, den du teilen möchtest.',
+        title: this.topic.title,
+        text: 'Check out this interesting topic!\n',
         url: this.getTopicUrl(),
       };
 
@@ -353,6 +354,7 @@ export default {
             console.log('Inhalt erfolgreich geteilt.');
           })
           .catch((error) => {
+
             console.error('Fehler beim Teilen:', error);
           });
       } else {
@@ -765,4 +767,5 @@ button.share-button {
   display: flex;
   align-items: center;
   width: 70%;
-}</style>
+}
+</style>

@@ -161,6 +161,7 @@ const User = mongoose.model(
     resetPasswordToken: String,
     resetPasswordExpires: Date,
     blocklist: [Number],
+    isAdmin:false,
   })
 );
 

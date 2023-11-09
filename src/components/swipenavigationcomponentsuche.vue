@@ -18,7 +18,6 @@
 <script>
 import { ref, reactive, onMounted, computed } from 'vue';
 import Hammer from 'hammerjs';
-import { iconColor } from './farben'
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
 
 
@@ -34,7 +33,7 @@ export default {
 
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
 
-    // Definiere eine computed-Funktion, um den currentUser aus dem Vuex-Store zu erhalten
+    // eslint-disable-next-line
     const currentUser = computed(() => store.state.currentUser);
 
     const tabs = reactive([
@@ -74,11 +73,7 @@ export default {
       hammer.on('swiperight', previousTab);
       hammer.on('swipeleft', nextTab);
   // Setze die Farbe basierend auf dem currentUser
-      const userfarbe = currentUser.value.farbe;
 
-      // eslint-disable-next-line
-
-      const color = userfarbe ? iconColor(userfarbe) : 'gray';
 
     });
 

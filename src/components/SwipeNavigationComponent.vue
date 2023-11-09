@@ -17,6 +17,7 @@
 import { shallowRef, reactive, onMounted, computed } from 'vue';
 import Hammer from 'hammerjs';
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
+// eslint-disable-next-line
 import { iconColor } from '../components/farben';
 
 export default {
@@ -24,7 +25,7 @@ export default {
   props: ['onTabSwitch'],
   setup(props) {
     const store = useStore();
-
+    // eslint-disable-next-line
     const currentUser = computed(() => store.state.currentUser);
     const tabs = reactive([
       { name: 'Public', path: '/public' },
@@ -66,11 +67,7 @@ export default {
 
       // Dieses Beispiel nimmt an, dass `currentUser.value.farbe` bereits gesetzt ist.
       // Andernfalls müsste hier eine entsprechende Überprüfung erfolgen.
-      const userfarbe = currentUser.value.farbe;
 
-      // eslint-disable-next-line
-
-      const color = userfarbe ? iconColor(userfarbe) : 'gray';
     });
 
     return { activeTab, nextTab, previousTab, switchTab, tabs };

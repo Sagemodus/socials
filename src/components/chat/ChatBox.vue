@@ -54,7 +54,6 @@ export default {
         if (props.chat?.participants[0] === props.chat?.participants[1]) {
 
             // eslint-disable-next-line
-
             userId = props.chat?.participants[0];
         }
         else {

@@ -23,12 +23,12 @@
 <script>
 import { ref, reactive, onMounted, computed, onUnmounted } from 'vue';
 import Hammer from 'hammerjs';
-import { iconColor } from './farben'
 import { useStore } from 'vuex';
 
 export default {
   setup(props) {
     const store = useStore();
+     // eslint-disable-next-line
     const currentUser = computed(() => store.state.currentUser);
 
     const tabs = reactive([
@@ -86,11 +86,7 @@ export default {
     });
 
     // Setze die Farbe basierend auf dem currentUser
-    const userfarbe = currentUser.value.farbe;
 
-    // eslint-disable-next-line
-
-    const color = userfarbe ? iconColor(userfarbe) : 'gray';
 
     return { activeTab, nextTab, previousTab, switchTab, tabs };
   },

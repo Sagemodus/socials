@@ -94,8 +94,7 @@ export default {
         const selectedChatId = ref(null);
 
         // eslint-disable-next-line
-
-        const router = useRouter();
+            const router = useRouter();
 
         const pendingChats = props.chats.filter(chat => chat.isPending && chat.startedBy != currentUser.id);
 

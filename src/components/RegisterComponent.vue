@@ -53,7 +53,6 @@
               >
             </div>
             <button class="btn btn-primary">Register</button>
-            &nbsp;&nbsp;&nbsp;&nbsp;
             <router-link to="/login" class="card-link">Already have an account?</router-link>
           </form>
         </div>
@@ -75,7 +74,6 @@ export default {
   },
   methods: {
       registerUser () {
-
         try{
       this.$store
         .dispatch('register', {
@@ -95,29 +93,29 @@ export default {
 </script>
 
 <style scoped>
-.registration {
+.login {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f5f5f5; /* Soft white background */
+  background-color: #f5f5f5;
 }
 
-.registration-title {
+.login-title {
   text-align: center;
-  color: #333; /* Dark gray text color */
+  color: #333;
   font-size: 24px;
   margin-bottom: 20px;
 }
 
-.registration-card {
+.login-card {
   width: 60%;
 }
 
 .card {
-  border: none; /* Remove card border */
-  border-radius: 10px; /* Rounded corners */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Soft shadow */
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn {
@@ -131,19 +129,19 @@ export default {
 }
 
 .form-label {
-  width: 100%; /* Labels start at the same spot */
+  width: 100%;
   font-weight: bold;
-  color: #555; /* Medium gray label text color */
+  color: #555;
 }
 
 .form-control {
-  border: 1px solid #ccc; /* Light gray border */
-  border-radius: 5px; /* Rounded corners */
+  border: 1px solid #ccc;
+  border-radius: 5px;
   padding: 10px;
 }
 
 .form-control:focus {
-  border-color: #007bff; /* Blue border when focused */
+  border-color: #007bff;
 }
 
 .registration-form {

@@ -10,17 +10,18 @@ import Swal from 'sweetalert2';
 import axios from 'axios';
 
 // Fetch topics and users
-/* eslint-disable */
+
+// eslint-disable-next-line no-unused-vars
 const fetchData = async () => {
   try {
     await store.dispatch('fetchTopics');
     await store.dispatch('fetchUsers');
-
     const userString = localStorage.getItem('user');
     if (userString) {
       const userData = JSON.parse(userString);
       store.commit('auth_success', userData);
-    }
+        }
+
 
     const app = createApp(App);
     app.use(router);

@@ -46,7 +46,7 @@ export default {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
+              body: JSON.stringify({
               resetToken: this.resetToken,
               newPassword: this.newPassword,
             }),

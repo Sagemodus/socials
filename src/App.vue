@@ -12,6 +12,7 @@
 </template>
 
 <script>
+
 import Navbar from './components/navbar_unten.vue'
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
@@ -33,6 +34,7 @@ export default {
 
     const store = useStore();
     const currentUser = store.state.currentUser;
+
     const userId = currentUser.id;
 /* 
     onBeforeUnmount(() => {

@@ -10,6 +10,7 @@
 </template>
 
 <script lang="js">
+
 // eslint-disable-next-line
 import { useStore } from 'vuex';
 // eslint-disable-next-line

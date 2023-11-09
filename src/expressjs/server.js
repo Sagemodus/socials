@@ -1100,6 +1100,112 @@ app.post("/api/commentupvote", async (req, res) => {
   }
 });
 
+const User = mongoose.model(
+  "User",
+  new mongoose.Schema({
+    name: String,
+    bio: String,
+    role: String,
+    contracreated: Array,
+    createdReplies: Array,
+    email: String,
+    farbe: String,
+    filterSettings: Object,
+    followers: Array,
+    following: Array,
+    hasdislikedcomment: Array,
+    hasdislikedreply: Array,
+    hasdislikedtopic: Array,
+    haslikedcomment: Array,
+    haslikedreply: Array,
+    haslikedtopic: Array,
+    id: Number,
+    joinedAt: String,
+    messages: Array,
+    nestedReplies: Array,
+    notifications: Array,
+    procreated: Array,
+    profileImage: String,
+    topicsaves: Array,
+    tweets: Array,
+    hashedPassword: String,
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
+    blocklist: [Number],
+    isAdmin:false,
+  })
+);
+
+// Define your isAdmin middleware
+function isAdmin(req, res, next) {
+  const user = req.user; // Assuming you have user data in the request object
+
+  if (user && user.role === 'admin') {
+    // User is an admin; allow access
+    next();
+  } else {
+    // User is not an admin; deny access
+    res.status(403).json({ error: 'Access denied. Admin role required.' });
+  }
+}
+
+app.get('/api/check-admin', isAdmin, (req, res) => {
+  res.json({ isAdmin: true });
+});
+
+// Add the isAdmin middleware to the app.delete route
+app.delete('/api/comments/:commentId', isAdmin, async (req, res) => {
+  const commentId = req.params.commentId;
+
+  try {
+    // Find the comment by its ID
+    const topic = await Topic.findOne({
+      $or: [
+        { 'proComments.id': commentId },
+        { 'contraComments.id': commentId },
+        { 'proComments.replies.id': commentId },
+        { 'contraComments.replies.id': commentId },
+      ],
+    });
+
+    if (!topic) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    const updateCommentText = (comments) => {
+      for (const comment of comments) {
+        if (comment.id === commentId) {
+          comment.text = "[This has been deleted]";
+        }
+        if (comment.replies.length > 0) {
+          updateCommentText(comment.replies);
+        }
+      }
+    };
+    updateCommentText(topic.proComments);
+    updateCommentText(topic.contraComments);
+
+    await topic.save();
+
+    res.status(200).json({ message: 'Comment updated successfully' });
+  } catch (error) {
+    console.error('Error updating comment:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
+        res.json(users); // Senden Sie die Daten als JSON an den Client
+  } catch (error) {
+    console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
+    res
+      .status(500)
+      .json({ message: "Fehler beim Abrufen der Daten aus der Datenbank" });
+  }
+});
+
 app.post("/api/topicdislike", async (req, res) => {
   try {
     const payload = req.body;
@@ -1116,6 +1222,7 @@ app.post("/api/topicdislike", async (req, res) => {
 
     const hasLiked = user.haslikedtopic.includes(topicId);
     const hasDisliked = user.hasdislikedtopic.includes(topicId);
+
 
     if (!hasDisliked) {
       topic.downvotes += 1;
@@ -1150,11 +1257,37 @@ app.post("/api/topicdislike", async (req, res) => {
   }
 });
 
+// Add a user to the blocklist
+app.post('/api/users/add-to-blocklist', async (req, res) => {
+  const userId = req.body.userId; // User ID to block
+  const currentUserId = req.body.currentUserId; // ID of the user adding to the blocklist
+
+  try {
+    const currentUser = await User.findOne({ id: currentUserId });
+
+    if (!currentUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Add the user to the blocklist if not already there
+    if (!currentUser.blocklist.includes(userId)) {
+      currentUser.blocklist.push(userId);
+      await currentUser.save();
+    }
+
+    res.status(200).json({ message: 'User added to blocklist' });
+  } catch (error) {
+    console.error('Error adding user to blocklist:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.patch("/api/topiclike", async (req, res) => {
   try {
     const payload = req.body;
     const topicId = payload.topicId;
     const userId = payload.userId;
+
 
     // Finde das Thema und den Benutzer in der Datenbank
     const topic = await Topic.findOne({ id: topicId });
@@ -1421,6 +1554,101 @@ app.get("/api/topics/:topicId", async (req, res) => {
     res.status(500).json({ error: "Interner Serverfehler" });
   }
 });
+
+
+app.get("/api/topics", async (req, res) => {
+  try {
+    const topics = await Topic.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
+
+    res.json(topics); // Senden Sie die Daten als JSON an den Client
+  } catch (error) {
+    console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
+    res
+      .status(500)
+      .json({ message: "Fehler beim Abrufen der Daten aus der Datenbank" });
+  }
+});
+
+async function getNextUserId() {
+  try {
+    // Find the document with the highest id value
+    const highestUser = await User.findOne({}, {}, { sort: { id: -1 } });
+
+    // If there are no users in the database, start with ID 1; otherwise, increment the highest ID value
+    const nextUserId = highestUser ? highestUser.id + 1 : 1;
+
+    return nextUserId;
+  } catch (error) {
+    console.error("Error getting next user ID:", error);
+    throw error;
+  }
+}
+
+function generateAuthToken(user) {
+  const payload = {
+    user: {
+      name: user.name,
+      password: user.hashedPassword,
+      email: user.email,
+    },
+  };
+
+  const token = jwt.sign(payload.user, jwtSecretKey, {
+    expiresIn: '1h',
+  });
+
+  return token;
+}
+
+app.post('/verify-token', (req,res)=>{
+  const {token}=req.body;
+  if(!token){
+    return res.status(400).json({message: 'Token is missing', status:FALSE});
+  }
+  jwt.verify(token, jwtSecretKey, (err)=>{
+    if(err){
+    return res.status(401).json({message:'Token is invalid', status:FALSE});
+    } 
+    res.status(200).json({ message: 'Token is valid', status:TRUE});
+})
+})
+
+
+
+app.post("/api/users/login", async (req, res) => {
+  const {email, password} = req.body;
+console.log(req.body)
+  try {
+    // Sanitize user inputs
+    const emailSanitized = DOMPurify.sanitize(email);
+    const passwordSanitized = DOMPurify.sanitize(password);
+
+    // Find the user by name in the database
+    const user = await User.findOne({ email: emailSanitized });
+  
+    console.log("Email:"+ email+ " Password: "+password)
+    if (!user) {
+      return res.status(401).send({ message: "User not found" });
+    }
+console.log(user)
+    // Compare the provided password with the hashed password
+    const isPasswordValid = await bcrypt.compare(passwordSanitized, user.hashedPassword);
+    if (!isPasswordValid) {
+      return res.status(401).send({ message: "Invalid password" });
+    }
+
+    // Generate a JWT token
+    const token = generateAuthToken(user);
+    
+    // Send the token and user ID as a response
+    console.log(user.id);
+    res.status(200).send({ success: true, token, userId: user.id });
+  } catch (error) {
+    console.error("Error logging in:", error);
+    res.status(500).send({ message: "Error logging in" });
+  }
+});
+
 
 app.post("/api/users/register", async (req, res) => {
   try {

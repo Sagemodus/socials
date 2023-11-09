@@ -12,24 +12,17 @@ const SocketService = {
       this.socket.emit("register", userId); // Senden Sie die userId an den Server, sobald Sie verbunden sind
     });
 
-    // Überwachen Sie den Online-Status eines Benutzers
-    this.socket.on("user-online", (userId) => {
-      store.commit("setUserOnline", userId);
-    });
 
-    // Überwachen Sie den Offline-Status eines Benutzers
-    this.socket.on("user-offline", (userId) => {
-      store.commit("setUserOffline", userId);
-    });
-    // eslint-disable-next-line no-unused-vars
-    this.socket.on("update-frontend", (message) => {});
+  },
+  updateFrontend(message) {
+    store.commit("ADD_MESSAGE", message);
   },
 
   onMessage(callback) {
+    console.log("kuree");
     this.socket.on("message", (message) => {
-      console.log("kuree")
+      console.log("kuree");
       try {
-
         callback(message);
       } catch (error) {
         console.error("Fehler beim fetchen des chats: ", error);
@@ -38,19 +31,20 @@ const SocketService = {
   },
 
   sendMessage(message) {
-    
-      try {
-        this.socket.emit("send-message", message);
-        
-
-      } catch (error) {
-       console.error(error)
-      }
- 
+    console.log("wird gesendet");
+    try {
+      this.socket.emit("send-message", message);
+      store.commit("ADD_MESSAGE", message);
+    } catch (error) {
+      console.error(error);
+    }
   },
 
-  disconnect() {
-    this.socket.disconnect();
+  disconnect(userId) {
+    console.log(userId);
+    this.socket.disconnect(userId);
+
+    // Entfernen Sie den 'beforeunload'-Event-Listener
   },
 };
 

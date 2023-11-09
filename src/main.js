@@ -10,6 +10,7 @@ import Swal from 'sweetalert2';
 import axios from 'axios';
 
 // Fetch topics and users
+
 // eslint-disable-next-line no-unused-vars
 const fetchData = async () => {
   try {

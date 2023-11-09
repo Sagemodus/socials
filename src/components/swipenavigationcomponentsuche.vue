@@ -75,7 +75,9 @@ export default {
       hammer.on('swipeleft', nextTab);
   // Setze die Farbe basierend auf dem currentUser
       const userfarbe = currentUser.value.farbe;
-      // eslint-disable-next-line no-unused-vars
+
+      // eslint-disable-next-line
+
       const color = userfarbe ? iconColor(userfarbe) : 'gray';
 
     });

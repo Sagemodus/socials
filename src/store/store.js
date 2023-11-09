@@ -14,7 +14,9 @@ import io from "socket.io-client";
 export function formatCreatedAt(createdAt) {
   const createdAtDate = dayjs(createdAt);
   const now = dayjs();
+
   const diff = now.diff(createdAtDate, "minute");
+
   if (diff < 1) {
     return "Now";
   } else if (diff < 60) {
@@ -30,8 +32,6 @@ export function formatCreatedAt(createdAt) {
   }
 }
 const MAX_COMMENT_POSITION = 100;
-
-
 
 function setDepthForReplies(replies, depth) {
   if (!replies || !Array.isArray(replies) || replies.length === 0) {
@@ -166,7 +166,6 @@ export default createStore({
         token: localStorage.getItem("token") || null,
       },
       isAdmin:false,
-
     };
   },
 
@@ -206,8 +205,6 @@ export default createStore({
 
     setTopics(state, topics) {
       state.topics = topics;
-
-      console.log("kolleg")
     },
 
     
@@ -256,20 +253,12 @@ export default createStore({
       state.status = 'error';
 
     },
-
-    
-
     setUsers(state, users) {
-
       state.users = users;
-
       state.currentUser = users[1];
 
       // Überprüfen, ob der aktuelle Benutzer ungelesene Benachrichtigungen hat
-
     },
-
-   
 
     updateCurrentUser(state, payload) {
       state.currentUser = { ...state.currentUser, ...payload };
@@ -469,33 +458,28 @@ export default createStore({
 
     TOGGLE_LIKE(state, { topicId, userId }) {
       const topic = state.topics.find((topic) => topic.id === topicId);
+      const user = state.users.find((user) => user.id === userId);
 
-      if (topic) {
-        const user = state.users.find((user) => user.id === userId);
-        if (user) {
-          if (!user.haslikedtopic.includes(topicId)) {
-            // Füge den Like hinzu
-            topic.upvotes += 1;
-            user.haslikedtopic.push(topicId);
+      if (!topic || !user) return;
 
-            // Entferne den Dislike (falls vorhanden)
-            if (user.hasdislikedtopic.includes(topicId)) {
-              topic.downvotes -= 1;
-              user.hasdislikedtopic = user.hasdislikedtopic.filter(
-                (id) => id !== topicId
-              );
-            }
-          } else {
-            // Entferne den Like
-            topic.upvotes -= 1;
-            user.haslikedtopic = user.haslikedtopic.filter(
-              (id) => id !== topicId
-            );
-          }
+      const hasLiked = user.haslikedtopic.includes(topicId);
+      const hasDisliked = user.hasdislikedtopic.includes(topicId);
 
-          updatePercentages(topic); // Aktualisiere Prozentsätze
+      if (!hasLiked) {
+        topic.upvotes += 1;
+        user.haslikedtopic.push(topicId);
+        if (hasDisliked) {
+          topic.downvotes -= 1;
+          user.hasdislikedtopic = user.hasdislikedtopic.filter(
+            (id) => id !== topicId
+          );
         }
+      } else {
+        topic.upvotes -= 1;
+        user.haslikedtopic = user.haslikedtopic.filter((id) => id !== topicId);
       }
+
+      updatePercentages(topic); // Aktualisiere Prozentsätze
     },
 
     TOGGLE_DISLIKE(state, { topicId, userId }) {
@@ -628,6 +612,7 @@ export default createStore({
       reply.replies.push(newReply);
       currentUser.nestedReplies.push(newReply.path);
     },
+
     ADD_NOTIFICATION_TO_USER(state, notificationsObjekt) {
       try {
         console.log(notificationsObjekt);
@@ -769,7 +754,6 @@ export default createStore({
       } catch (error) {
         console.error("Ein fehler ist aufgetreten ", error);
       }
-
     },
 
     UPDATE_CHATARRAY(state, chatId) {
@@ -959,7 +943,6 @@ export default createStore({
       } catch (error) {
         console.error("Fehler beim Aktualisieren des reads:", error.message);
       }
-
     },
 
     async updateCurrentUserAction({ commit }, payload) {
@@ -997,7 +980,6 @@ export default createStore({
         // Optional: Sie könnten hier auch einen Zustand setzen, um den Fehler im UI anzuzeigen
       }
     },
-
 
     fetchOnlineUsers({ commit }) {
       axios
@@ -1192,6 +1174,7 @@ export default createStore({
         );
 
         if (!response.ok) {
+          console.log(response)
           throw new Error("Netzwerkantwort war nicht ok.");
         }
 
@@ -1200,14 +1183,7 @@ export default createStore({
         if (data.message === "Benachrichtigung bereits gesendet") {
           console.log("Benachrichtigung wurde bereits gesendet.");
           return; // Beendet die Funktion frühzeitig
-        } else {
-          const notification = data.objekt;
-          console.log(data.objekt + data + " kolelg");
-          console.log(notification + " action notification");
-
-          // Nach erfolgreichem Senden der Benachrichtigung, führen Sie die Mutation aus
-          commit("ADD_NOTIFICATION_TO_USER", notification);
-        }
+        } 
       } catch (error) {
         console.error(
           "Es gab einen Fehler beim Senden der Benachrichtigung:",
@@ -1217,7 +1193,6 @@ export default createStore({
       }
     },
 
-
     async addReplyPathToUser({ commit }, { userId, replyPath }) {
       try {
         const response = await axios.put(
@@ -1225,106 +1200,10 @@ export default createStore({
           { replyPath }
         );
 
-      if (response.data && response.data.success) {
-        commit("ADD_REPLY_PATH_TO_USER", { userId, replyPath });
-      }
-    } catch (error) {
-      console.error("Fehler beim Hinzufügen des Reply-Pfads:", error);
-    }
-  },
-
-
-    async submitReply({ commit }, { reply, newReply }) {
-      try {
-        const response = await axios.post(
-          "http://localhost:3000/api/replies",
-          newReply
-        );
         if (response.data && response.data.success) {
-          commit("ADD_REPLY", { reply, newReply });
         }
       } catch (error) {
-        console.error("Fehler beim Senden der Antwort an den Server:", error);
-      }
-    },
-
-    async addReplyAction({ commit }, { newReply, comment }) {
-      try {
-        // Simuliere den Serveraufruf
-        const response = await axios.post(
-          "http://localhost:3000/api/addReply",
-          newReply
-        );
-        const antwort = response.data;
-        console.log(newReply.path);
-        console.log(response.data.success);
-        // Überprüfe die Serverantwort
-        if (response.data && response.data.success) {
-          // Commit der Mutation, um die Antwort zum Kommentar hinzuzufügen
-          commit("addReplyMutation", { newReply, comment });
-          // Hier könnten Sie den Aufruf zum Hinzufügen des Replies zum Benutzerprofil einfügen
-          const userReplyResponse = await axios.post(
-            "http://localhost:3000/api/addUserReply",
-            {
-              comment,
-              reply: newReply,
-            }
-          );
-          if (userReplyResponse.data && userReplyResponse.data.success) {
-            console.log("Reply erfolgreich zum Benutzerprofil hinzugefügt");
-          } else {
-            console.error(
-              "Fehler beim Hinzufügen des Replies zum Benutzerprofil"
-            );
-          }
-        } else {
-          throw new Error(
-            response.data.error ||
-              "Unbekannter Fehler beim Hinzufügen der Antwort"
-          );
-        }
-
-        // Leere das Eingabefeld und blende das Antwortformular aus
-        // Dies sollte in der Komponente selbst erfolgen, z.B. durch das Auslösen eines Events oder das Setzen eines Zustands
-      } catch (error) {
-        console.error("Fehler beim Hinzufügen der Antwort:", error);
-        // Hier kannst du auf spezifische Fehler reagieren, z.B. durch das Anzeigen einer Fehlermeldung für den Benutzer
-      }
-    },
-
-    async fetchUsers({ commit }) {
-      try {
-        const response = await axios.get("http://localhost:3000/api/users");
-        const users = response.data;
-        console.log(users);
-        commit("setUsers", users);
-      } catch (error) {
-        console.error("Fehler beim Abrufen der Daten:", error);
-      }
-    },
-
-  async addReplyPathToUser({ commit }, { userId, replyPath }) {
-    try {
-      const response = await axios.put(`http://192.168.1.42:3000/api/users/${userId}/addReplyPath`, { replyPath });
-
-      if (response.data && response.data.success) {
-        commit("ADD_REPLY_PATH_TO_USER", { userId, replyPath });
-      }
-    } catch (error) {
-      console.error("Fehler beim Hinzufügen des Reply-Pfads:", error);
-    }
-  },
-
-    async verifyToken({ commit }, token) {
-      try {
-        const response = await axios.post('/verify-token', { token });
-        // Handle the response as needed
-        console.log(response.data.status)
-        return response.data.status;
-
-      } catch (error) {
-        // Handle errors
-        throw error;
+        console.error("Fehler beim Hinzufügen des Reply-Pfads:", error);
       }
     },
 
@@ -1340,7 +1219,7 @@ export default createStore({
           commit("ADD_REPLY", { reply, newReply });
           await dispatch("addReplyPathToUser", {
             userId: currentUser.id,
-            replyPath: newPath,
+            replyPath: newReply.path,
           });
           await dispatch("sendNotification", {
             userId: payload.userId,
@@ -1451,7 +1330,6 @@ export default createStore({
         console.error("Fehler beim Abrufen der Daten:", error);
       }
     },
-    
 
     logout({ commit }) {
       console.log("logout")
@@ -1533,9 +1411,9 @@ export default createStore({
     }
   },
 
+
     async fetchTopics({ commit }) {
       try {
-
         const response = await axios.get(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/topics"
         );
@@ -1549,7 +1427,6 @@ export default createStore({
     commentundreply({ commit }, { comment, reply }) {
       commit("comment_und_reply2", { comment, reply });
     },
-
     async addtopicToSaves({ commit }, { path, currentUserId }) {
       console.log(currentUserId);
       console.log(path);
@@ -1571,7 +1448,6 @@ export default createStore({
       }
     },
 
-
     addNotification({ commit }, notification) {
       commit("ADD_NOTIFICATION", notification);
     },
@@ -1590,6 +1466,7 @@ export default createStore({
     },
 
     async upvoteComment({ commit, dispatch, state }, payload) {
+      console.log(payload)
       const userProfile = state.users.find(
         (user) => user.id === payload.currentUserId
       );
@@ -1599,7 +1476,7 @@ export default createStore({
           payload
         );
         const isAlreadyLiked = userProfile.haslikedcomment.includes(
-          payload.topicId
+          payload.commentId
         );
         if (response.status === 200 && response.data.success) {
           commit("UPVOTE_COMMENT", payload);
@@ -1608,6 +1485,7 @@ export default createStore({
             response.data.message || "Ein unbekannter Fehler ist aufgetreten."
           );
         }
+        console.log(isAlreadyLiked);
         if (!isAlreadyLiked) {
           try {
             await dispatch("sendNotification", {
@@ -1633,8 +1511,9 @@ export default createStore({
         (user) => user.id === payload.currentUserId
       );
       const isAlreadyLiked = userProfile.hasdislikedcomment.includes(
-        payload.topicId
+        payload.commentId
       );
+      console.log(isAlreadyLiked);
       try {
         const response = await axios.post(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/commentdownvote",
@@ -1672,6 +1551,7 @@ export default createStore({
       const isAlreadyLiked = userProfile.haslikedreply.includes(
         payload.replyId
       );
+      console.log(isAlreadyLiked);
       try {
         const response = await axios.post(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/replyupvote",
@@ -1711,7 +1591,7 @@ export default createStore({
         payload.replyId
       );
       try {
-        console.log(payload.commentId);
+        console.log(isAlreadyLiked);
         const response = await axios.post(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/replydownvote",
           payload
@@ -1746,10 +1626,7 @@ export default createStore({
       try {
         console.log(topicId);
         const response = await axios.get(
-
           `https://c964nzv2-3000.euw.devtunnels.ms/api/topics/${topicId}`
-
-
         );
         const topicData = response.data;
         console.log(topicData);
@@ -1759,7 +1636,6 @@ export default createStore({
         throw error;
       }
     },
-
 
     async addCommentToTopic({ commit, dispatch, state }, payload) {
       const { author, topicId, comment, selectedTab } = payload;
@@ -1814,7 +1690,6 @@ export default createStore({
     getTopicById: (state) => (id) => {
       return state.topics.find((topic) => topic.id === id);
     },
-    
 
     getUserById: (state) => (id) => {
       return state.users.find((user) => user.id === id);

@@ -71,9 +71,9 @@
 
                 </div>
                 <div>
-                    <div v-for="topic in TopicDownVotes" :key="topic.id" :id="topic.id">
-                        <TopicBox :key="topic.id" :id="topic.id" :isDownVoted ="true" :disableelements ="true" />
-                    </div>
+              <div v-for="topic in TopicDownVotes.reverse()" :key="topic.id" :id="topic.id">
+                <TopicBox :key="topic.id" :id="topic.id" :disableelements="true" :isDownVoted="true" />
+              </div>
 
                 </div>
             </template>

@@ -93,7 +93,7 @@ export default {
     const isScrolled = ref(false);
 
     const handleScroll = () => {
-      const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollPosition = window.pageYOffset -100 || document.documentElement.scrollTop;
 
       // Überprüfe die Scroll-Richtung und aktualisiere isTabBarSticky
       isTabBarSticky.value = scrollPosition < lastScrollPosition.value;
@@ -148,8 +148,8 @@ export default {
           commentElement.classList.add('highlighted');
 
           setTimeout(() => {
-            commentElement.classList.remove('highlighted');
-          }, 2500);
+            commentElement.classList.remove('highlighted'); 
+          }, 1500);
         }
 
         window.addEventListener('scroll', handleScroll); // Wenn erforderlich
@@ -237,16 +237,7 @@ export default {
   methods: {
     ...mapActions(['fetchComments', 'addCommentToTopic', 'selectTab']),
 
-    scrollToElement() {
-      // Das Element mit der commentId finden
-      const commentElement = document.getElementById(this.commentId);
 
-      // Überprüfen, ob das Element existiert
-      if (commentElement) {
-        // Scrollen zum Element mit sanftem Verhalten
-        commentElement.scrollIntoView({ behavior: "smooth" });
-      }
-    },
 
     // Hilfsfunktion, um den Kommentar mit der neuen ID zu finden
     findCommentById(newCommentId) {
@@ -310,11 +301,25 @@ export default {
         // Kommentar zum Store hinzufügen
         console.log(this.author.id + " component")
 
-        this.$store.dispatch('addCommentToTopic', { author, topicId, comment: newComment, selectedTab, notificationType: "commentaddtotopic", zielId: this.author.id, benachrichtigungsElementId: newComment.id, userId: currentUserId });
-        console.log('Kommentar erfolgreich hinzugefügt:');
+        this.$store.dispatch('addCommentToTopic', { author, topicId, comment: newComment, selectedTab, notificationType: "commentaddtotopic", zielId: this.author.id, benachrichtigungsElementId: newComment.id, userId: currentUserId })
+          .then(() => {
+            // Warten Sie, bis der Kommentar hinzugefügt wurde, und scrollen Sie dann zu ihm
+            this.$nextTick(() => {
+              const element = document.getElementById(newComment.id);
+              if (element) {
+                const yCoordinate = element.getBoundingClientRect().top + window.pageYOffset - 100;
+                window.scrollTo({ top: yCoordinate, behavior: 'smooth' });
+                element.classList.add('highlighted'); // Hinzufügen der 'highlighted' Klasse
+                setTimeout(() => {
+                  element.classList.remove('highlighted');
+                }, 1000);
+              }
+            });
+          })
 
+      }
 
-      } catch (error) {
+      catch (error) {
         console.error('Fehler beim Hinzufügen des Kommentars:', error);
         // Hier können Sie eine Fehlermeldung anzeigen oder andere Maßnahmen ergreifen, um mit dem Fehler umzugehen
       }

@@ -1,18 +1,13 @@
 <template>
   <div class="comment-box" :id="commentId">
 
-
-
-    <div class="comment-content" @click="handleRouterLinkClick(comment)">{{ trimmedCommentText }}</div>
-
-
     <div class="fromNotification" v-if="!disableelementsforNotifications">
       <div class="fromNotification" v-if="!disableelementsforNotifications">
         <!-- Anzeige ausblenden wenn es in der notification view gerendert -->
         <div class="user-info">
           <div class="header-comment">
             <img :src="author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile" />
-            <h5 class="username">{{ author?.name }}</h5>
+            <h5 class="username"  @click="goToProfile">{{ author?.name }} </h5>
             <div class="month">
               <p>{{ $store.getters.formattedCreatedAt(comment?.createdAt) }}</p>
             </div>
@@ -21,6 +16,11 @@
           </div>
         </div>
       </div>
+
+    <div class="comment-content" @click="handleRouterLinkClick(comment)">{{ trimmedCommentText }}</div>
+
+
+
 
       <div class="actions">
 
@@ -462,7 +462,7 @@ export default {
 }
 
 .comment-content {
-  padding-top: 10px;
+     padding-bottom: 10px;
 }
 
 .reply-form {

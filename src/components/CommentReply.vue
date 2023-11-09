@@ -3,29 +3,26 @@
   <div class="comment-reply" v-if="reply">
 
 
-    <p class="antwort-text" id="antworttext" @click='goToTopic(reply.topicId)'>{{ reply?.text }}</p>
+
     <div class="fromNotification" v-if="!disableelementsforNotifications">
             <div class="profile-info">
           <img :src="author?.profileImage" alt="Profilbild" class="profile-image" @click="goToProfile" />
-          <h5 class="profile-name">{{ author?.name }}</h5>
+          <h5 class="profile-name"  @click="goToProfile">{{ author?.name }}</h5>
           <div class="month">
             <p>{{ $store.getters.formattedCreatedAt(reply.createdAt) }}</p>
           </div>
         </div>
+
+      <p class="antwort-text" id="antworttext" @click='goToTopic(reply.topicId)'>{{ reply?.text }}</p>
+
       <div class="buttons-container">
         <!-- Antwort-Button anzeigen, um auf diese Antwort zu antworten -->
-
-
 
         <button v-if="!showReplyForm && depth != 5" @click="openReplyForm" class="action-button">
           <font-awesome-icon :style="{ color: iconColor(currentUser.farbe) }" :icon="['fas', 'commenting']"
             class="icon" />
         </button>
-
-
-
-
-        <!-- Upvote Button -->
+    <!-- Upvote Button -->
         <button @click="upvoteReplyAction(reply.id, currentUser.id, reply.topicId, reply.commentobjektId)"
           class="action-button" ref="upvoteButton">
           <font-awesome-icon :icon="hasLikedReply ? ['fas', 'thumbs-up'] : ['far', 'thumbs-up']" class="icon"
@@ -429,7 +426,7 @@ export default {
     },
 
     downvoteReplyAction(replyId, currentUserId, topicId, commentId) {
-      this.$store.dispatch('downvoteReply', { replyId, currentUserId, topicId, commentId, notificationType: "replydislike", zielId: this.reply.author, benachrichtigungsElementId: replyId, });
+      this.$store.dispatch('downvoteReply', { replyId, currentUserId, topicId, commentId:commentId, notificationType: "replydislike", zielId: this.reply.author, benachrichtigungsElementId: replyId, });
       this.$nextTick(() => {
         this.animateButton(this.$refs.downvoteButton);
       });
@@ -516,6 +513,9 @@ export default {
 <style lang="scss" scoped>
 .antwort-text {
   padding-left: 5px;
+}
+p#antworttext {
+    padding-top: 0px;
 }
 
 .month {

@@ -52,7 +52,6 @@ import CommentReply from './CommentReply.vue';
 import ChatBox from './chat/ChatBox.vue'
 
 // eslint-disable-next-line
-
 import { onMounted } from "vue";
 export default {
     components: {

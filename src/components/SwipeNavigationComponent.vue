@@ -67,6 +67,7 @@ export default {
       // Dieses Beispiel nimmt an, dass `currentUser.value.farbe` bereits gesetzt ist.
       // Andernfalls müsste hier eine entsprechende Überprüfung erfolgen.
       const userfarbe = currentUser.value.farbe;
+      // eslint-disable-next-line no-unused-vars
       const color = userfarbe ? iconColor(userfarbe) : 'gray';
     });
 

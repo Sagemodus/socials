@@ -332,12 +332,16 @@ export default {
       sortedCommentList,
       showSettings,
       toggleSettings,
+      //eslint-disable-next-line
       editMode,
+      //eslint-disable-next-line
       editableBio,
+      //eslint-disable-next-line
       enableEditMode,
+      //eslint-disable-next-line
       disableEditMode,
+      //eslint-disable-next-line
       saveBio,
-
     };
   },
 

@@ -21,6 +21,7 @@ const SocketService = {
     this.socket.on("user-offline", (userId) => {
       store.commit("setUserOffline", userId);
     });
+    // eslint-disable-next-line no-unused-vars
     this.socket.on("update-frontend", (message) => {});
   },
 

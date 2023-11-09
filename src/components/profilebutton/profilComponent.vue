@@ -10,7 +10,9 @@
 </template>
 
 <script lang="js">
+// eslint-disable-next-line no-unused-vars
 import { useStore } from 'vuex';
+// eslint-disable-next-line no-unused-vars
 import { computed } from 'vue';
 
 export default {

@@ -16,6 +16,7 @@
 </template>
 
 <script>
+// eslint-disable-next-line no-unused-vars
 import { computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import notificationComponent from "../components/notificationsComponent.vue";

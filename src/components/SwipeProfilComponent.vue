@@ -87,6 +87,7 @@ export default {
 
     // Setze die Farbe basierend auf dem currentUser
     const userfarbe = currentUser.value.farbe;
+    // eslint-disable-next-line no-unused-vars
     const color = userfarbe ? iconColor(userfarbe) : 'gray';
 
     return { activeTab, nextTab, previousTab, switchTab, tabs };

@@ -12,6 +12,7 @@
 </template>
 
 <script>
+
 import Navbar from './components/navbar_unten.vue'
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
@@ -29,6 +30,7 @@ export default {
   setup() {
     const store = useStore();
     const currentUser = store.state.currentUser;
+    // eslint-disable-next-line no-unused-vars
     const route = useRoute();
     SocketService.init(currentUser.id);
     const showNavbar = computed(() => store.state.showNavbar);

@@ -92,6 +92,7 @@ export default {
         const isButtonDisabled = ref(true);
         let selectedUserId = ref(null); // Speichern Sie die ID des ausgewählten Benutzers hier
         const selectedChatId = ref(null);
+        // eslint-disable-next-line no-unused-vars
         const router = useRouter();
 
         const pendingChats = props.chats.filter(chat => chat.isPending && chat.startedBy != currentUser.id);

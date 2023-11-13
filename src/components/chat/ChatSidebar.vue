@@ -137,8 +137,17 @@ export default {
 
                             try {
                                 store.dispatch("updateActiveChats", error.response.data.chat.chatId)
-                                store.state.chats.push(error.response.data.chat)
-                                console.log("wird gepusht")
+
+                                const bestehenderChat = store.state.chats.find((chat) => chat.chatId == error.response.data.chat.chatId)
+
+                                        if  (!bestehenderChat){
+                                            store.state.chats.push(error.response.data.chat)
+                                            console.log("wird gepusht")
+                                                              }
+                                        else {
+                                            console.log("nüüüüüüt bro")
+                                          }                      
+                            
 
                             } catch (error) {
                                 console.error("", error)

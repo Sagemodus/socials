@@ -248,11 +248,26 @@ export default createStore({
     auth_error(state) {
       state.status = "error";
     },
-    setUsers(state, users) {
-      state.users = users;
-      state.currentUser = users[1];
+    setUsers(state, payload) {
+      const { users, userData } = payload;
 
-      // Überprüfen, ob der aktuelle Benutzer ungelesene Benachrichtigungen hat
+      // Aktualisieren Sie die Benutzerliste im State
+      state.users = users;
+
+      // Finden Sie den Index des aktuellen Benutzers in der Liste
+      const userIndex = users.findIndex((user) => user.id === userData.id);
+
+      if (userIndex !== -1) {
+        // Aktualisieren Sie den aktuellen Benutzer, ohne seine bestehenden Eigenschaften zu überschreiben
+        state.currentUser = {
+          ...state.currentUser,
+          ...users[userIndex],
+        };
+      } else {
+        console.error("Benutzer mit der angegebenen ID nicht gefunden");
+      }
+
+      // Weitere Logik für ungelesene Benachrichtigungen usw.
     },
 
     updateCurrentUser(state, payload) {
@@ -995,7 +1010,7 @@ export default createStore({
           "https://c964nzv2-3000.euw.devtunnels.ms/api/createchat",
           payload
         );
-        if (response.status === 200 && response.data.success) {
+        if (response.status === 200) {
           payload.chat = response.data.chat;
           console.log("payload mit chatId: ", payload);
           commit("CREATE_CHAT", payload);
@@ -1301,15 +1316,19 @@ export default createStore({
       }
     },
 
-    async fetchUsers({ commit, state }) {
+    async fetchUsers({ commit, state }, payload) {
       try {
+        const userData = payload;
+        console.log("currentuserId: ", userData);
         const response = await axios.get(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/users"
         );
         const users = response.data;
-        commit("setUsers", users);
+        commit("setUsers", { users, userData });
         console.log(" response.data ", response.data);
         const currentUserChats = state.currentUser.activeChats;
+        console.log("amj: ", state.currentUser);
+
         const responseChats = await axios.post(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/chats",
           { currentUserChats: currentUserChats }
@@ -1329,7 +1348,6 @@ export default createStore({
       router.push("/login");
       commit("updateCurrentUser", { token: null });
       commit("auth_logout");
-   
     },
 
     async login({ commit, getters, dispatch }, user) {
@@ -1404,7 +1422,6 @@ export default createStore({
         throw err; // Rethrow the error for further handling in the component
       }
     },
-
 
     async fetchTopics({ commit }) {
       try {

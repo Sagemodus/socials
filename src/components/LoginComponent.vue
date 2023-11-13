@@ -40,7 +40,10 @@
 </template>
 
 <script>
+import { iconColor } from '../components/farben';
+
 export default {
+
   data() {
     return {
       name: "",
@@ -55,6 +58,10 @@ export default {
           email: this.email
         })
         .then(() => {
+             const userfarbe = this.$store.state.currentUser.farbe;
+          const color = userfarbe ? iconColor(userfarbe) : 'gray';
+          console.log(color)
+          document.documentElement.style.setProperty('--iconColor', color);
             this.$router.push({ name: 'feed' })       
         })
     }

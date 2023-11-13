@@ -422,7 +422,7 @@ export default {
 
   created() {
     // Check if the user is an admin when the component is created
-    this.checkAdmin();
+ /*    this.checkAdmin(); */
   },
 };
 </script>

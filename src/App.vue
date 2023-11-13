@@ -15,12 +15,12 @@
 
 import Navbar from './components/navbar_unten.vue'
 import { initializeApp } from "firebase/app";
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { getMessaging, onMessage } from "firebase/messaging";
 import { useStore } from 'vuex';
-import SocketService from './services/SocketService';
+
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { iconColor } from '../src/components/farben';
+
 
 
 export default {
@@ -29,22 +29,23 @@ export default {
 
   },
   setup() {
-/*eslint-disable*/
- 
-
     const store = useStore();
-    const currentUser = store.state.currentUser;
 
-    const userId = currentUser.id;
-/* 
-    onBeforeUnmount(() => {
-        console.log(userId)
-      SocketService.disconnect(currentUser.id);
-    }); */
+
+
+
+
+
+
+    /* 
+        onBeforeUnmount(() => {
+            console.log(userId)
+          SocketService.disconnect(currentUser.id);
+        }); */
 
     // eslint-disable-next-line
     const route = useRoute();
-    SocketService.init(currentUser.id);
+
     const showNavbar = computed(() => store.state.showNavbar);
     const firebaseConfig = {
       apiKey: "AIzaSyDjimJJcGiL1O_6Swpzp2d5xaA5-AI4CpI",
@@ -59,9 +60,7 @@ export default {
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);// eslint-disable-line no-unused-vars
 
-    const userfarbe = currentUser.farbe;
-    const color = userfarbe ? iconColor(userfarbe) : 'gray';
-    document.documentElement.style.setProperty('--iconColor', color);
+
 
     // Get registration token. Initially this makes a network call, once retrieved
     // subsequent calls to getToken will return from cache.
@@ -70,42 +69,17 @@ export default {
     onMessage(messaging, (payload) => {
       console.log('Message received. ', payload);
       const notificationObject = JSON.parse(payload.data.objekt);
-      
+
       try {
         store.commit("ADD_NOTIFICATION_TO_USER", notificationObject);
-        
+
       } catch (error) {
         console.error(error)
       }
       // ...
     });
 
-    getToken(messaging, { vapidKey: 'BJTzLLT-jiIVy-3Zse1A9ZqvQHPM8xl91xMvyAiTRtOZ_xViUWpy9G8eN9ZNm-ednER7gkg_KrYCXqfb2qz-KSI' }).then((currentToken) => {
-      if (currentToken) {
-        console.log(currentToken);
 
-        // Send the token to your server
-        fetch('https://c964nzv2-3000.euw.devtunnels.ms/save-token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ userId: store.state.currentUser._id, token: currentToken })
-        })
-          .then(response => response.json())
-          .then(data => {
-            console.log('Token sent to the server:', data);
-          })
-          .catch((error) => {
-            console.error('Error sending token to server:', error);
-          });
-
-      } else {
-        console.log('No registration token available. Request permission to generate one.');
-      }
-    }).catch((err) => {
-      console.log('An error occurred while retrieving token. ', err);
-    });
 
     return {
       store,

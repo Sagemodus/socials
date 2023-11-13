@@ -311,6 +311,30 @@ export default {
       showDropdown.value = !showDropdown.value;
     };
 
+    const editMode = ref(false);
+    const editableBio = ref('');
+
+    const enableEditMode = () => {
+      editableBio.value = currentUser.value.bio; // Kopiert die aktuelle Bio in ein bearbeitbares Feld
+      editMode.value = true;
+
+
+    };
+
+    const disableEditMode = () => {
+      editMode.value = false;
+    };
+
+    const saveBio = () => {
+
+      currentUser.value.bio = editableBio.value;
+      editMode.value = false;
+      const editableBiOhneValue = editableBio.value;
+      const payload = { editableBiOhneValue, userId }
+      store.dispatch("updateBio", payload)
+    };
+
+
     const logout = () => {
       store.dispatch('logout')
     }

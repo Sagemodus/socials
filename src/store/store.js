@@ -233,6 +233,7 @@ export default createStore({
         localStorage.removeItem("CurrentUser");
         localStorage.removeItem("user");
         state.currentUser = null;
+        router.push("/login")
       } catch (err) {
         console.log(err);
       }

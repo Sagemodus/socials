@@ -26,12 +26,11 @@ import profileAndereUser from '../components/profilebutton/profileAndereUser.vue
 
 /* 
 import store from '../store/store.js'
+*/
 //passwort vergessen
-
-
 import PasswordForgottenComponent from '../components/PasswordForgottenComponent.vue';
 import ResetPassword from '../components/ResetPasswordComponent.vue'
-*/
+
 
 import store from '../store/store.js'; // Import your Vuex store
 
@@ -105,6 +104,18 @@ const routes = [
     name: "Searchbar",
     component: SearchbarComponent,
   },
+  //Reset password
+  {
+    path: "/resetPassword",
+    name: "ResetPassword",
+    component: ResetPassword
+  },
+  {
+    path: "/resetPasswordConfirm",
+    name: "ResetPasswordConfirm",
+    component: PasswordForgottenComponent
+  },
+
   // Swipe-Profil-Komponente
   {
     path: "/swipe-profil-component",

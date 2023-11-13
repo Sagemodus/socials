@@ -26,7 +26,8 @@ import SocketService from "./services/SocketService";
           await store.dispatch("fetchTopics");
         await store.dispatch("fetchUsers", userData);
         }
-
+        await store.dispatch("fetchUsers");
+        await store.dispatch("fetchTopics");
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -43,28 +44,42 @@ fetchData().then(() => {
   app.use(store);
   console.log("currenuser", store.state.currentUser);
       const currentUser = store.state.currentUser;
-      /*eslint-disable*/
-      const userId = currentUser.id;
-      SocketService.init(currentUser.id);
+  /*eslint-disable*/
+  if (!currentUser) {
+    
 
-      if (currentUser) {
-        const userfarbe = currentUser.farbe;
-        const color = userfarbe ? iconColor(userfarbe) : "gray";
-        console.log(color);
-        document.documentElement.style.setProperty("--iconColor", color);
-      }
+  }
+  else {
+     const userId = currentUser.id;
 
-library.add(fas);
-library.add(far);
+     if (userId) {
 
-app.use(router);
-app.component("font-awesome-icon", FontAwesomeIcon);
+       SocketService.init(currentUser.id);
+     } else {
+       console.log("userId ned gfunde");
+     }
+
+     if (currentUser) {
+       const userfarbe = currentUser.farbe;
+       const color = userfarbe ? iconColor(userfarbe) : "gray";
+       console.log(color);
+       document.documentElement.style.setProperty("--iconColor", color);
+     }
+  }
 
 
-app.config.globalProperties.$swal = Swal;
-app.mount("#app");
+     library.add(fas);
+     library.add(far);
+
+     app.use(router);
+     app.component("font-awesome-icon", FontAwesomeIcon);
+
+     app.config.globalProperties.$swal = Swal;
+     app.mount("#app");
 
 
+
+ 
     });
 // Set up Axios interceptors for handling 401 errors
 axios.interceptors.response.use(

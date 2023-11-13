@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 import axios from "axios";
 import router from "../router/index.js";
 import io from "socket.io-client";
-
+import SocketService from "../services/SocketService.js";
 /* eslint-disable no-unused-vars */
 
 export function formatCreatedAt(createdAt) {
@@ -243,6 +243,7 @@ export default createStore({
       state.currentUser = user;
       localStorage.setItem("user", JSON.stringify(user));
       axios.defaults.headers.common["Authorization"] = `Bearer ${user.token}`;
+             SocketService.init(user.id);
     },
 
     auth_error(state) {
@@ -255,16 +256,24 @@ export default createStore({
       state.users = users;
 
       // Finden Sie den Index des aktuellen Benutzers in der Liste
-      const userIndex = users.findIndex((user) => user.id === userData.id);
+      if (userData?.id) {
+              const userIndex = users.findIndex(
+                (user) => user.id === userData.id
+              );
 
-      if (userIndex !== -1) {
-        // Aktualisieren Sie den aktuellen Benutzer, ohne seine bestehenden Eigenschaften zu überschreiben
-        state.currentUser = {
-          ...state.currentUser,
-          ...users[userIndex],
-        };
-      } else {
-        console.error("Benutzer mit der angegebenen ID nicht gefunden");
+              if (userIndex !== -1) {
+                // Aktualisieren Sie den aktuellen Benutzer, ohne seine bestehenden Eigenschaften zu überschreiben
+                state.currentUser = {
+                  ...state.currentUser,
+                  ...users[userIndex],
+                };
+              } else {
+                console.error("Benutzer mit der angegebenen ID nicht gefunden");
+              }
+      }
+
+      else {
+        console.log("noch nicht eingeloggd")
       }
 
       // Weitere Logik für ungelesene Benachrichtigungen usw.
@@ -1374,7 +1383,7 @@ export default createStore({
           const user = getters.getUserById(userId);
           console.log(user);
           user.token = token;
-          commit("auth_success", user);
+          commit("auth_success", user)
           return { success: true, userId };
         } else {
           commit("auth_error");

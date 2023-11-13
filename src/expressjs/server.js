@@ -430,18 +430,19 @@ app.post("/api/createchat", async (req, res) => {
     }
     console.log(currentUserId, propuserId);
     // Check if a chat already exists between these two users
-    const existingChat = await Chat.findOne({
-      participants: [currentUserId, propuserId],
-    });
+const existingChat = await Chat.findOne({
+  participants: { $all: [currentUserId, propuserId] },
+});
 
-    if (existingChat && existingChat.participants.length === 2) {
-      console.log(existingChat);
-      return res.status(400).send({
-        success: false,
-        message: "Ein Chat zwischen diesen Benutzern existiert bereits.",
-        chat: existingChat,
-      });
-    }
+if (existingChat && existingChat.isPending) {
+  console.log(existingChat);
+  return res.status(400).send({
+    success: false,
+    message: "Ein Chat zwischen diesen Benutzern existiert bereits.",
+    chat: existingChat,
+  });
+}
+
 
     const chat = {
       participants: [currentUserId, propuserId],

@@ -43,7 +43,7 @@ const DOMPurify = createDOMPurify(window);
 const crypto = require("crypto"); // For generating random tokens
 const nodemailer = require("nodemailer"); // For sending emails
 const { FALSE, TRUE } = require("node-sass");
-const { empty } = require("uuidv4");
+
 
 const jwtSecretKey = process.env.JWT_SECRET;
 
@@ -1550,7 +1550,6 @@ app.post("/api/addReply", async (req, res) => {
 });
 
 app.post("/api/addUserReply", async (req, res) => {
-  const comment = req.body.comment;
   const reply = req.body.reply;
   const authorId = reply.author;
 

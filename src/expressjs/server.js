@@ -21,12 +21,30 @@ const server = http.createServer(app); // Ersetzen Sie 'app' durch 'server'
 const io = require("socket.io")(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"],
+
+    cdmethods: ["GET", "POST"],
   },
 });
 
 const port = process.env.PORT || 3000;
 const bodyParser = require("body-parser");
+
+const jwt = require("jsonwebtoken"); // Tokens für session authentifizierung
+
+//von hier
+const { JSDOM } = require("jsdom");
+const createDOMPurify = require("dompurify");
+const { window } = new JSDOM("");
+const DOMPurify = createDOMPurify(window);
+// bis hier ist alles für sanitierung von inputs
+
+//Secure token random generate für reset token und Emailer
+const crypto = require("crypto"); // For generating random tokens
+const nodemailer = require("nodemailer"); // For sending emails
+const { FALSE, TRUE } = require("node-sass");
+const { empty } = require("uuidv4");
+
+const jwtSecretKey = process.env.JWT_SECRET;
 
 app.use(
   cors({
@@ -93,6 +111,93 @@ const clean = async () => {
     console.error("Error during cleanup:", error);
   }
 };
+
+app.post("/api/users/reset-password-request", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Find the user by email in the database
+    const user = await User.findOne({ email: email });
+
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    // Generate a random reset token
+    const resetToken = crypto.randomBytes(20).toString("hex");
+
+    // Set an expiration time for the reset token (e.g., 1 hour)
+    const resetTokenExpiration = Date.now() + 3600000; // 1 hour in milliseconds
+
+    // Update the user's record with the reset token and expiration time
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = new Date(resetTokenExpiration); // Store as a Date object
+    await user.save();
+
+    // Send an email to the user with the reset token and a link to the reset page
+    const transporter = nodemailer.createTransport({
+      // Configure your email provider here (e.g., SMTP)
+    });
+
+    const mailOptions = {
+      from: "your@email.com",
+      to: user.email,
+      subject: "Password Reset",
+      text:
+        `You are receiving this email because you (or someone else) requested a password reset for your account.\n\n` +
+        `Please click on the following link, or paste it into your browser to reset your password:\n\n` +
+        `http://yourwebsite.com/reset-password/${resetToken}\n\n` +
+        `If you did not request this, please ignore this email, and your password will remain unchanged.\n`,
+    };
+
+    transporter.sendMail(mailOptions, (error) => {
+      if (error) {
+        console.error("Error sending email:", error);
+        res.status(500).send({ message: "Error sending email" });
+      } else {
+        console.log("Password reset email sent");
+        res.status(200).send({ message: "Password reset email sent" });
+      }
+    });
+  } catch (error) {
+    console.error("Error initiating password reset:", error);
+    res.status(500).send({ message: "Error initiating password reset" });
+  }
+});
+
+// Define a route for resetting the password using the reset token
+app.post("/api/users/reset-password", async (req, res) => {
+  try {
+    const { resetToken, newPassword } = req.body;
+
+    // Find the user by the reset token and check if it's still valid
+    const user = await User.findOne({
+      resetPasswordToken: resetToken,
+      resetPasswordExpires: { $gt: Date.now() }, // Check if the token is still valid
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .send({ message: "Invalid or expired reset token" });
+    }
+
+    // Generate a new hashed password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update the user's password and reset token in the database
+    user.hashedPassword = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).send({ message: "Password reset successful" });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res.status(500).send({ message: "Error resetting password" });
+  }
+});
 
 app.post("/api/removeChat", async (req, res) => {
   const { chatId, currentUserId } = req.body;
@@ -272,28 +377,25 @@ io.on("connection", (socket) => {
     }
   });
 
-
   socket.on("disconnect", () => {
     console.log(userSockets);
-  console.log("Ein Benutzer wurde getrennt:", socket.id);
-  for (let userId in userSockets) {
-    const index = userSockets[userId].indexOf(socket.id);
-    if (index !== -1) {
-      userSockets[userId].splice(index, 1);
-      if (userSockets[userId].length === 0) {
-        delete userSockets[userId];
+    console.log("Ein Benutzer wurde getrennt:", socket.id);
+    for (let userId in userSockets) {
+      const index = userSockets[userId].indexOf(socket.id);
+      if (index !== -1) {
+        userSockets[userId].splice(index, 1);
+        if (userSockets[userId].length === 0) {
+          delete userSockets[userId];
           console.log(userSockets);
-        const onlineIndex = onlineUsers.indexOf(userId);
-        if (onlineIndex !== -1) {
-          onlineUsers.splice(onlineIndex, 1);
+          const onlineIndex = onlineUsers.indexOf(userId);
+          if (onlineIndex !== -1) {
+            onlineUsers.splice(onlineIndex, 1);
+          }
         }
+        break;
       }
-      break;
     }
-    }
-    
-});
-  
+  });
 });
 app.get("/api/online-status", (req, res) => {
   res.json(onlineUsers);
@@ -524,7 +626,7 @@ app.post("/send-notification", async (req, res) => {
       console.log("Benutzer nicht gefunden");
       return res.status(404).json({ error: "Benutzer nicht gefunden" });
     }
-
+    console.log("zielId: ", zielId);
     const userTokens = user.fcmTokens;
     // Benachrichtigung in der Datenbank speichern
     const notification = {
@@ -675,81 +777,76 @@ app.post("/send-notification", async (req, res) => {
         body = "Sie haben eine neue Benachrichtigung erhalten.";
         break;
     }
-const minutesThreshold = 1; // Setzen Sie hier die gewünschten Minuten ein
+    const minutesThreshold = 1; // Setzen Sie hier die gewünschten Minuten ein
 
-const existingNotification = user.notifications.find(
-  (notification) =>
-    notification.userId === userId &&
-    notification.benachrichtigungsElementId === benachrichtigungsElementId &&
-    notification.notificationType === notificationType &&
-    notification.sentAt
-);
+    const existingNotification = user.notifications.find(
+      (notification) =>
+        notification.userId === userId &&
+        notification.benachrichtigungsElementId ===
+          benachrichtigungsElementId &&
+        notification.notificationType === notificationType &&
+        notification.sentAt
+    );
 
-let isWithinTimeThreshold = false;
+    let isWithinTimeThreshold = false;
 
-if (existingNotification) {
-  const now = new Date();
-  const sendAt = new Date(existingNotification.sentAt); // Stellen Sie sicher, dass sendAt ein Date-Objekt ist
-  const diffInMinutes = (now - sendAt) / (1000 * 60);
-  isWithinTimeThreshold = diffInMinutes < minutesThreshold;
-}
+    if (existingNotification) {
+      const now = new Date();
+      const sendAt = new Date(existingNotification.sentAt); // Stellen Sie sicher, dass sendAt ein Date-Objekt ist
+      const diffInMinutes = (now - sendAt) / (1000 * 60);
+      isWithinTimeThreshold = diffInMinutes < minutesThreshold;
+    }
 
-if (
-
-  existingNotification &&
-    !notificationType.startsWith("chat") &&
-    isWithinTimeThreshold 
-) {
-  console.log(
-    "Benachrichtigung bereits gesendet und ist weniger als 5 Minuten her."
-  );
-  return res.status(200).json({
-    message:
-      "Benachrichtigung bereits gesendet und ist weniger als 5 Minuten her.",
-  });
-}
-
+    if (
+      existingNotification &&
+      !notificationType.startsWith("chat") &&
+      isWithinTimeThreshold
+    ) {
+      console.log(
+        "Benachrichtigung bereits gesendet und ist weniger als 5 Minuten her."
+      );
+      return res.status(200).json({
+        message:
+          "Benachrichtigung bereits gesendet und ist weniger als 5 Minuten her.",
+      });
+    }
 
     message2.data.objekt = JSON.stringify(notification);
+    console.log("message: ", message2);
+console.log("alter: ", !message2.tokens || message2.tokens.length === 0);
+    if (!message2.tokens || message2.tokens.length === 0) {
+      console.warn(
+        "Warnung: Der Benutzer hat die Benachrichtigung nicht autorisiert.1"
+      );
+      // Optional: Senden Sie eine Antwort zurück, dass kein Token vorhanden ist, aber als Warnung, nicht als Fehler
+      return res.status(200).json({
+        warning: "Der Benutzer hat die Benachrichtigung nicht autorisiert.2",
+      });
+    } else {
+      console.log("moruk");
+      // Senden der Benachrichtigung, wenn das Token vorhanden ist
+      admin
+        .messaging()
+        .sendMulticast(message2)
+        .then(async () => {
+          // Response enthält den gesamten Pfad der messageId
 
- if (!message2.token) {
-   console.warn(
-     "Warnung: Der Benutzer hat die Benachrichtigung nicht autorisiert."
-   );
-   // Optional: Senden Sie eine Antwort zurück, dass kein Token vorhanden ist, aber als Warnung, nicht als Fehler
-   return res.status(200).json({
-     warning: "Der Benutzer hat die Benachrichtigung nicht autorisiert.",
-   });
- } else {
-   // Senden der Benachrichtigung, wenn das Token vorhanden ist
-   admin
-     .messaging()
-     .sendMulticast(message2)
-     .then(async (response) => {
-       // Response enthält den gesamten Pfad der messageId
+          // Extrahieren Sie nur den ID-Teil der messageId
+          notification.messageId = uuidv4();
+          user.notifications.push(notification);
 
-       // Extrahieren Sie nur den ID-Teil der messageId
-       notification.messageId = uuidv4();
-       user.notifications.push(notification);
-
-       await user.save();
-       res.status(200).json({
-         success: true,
-         message: "Benachrichtigung erfolgreich gesendet",
-         objekt: notification,
-       });
-     })
-     .catch((error) => {
-       console.log("Error sending message:", error);
-     });
- }
-  
-   
-}
-   
-  
-  
-  catch (error) {
+          await user.save();
+          res.status(200).json({
+            success: true,
+            message: "Benachrichtigung erfolgreich gesendet",
+            objekt: notification,
+          });
+        })
+        .catch((error) => {
+          console.log("Error sending message:", error);
+        });
+    }
+  } catch (error) {
     console.error("Fehler beim Senden der Benachrichtigung:", error);
     res.status(500).json({ error: "Fehler beim Senden der Benachrichtigung" });
   }
@@ -788,9 +885,10 @@ app.post("/api/updateBio", async (req, res) => {
 app.post("/save-token", async (req, res) => {
   try {
     const { userId, token } = req.body;
-
+    console.log("user: ", req.body);
     // Finden Sie den Benutzer in der Datenbank
     const user = await User.findById(userId);
+
     if (!user) {
       return res.status(404).send("User not found");
     }
@@ -1100,76 +1198,40 @@ app.post("/api/commentupvote", async (req, res) => {
   }
 });
 
-const User = mongoose.model(
-  "User",
-  new mongoose.Schema({
-    name: String,
-    bio: String,
-    role: String,
-    contracreated: Array,
-    createdReplies: Array,
-    email: String,
-    farbe: String,
-    filterSettings: Object,
-    followers: Array,
-    following: Array,
-    hasdislikedcomment: Array,
-    hasdislikedreply: Array,
-    hasdislikedtopic: Array,
-    haslikedcomment: Array,
-    haslikedreply: Array,
-    haslikedtopic: Array,
-    id: Number,
-    joinedAt: String,
-    messages: Array,
-    nestedReplies: Array,
-    notifications: Array,
-    procreated: Array,
-    profileImage: String,
-    topicsaves: Array,
-    tweets: Array,
-    hashedPassword: String,
-    resetPasswordToken: String,
-    resetPasswordExpires: Date,
-    blocklist: [Number],
-    isAdmin:false,
-  })
-);
-
 // Define your isAdmin middleware
 function isAdmin(req, res, next) {
   const user = req.user; // Assuming you have user data in the request object
 
-  if (user && user.role === 'admin') {
+  if (user && user.role === "admin") {
     // User is an admin; allow access
     next();
   } else {
     // User is not an admin; deny access
-    res.status(403).json({ error: 'Access denied. Admin role required.' });
+    res.status(403).json({ error: "Access denied. Admin role required." });
   }
 }
 
-app.get('/api/check-admin', isAdmin, (req, res) => {
+app.get("/api/check-admin", isAdmin, (req, res) => {
   res.json({ isAdmin: true });
 });
 
 // Add the isAdmin middleware to the app.delete route
-app.delete('/api/comments/:commentId', isAdmin, async (req, res) => {
+app.delete("/api/comments/:commentId", isAdmin, async (req, res) => {
   const commentId = req.params.commentId;
 
   try {
     // Find the comment by its ID
     const topic = await Topic.findOne({
       $or: [
-        { 'proComments.id': commentId },
-        { 'contraComments.id': commentId },
-        { 'proComments.replies.id': commentId },
-        { 'contraComments.replies.id': commentId },
+        { "proComments.id": commentId },
+        { "contraComments.id": commentId },
+        { "proComments.replies.id": commentId },
+        { "contraComments.replies.id": commentId },
       ],
     });
 
     if (!topic) {
-      return res.status(404).json({ error: 'Comment not found' });
+      return res.status(404).json({ error: "Comment not found" });
     }
 
     const updateCommentText = (comments) => {
@@ -1187,17 +1249,17 @@ app.delete('/api/comments/:commentId', isAdmin, async (req, res) => {
 
     await topic.save();
 
-    res.status(200).json({ message: 'Comment updated successfully' });
+    res.status(200).json({ message: "Comment updated successfully" });
   } catch (error) {
-    console.error('Error updating comment:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error("Error updating comment:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
 app.get("/api/users", async (req, res) => {
   try {
     const users = await User.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
-        res.json(users); // Senden Sie die Daten als JSON an den Client
+    res.json(users); // Senden Sie die Daten als JSON an den Client
   } catch (error) {
     console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
     res
@@ -1222,7 +1284,6 @@ app.post("/api/topicdislike", async (req, res) => {
 
     const hasLiked = user.haslikedtopic.includes(topicId);
     const hasDisliked = user.hasdislikedtopic.includes(topicId);
-
 
     if (!hasDisliked) {
       topic.downvotes += 1;
@@ -1258,7 +1319,7 @@ app.post("/api/topicdislike", async (req, res) => {
 });
 
 // Add a user to the blocklist
-app.post('/api/users/add-to-blocklist', async (req, res) => {
+app.post("/api/users/add-to-blocklist", async (req, res) => {
   const userId = req.body.userId; // User ID to block
   const currentUserId = req.body.currentUserId; // ID of the user adding to the blocklist
 
@@ -1266,7 +1327,7 @@ app.post('/api/users/add-to-blocklist', async (req, res) => {
     const currentUser = await User.findOne({ id: currentUserId });
 
     if (!currentUser) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Add the user to the blocklist if not already there
@@ -1275,10 +1336,10 @@ app.post('/api/users/add-to-blocklist', async (req, res) => {
       await currentUser.save();
     }
 
-    res.status(200).json({ message: 'User added to blocklist' });
+    res.status(200).json({ message: "User added to blocklist" });
   } catch (error) {
-    console.error('Error adding user to blocklist:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error("Error adding user to blocklist:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -1287,7 +1348,6 @@ app.patch("/api/topiclike", async (req, res) => {
     const payload = req.body;
     const topicId = payload.topicId;
     const userId = payload.userId;
-
 
     // Finde das Thema und den Benutzer in der Datenbank
     const topic = await Topic.findOne({ id: topicId });
@@ -1555,20 +1615,6 @@ app.get("/api/topics/:topicId", async (req, res) => {
   }
 });
 
-
-app.get("/api/topics", async (req, res) => {
-  try {
-    const topics = await Topic.find(); // Annahme: Sie haben ein Model namens "Topic" definiert
-
-    res.json(topics); // Senden Sie die Daten als JSON an den Client
-  } catch (error) {
-    console.error("Fehler beim Abrufen der Daten aus der Datenbank:", error);
-    res
-      .status(500)
-      .json({ message: "Fehler beim Abrufen der Daten aus der Datenbank" });
-  }
-});
-
 async function getNextUserId() {
   try {
     // Find the document with the highest id value
@@ -1594,30 +1640,34 @@ function generateAuthToken(user) {
   };
 
   const token = jwt.sign(payload.user, jwtSecretKey, {
-    expiresIn: '1h',
+    expiresIn: "1h",
   });
 
   return token;
 }
 
-app.post('/verify-token', (req,res)=>{
-  const {token}=req.body;
-  if(!token){
-    return res.status(400).json({message: 'Token is missing', status:FALSE});
+app.post("/verify-token", (req, res) => {
+  const { token } = req.body;
+  if (!token) {
+    return res.status(400).json({ message: "Token is missing", status: FALSE });
   }
-  jwt.verify(token, jwtSecretKey, (err)=>{
-    if(err){
-    return res.status(401).json({message:'Token is invalid', status:FALSE});
-    } 
-    res.status(200).json({ message: 'Token is valid', status:TRUE});
-})
-})
-
-
+  jwt.verify(token, jwtSecretKey, (err) => {
+    if (err) {
+      return res
+        .status(401)
+        .json({ message: "Token is invalid", status: FALSE });
+    }
+    res.status(200).json({ message: "Token is valid", status: TRUE });
+  });
+});
 
 app.post("/api/users/login", async (req, res) => {
-  const {email, password} = req.body;
-console.log(req.body)
+  const password = req.body.password;
+  const email = req.body.email;
+  console.log("jwtSecretKey", jwtSecretKey);
+  console.log("body: ", req.body);
+  console.log("passwort: ", password);
+  console.log("email: ", email);
   try {
     // Sanitize user inputs
     const emailSanitized = DOMPurify.sanitize(email);
@@ -1625,30 +1675,29 @@ console.log(req.body)
 
     // Find the user by name in the database
     const user = await User.findOne({ email: emailSanitized });
-  
-    console.log("Email:"+ email+ " Password: "+password)
+
     if (!user) {
       return res.status(401).send({ message: "User not found" });
     }
-console.log(user)
+    console.log("user; ", user);
     // Compare the provided password with the hashed password
-    const isPasswordValid = await bcrypt.compare(passwordSanitized, user.hashedPassword);
+    const isPasswordValid = await bcrypt.compare(
+      passwordSanitized,
+      user.hashedPassword
+    );
     if (!isPasswordValid) {
       return res.status(401).send({ message: "Invalid password" });
     }
 
     // Generate a JWT token
     const token = generateAuthToken(user);
-    
-    // Send the token and user ID as a response
-    console.log(user.id);
+
     res.status(200).send({ success: true, token, userId: user.id });
   } catch (error) {
     console.error("Error logging in:", error);
     res.status(500).send({ message: "Error logging in" });
   }
 });
-
 
 app.post("/api/users/register", async (req, res) => {
   try {
@@ -1670,6 +1719,64 @@ app.post("/api/users/register", async (req, res) => {
   } catch (error) {
     console.error("Error registering user:", error);
     res.status(500).send({ message: "Error registering user" });
+  }
+});
+
+app.post("/api/users/register", async (req, res) => {
+  try {
+    const userData = req.body;
+
+    // Sanitize user input
+    const sanitizedName = DOMPurify.sanitize(userData.name);
+    const sanitizedPassword = DOMPurify.sanitize(userData.password);
+    // Check if a user with the same name already exists
+    const existingUser = await User.findOne({ name: sanitizedName });
+    if (existingUser) {
+      return res.status(400).send({
+        success: false,
+        message: "User with this name already exists",
+      });
+    }
+
+    // Get the next available user ID
+    const nextUserId = await getNextUserId();
+
+    // Set the id and joinedAt fields of the userData
+    userData.id = nextUserId;
+    userData.joinedAt = new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+
+    // Generate a salt and hash the user's password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(sanitizedPassword, saltRounds);
+
+    // Replace the plain password with the hashed password
+    userData.hashedPassword = hashedPassword;
+
+    // Create a new user document with the sanitized data
+    const user = new User({
+      name: sanitizedName,
+      hashedPassword: hashedPassword,
+      joinedAt: userData.joinedAt,
+      id: userData.id,
+    });
+    await user.save();
+
+    const token = jwt.sign({ userData }, jwtSecretKey, {
+      expiresIn: "1h",
+    });
+
+    res.status(200).json({
+      token,
+      user: user,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error registering user:", error);
+    res.status(500).send({ success: false, message: "Error registering user" });
   }
 });
 

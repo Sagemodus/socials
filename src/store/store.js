@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
 import axios from "axios";
-import router from '../router/index.js'
+import router from "../router/index.js";
 import io from "socket.io-client";
 
 /* eslint-disable no-unused-vars */
@@ -51,7 +51,6 @@ function setDepthForTopics(topics) {
     setDepthForReplies(topic.proComments, 0); // Starttiefe ist 1
   }
 }
-
 
 function isCommentPositionAvailable(state, topicId, selectedTab) {
   const topic = state.topics.find((topic) => topic.id === topicId);
@@ -162,17 +161,17 @@ export default createStore({
       categories,
       onlineUsers: [],
       showNavbar: true,
-      currentUser:{
+      currentUser: {
         token: localStorage.getItem("token") || null,
       },
-      isAdmin:false,
+      isAdmin: false,
     };
   },
 
   mutations: {
-      SET_ADMIN_STATUS(state, isAdmin) {
-        state.isAdmin = isAdmin;
-      },
+    SET_ADMIN_STATUS(state, isAdmin) {
+      state.isAdmin = isAdmin;
+    },
     ADD_USER_TO_BLOCKLIST(state, userId) {
       // Check if currentUser and blocklist are defined
       if (state.currentUser && state.currentUser.blocklist) {
@@ -190,7 +189,9 @@ export default createStore({
     },
 
     deleteComment(state, commentToDelete) {
-      state.comments = state.comments.filter(comment => comment.id !== commentToDelete.id);
+      state.comments = state.comments.filter(
+        (comment) => comment.id !== commentToDelete.id
+      );
     },
 
     setShowNavbar(state, value) {
@@ -207,51 +208,45 @@ export default createStore({
       state.topics = topics;
     },
 
-    
     register_request(state) {
-      state.status = 'loading'; // You can set any loading state here if needed
+      state.status = "loading"; // You can set any loading state here if needed
     },
-  
-    register_success(state,{user,token}) {
-      state.status = 'success';
+
+    register_success(state, { user, token }) {
+      state.status = "success";
       state.currentUser = user;
-      localStorage.setItem('user', JSON.stringify(user))
-      axios.defaults.headers.common['Authorization']=`Bearer ${
-        token
-      }`
+      localStorage.setItem("user", JSON.stringify(user));
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       state.user = user; // You can store the registered user data here if needed
     },
-  
+
     register_error(state) {
-      state.status = 'error'; // You can set an error state here if needed
+      state.status = "error"; // You can set an error state here if needed
     },
-    
+
     auth_request(state) {
-      state.status = 'loading';
+      state.status = "loading";
     },
-    auth_logout(state){
-      try{
-      delete axios.defaults.headers.common['Authorization'] 
-      localStorage.removeItem('CurrentUser')
-      localStorage.removeItem('user')
-      state.currentUser = null
-      }catch(err){
-        console.log(err)
+    auth_logout(state) {
+      try {
+        delete axios.defaults.headers.common["Authorization"];
+        localStorage.removeItem("CurrentUser");
+        localStorage.removeItem("user");
+        state.currentUser = null;
+      } catch (err) {
+        console.log(err);
       }
     },
-    
-    auth_success(state, user) {
-      state.status = 'success';
-      state.currentUser = user;
-      localStorage.setItem('user', JSON.stringify(user))
-      axios.defaults.headers.common['Authorization']=`Bearer ${
-        user.token
-      }`
-    },
-    
-    auth_error(state) {
-      state.status = 'error';
 
+    auth_success(state, user) {
+      state.status = "success";
+      state.currentUser = user;
+      localStorage.setItem("user", JSON.stringify(user));
+      axios.defaults.headers.common["Authorization"] = `Bearer ${user.token}`;
+    },
+
+    auth_error(state) {
+      state.status = "error";
     },
     setUsers(state, users) {
       state.users = users;
@@ -363,7 +358,6 @@ export default createStore({
       }
     },
 
-
     UPVOTE_REPLY(state, { replyId, currentUserId, topicId, commentId }) {
       const topic = state.topics.find((topic) => topic.id === topicId);
       const comment =
@@ -438,7 +432,7 @@ export default createStore({
           // Add the dislike
           reply.downvotes += 1;
           user.hasdislikedreply.push(replyId);
-          
+
           // Remove the like, if present
           if (user.haslikedreply.includes(replyId)) {
             reply.upvotes -= 1;
@@ -782,45 +776,43 @@ export default createStore({
   },
 
   actions: {
-
     async checkAdmin() {
       try {
-        console.log("check admin vor api call")
-        const response = await axios.get('http://localhost:3000/api/check-admin');
-        console.log("check admin nach api call")
+        console.log("check admin vor api call");
+        const response = await axios.get(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/check-admin"
+        );
+        console.log("check admin nach api call");
         if (response.data.isAdmin) {
           // User is an admin
-          this.$store.commit('SET_ADMIN_STATUS', true); // Commit the mutation
+          this.$store.commit("SET_ADMIN_STATUS", true); // Commit the mutation
         }
       } catch (error) {
         // Handle any errors, e.g., show an error message
-        console.error('Error checking admin status:', error);
+        console.error("Error checking admin status:", error);
       }
     },
-    
 
     blockUser({ commit }, userId) {
       // Perform an API call or other necessary logic to add the user to the blocklist.
       // Replace this with your actual implementation.
-  
+
       // Simulate blocking the user by adding them to the blocklist.
-      commit('ADD_USER_TO_BLOCKLIST', userId);
+      commit("ADD_USER_TO_BLOCKLIST", userId);
     },
 
-    
     async deleteComment({ commit, state }, commentToDelete) {
       try {
         // Make an HTTP DELETE request to your server to delete the comment
         await axios.delete(`/api/comments/${commentToDelete.id}`);
-        
+
         // If the deletion was successful on the server, commit the mutation
-        commit('deleteComment', commentToDelete);
+        commit("deleteComment", commentToDelete);
       } catch (error) {
         // Handle any errors that occur during the HTTP request (e.g., network errors)
-        console.error('Error deleting comment:', error);
+        console.error("Error deleting comment:", error);
       }
     },
-    
 
     async updateBio({ commit, state }, payload) {
       console.log("payload: ", payload);
@@ -1174,7 +1166,7 @@ export default createStore({
         );
 
         if (!response.ok) {
-          console.log(response)
+          console.log(response);
           throw new Error("Netzwerkantwort war nicht ok.");
         }
 
@@ -1183,7 +1175,7 @@ export default createStore({
         if (data.message === "Benachrichtigung bereits gesendet") {
           console.log("Benachrichtigung wurde bereits gesendet.");
           return; // Beendet die Funktion frühzeitig
-        } 
+        }
       } catch (error) {
         console.error(
           "Es gab einen Fehler beim Senden der Benachrichtigung:",
@@ -1316,6 +1308,7 @@ export default createStore({
         );
         const users = response.data;
         commit("setUsers", users);
+        console.log(" response.data ", response.data);
         const currentUserChats = state.currentUser.activeChats;
         const responseChats = await axios.post(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/chats",
@@ -1332,27 +1325,37 @@ export default createStore({
     },
 
     logout({ commit }) {
-      console.log("logout")
+      console.log("logout");
+      router.push("/login");
       commit("updateCurrentUser", { token: null });
       commit("auth_logout");
-      router.push('/login');
+   
     },
 
-
-    async login({ commit, getters }, user) {
+    async login({ commit, getters, dispatch }, user) {
       commit("auth_request");
 
       try {
-        console.log(user)
-        let res = await axios.post("http://localhost:3000/api/users/login", user);
+        console.log(user);
+        let res = await axios.post(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/users/login",
+          user
+        );
         // ...
 
         if (res.status === 200 && res.data.success) {
+          console.log("token: ", res.data.token);
+          console.log(res.data);
+          await dispatch("fetchTopics");
+
+          await dispatch("initializeStore");
+          console.log(res.data);
           const token = res.data.token;
           const userId = res.data.userId; // Get the userId from the response
-          const user = getters.getUserById(userId)
-          user.token = token
-          console.log(user)
+          console.log(userId);
+          const user = getters.getUserById(userId);
+          console.log(user);
+          user.token = token;
           commit("auth_success", user);
           return { success: true, userId };
         } else {
@@ -1364,52 +1367,43 @@ export default createStore({
         commit("auth_error");
         console.error("Error logging in:", err);
         return { success: false };
-
       }
     },
-    
-  
+
     async register({ commit }, userData) {
       try {
-        commit('register_request');
-        let res = await axios.post('http://localhost:3000/api/users/register', userData);
+        commit("register_request");
+        let res = await axios.post(
+          "https://c964nzv2-3000.euw.devtunnels.ms/api/users/register",
+          userData
+        );
         if (res.data.success) {
           const user = res.data.user;
           const token = res.data.token;
-          const payload={
-            user:user,
-            token:token
-          }
-          console.log(res.data.user+" User objekt"+res.data.token+" Token")
-          commit("register_success",payload);
+          const payload = {
+            user: user,
+            token: token,
+          };
+          console.log(
+            res.data.user + " User objekt" + res.data.token + " Token"
+          );
+          commit("register_success", payload);
         } else {
-          commit('register_error', res.data.message || 'An error occurred while registering.');
+          commit(
+            "register_error",
+            res.data.message || "An error occurred while registering."
+          );
         }
 
         return res;
       } catch (err) {
-        commit('register_error', err.message || 'An error occurred while registering.');
+        commit(
+          "register_error",
+          err.message || "An error occurred while registering."
+        );
         throw err; // Rethrow the error for further handling in the component
       }
     },
-    
-
-  async fetchUsers({ commit, state }) {
-    try {
-      // Check if the user is authenticated (has a token)
-      /*
-      if (state.currentUser.token) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${state.currentUser.token}`;
-      }
-  */
-      const response = await axios.get("http://localhost:3000/api/users");
-      const users = response.data;
-      console.log(users);
-      commit("setUsers", users);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  },
 
 
     async fetchTopics({ commit }) {
@@ -1466,7 +1460,7 @@ export default createStore({
     },
 
     async upvoteComment({ commit, dispatch, state }, payload) {
-      console.log(payload)
+      console.log(payload);
       const userProfile = state.users.find(
         (user) => user.id === payload.currentUserId
       );
@@ -1733,7 +1727,4 @@ export default createStore({
       return this.$store.state.isAdmin;
     },
   },
-
-
-
 });

@@ -1,5 +1,5 @@
 <template>
-    <div class="kommentieren"  >
+    <div class="kommentieren">
         <div class="send-message-form" v-if="!chat.isPending">
             <textarea v-model="messageContent" ref="messageTextarea" @keyup.enter="sendMessage"
                 placeholder="Nachricht eingeben..."></textarea>
@@ -18,12 +18,12 @@ import { iconColor } from '../farben';
 
 
 export default {
-     props: ['chat'],
+    props: ['chat'],
     setup(props) {
         const store = useStore();
         const currentUser = store.state.currentUser;
         console.log("CurrentUser", currentUser)
-         const isStarter = computed(() => {
+        const isStarter = computed(() => {
             if (currentUser.id == props.chat.startedBy) {
                 return true
             }
@@ -32,7 +32,7 @@ export default {
             }
 
         })
-     
+
         return {
             currentUser,
             isStarter
@@ -60,6 +60,7 @@ export default {
                     senderId: this.currentUser.id, // Sie können dies durch die tatsächliche senderId ersetzen, wenn sie verfügbar ist
                     text: this.messageContent,
                 };
+                console.log("amk sende ")
                 this.$emit('send-message', messageObj);
                 this.messageContent = '';
             }
@@ -111,5 +112,6 @@ button {
 
 svg.svg-inline--fa.fa-paper-plane {
     height: 20px;
-    color:var(--iconColor)
-}</style>
+    color: var(--iconColor)
+}
+</style>

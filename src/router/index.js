@@ -23,6 +23,8 @@ import ReplyPage from '../components/SingleReplyPage.vue';
 import nestedReplyPage from '../components/profilebutton/nestedReplyPage.vue';
 import bookmarkSaves from '../components/profilebutton/bookmarkSaves.vue';
 import profileAndereUser from '../components/profilebutton/profileAndereUser.vue';
+
+/* 
 import store from '../store/store.js'
 //passwort vergessen
 
@@ -146,7 +148,7 @@ const router = createRouter({
   }
 });
 
-router.beforeEach((to, from, next) => {
+/* router.beforeEach((to, from, next) => {
   const token = store.state.currentUser?.token;
   // If the route is not the login route and there's no token, redirect to the login route
   if (to.path !== '/login' && !token) {
@@ -154,6 +156,6 @@ router.beforeEach((to, from, next) => {
   } else {
     next();
   }
-});
+}); */
 
 export default router;

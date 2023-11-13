@@ -31,7 +31,7 @@ const UserShema =
         resetPasswordToken: String,
         resetPasswordExpires: Date,
         blocklist: [Number],
-        isAdmin:false,
+        isAdmin:Boolean,
     });
 
 module.exports = mongoose.model("User", UserShema);

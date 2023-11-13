@@ -36,7 +36,8 @@ export default {
 
 
         return {
-            chats
+            chats,
+            store
         };
     },
     data() {
@@ -47,9 +48,16 @@ export default {
     },
     created() {
 
+
         SocketService.onMessage((message) => {
+            console.log("kure", this.store.state.currentUser)
+            console.log("on message jeztzt", message)
+
 
             this.messages.push(message);
+
+
+
         });
         this.loadSelectedChat();
 

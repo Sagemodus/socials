@@ -11,19 +11,23 @@ const SocketService = {
     this.socket.on("connect", () => {
       this.socket.emit("register", userId); // Senden Sie die userId an den Server, sobald Sie verbunden sind
     });
-
-
   },
-  updateFrontend(message) {
+/*   updateFrontend(message) {
     store.commit("ADD_MESSAGE", message);
-  },
+  }, */
 
   onMessage(callback) {
     console.log("kuree");
     this.socket.on("message", (message) => {
-      console.log("kuree");
+      console.log("kuree", message);
       try {
+        if (message.senderId == store.state.currentUser) {
+          console.log("an sich serlber")
+        } else {
         callback(message);
+        }
+
+  
       } catch (error) {
         console.error("Fehler beim fetchen des chats: ", error);
       }
@@ -34,7 +38,13 @@ const SocketService = {
     console.log("wird gesendet");
     try {
       this.socket.emit("send-message", message);
-      store.commit("ADD_MESSAGE", message);
+      if (store.state.currentUser.id == message.zielId) {
+        console.log("zurück ta qi rob")
+      }
+      else {
+        /*       store.commit("ADD_MESSAGE", message); */
+      }
+
     } catch (error) {
       console.error(error);
     }

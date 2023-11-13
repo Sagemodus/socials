@@ -42,7 +42,7 @@ const SocketService = {
         console.log("zurück ta qi rob")
       }
       else {
-        /*       store.commit("ADD_MESSAGE", message); */
+              store.commit("ADD_MESSAGE", message); 
       }
 
     } catch (error) {

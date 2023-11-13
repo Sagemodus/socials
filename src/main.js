@@ -16,28 +16,32 @@ import SocketService from "./services/SocketService";
     const fetchData = async () => {
       console.log("amk");
       try {
-        await store.dispatch("fetchTopics");
-        await store.dispatch("fetchUsers");
+  
         const userString = localStorage.getItem("user");
         console.log("user: ", userString);
         if (userString) {
           const userData = JSON.parse(userString);
           console.log("hello");
           store.commit("auth_success", userData);
+          await store.dispatch("fetchTopics");
+        await store.dispatch("fetchUsers", userData);
         }
+
       } catch (error) {
         console.error("Error fetching data:", error);
       }
  };
-    console.log("user: ", store.state.currentUser);
+  
 
 
 
 
 // eslint-disable-next-line no-unused-vars
 fetchData().then(() => {
+    console.log("user: ", store.state.currentUser);
   const app = createApp(App);
-      app.use(store);
+  app.use(store);
+  console.log("currenuser", store.state.currentUser);
       const currentUser = store.state.currentUser;
       /*eslint-disable*/
       const userId = currentUser.id;

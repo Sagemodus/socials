@@ -28,12 +28,13 @@ import profileAndereUser from '../components/profilebutton/profileAndereUser.vue
 import store from '../store/store.js'
 //passwort vergessen
 
-/*
+
 import PasswordForgottenComponent from '../components/PasswordForgottenComponent.vue';
 import ResetPassword from '../components/ResetPasswordComponent.vue'
+*/
 
 import store from '../store/store.js'; // Import your Vuex store
-*/
+
 
 const routes = [
   {
@@ -148,7 +149,7 @@ const router = createRouter({
   }
 });
 
-/* router.beforeEach((to, from, next) => {
+ router.beforeEach((to, from, next) => {
   const token = store.state.currentUser?.token;
   // If the route is not the login route and there's no token, redirect to the login route
   if (to.path !== '/login' && !token) {
@@ -156,6 +157,6 @@ const router = createRouter({
   } else {
     next();
   }
-}); */
+}); 
 
 export default router;

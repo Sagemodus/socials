@@ -331,41 +331,48 @@ io.on("connection", (socket) => {
 
   socket.on("send-message", async (message) => {
     try {
-      console.log("hellizu");
+      console.log("message angfang : ", message);
+      // Finden Sie den Chat anhand der chatId
       const chat = await Chat.findOne({ chatId: message.chatId });
 
       console.log(message.chatId);
       if (chat) {
+        // Fügen Sie die neue Nachricht zu den Nachrichten des Chats hinzu
         chat.messages.push({
           text: message.text,
           senderId: message.senderId,
           timestamp: new Date(),
           chatId: message.chatId,
         });
+
+        // Speichern Sie die Änderungen
         await chat.save();
         console.log("Nachricht zu einem bestehenden Chat hinzugefügt");
         console.log(chat.participants, "Teilnehmer");
-        const recipientId =
-          chat.participants.find((id) => id === message.senderId) ||
-          chat.participants.find((id) => id !== message.senderId);
+
+        // Bestimmen Sie den Empfänger der Nachricht
+        let recipientId = chat.participants.find(
+          (id) => id !== message.senderId
+        );
+        console.log("mrk", recipientId);
         if (!recipientId) {
           console.log("Nachricht an sich selbst gesendet.");
-          io.to(socket.id).emit("update-frontend", message);
-          return;
+          recipientId = chat.participants[0];
         }
+
         console.log(recipientId, " :id");
         console.log(userSockets, " usersockets");
+        // Senden Sie die Nachricht nur an den gewünschten Benutzer
         const recipientSocketId = userSockets[recipientId];
         console.log("versueche", recipientSocketId);
 
-        const recipientSocketIds = userSockets[recipientId];
-        if (recipientSocketIds && recipientSocketIds.length > 0) {
-          for (let recipientSocketId of recipientSocketIds) {
-            io.to(recipientSocketId).emit("message", message);
-          }
-        } else {
-          io.to(socket.id).emit("update-frontend", message);
-        }
+        const callbackUser = userSockets[message.senderId];
+
+        console.log(callbackUser, " callback");
+        if (recipientSocketId) {
+          console.log("Socketid", recipientSocketId, userSockets);
+          io.to(recipientSocketId).emit("message", message);
+        } 
       } else {
         console.log("Chat nicht gefunden");
       }
@@ -407,6 +414,8 @@ server.listen(port, () => {
 app.post("/api/createchat", async (req, res) => {
   const { currentUserId, propuserId } = req.body;
   console.log("kolleg: ", req.body);
+    console.log(" propuserId: ", propuserId);
+  console.log(" currentUserId: ", currentUserId);
   try {
     // Find entity based on payloadVariable2
     const user1 = await User.findOne({ id: currentUserId });
@@ -626,7 +635,6 @@ app.post("/send-notification", async (req, res) => {
       console.log("Benutzer nicht gefunden");
       return res.status(404).json({ error: "Benutzer nicht gefunden" });
     }
-    console.log("zielId: ", zielId);
     const userTokens = user.fcmTokens;
     // Benachrichtigung in der Datenbank speichern
     const notification = {
@@ -812,7 +820,6 @@ app.post("/send-notification", async (req, res) => {
     }
 
     message2.data.objekt = JSON.stringify(notification);
-    console.log("message: ", message2);
 console.log("alter: ", !message2.tokens || message2.tokens.length === 0);
     if (!message2.tokens || message2.tokens.length === 0) {
       console.warn(

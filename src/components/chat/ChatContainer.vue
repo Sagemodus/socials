@@ -33,7 +33,7 @@ export default {
         const chats = computed(() => {
             return store.state.chats
         });
-
+        console.log("chats: ", chats)
 
         return {
             chats,

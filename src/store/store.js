@@ -151,7 +151,7 @@ export default createStore({
     const loggedin = "true";
 
     return {
-      currentUser: null,
+      currentUser: {},
       topics: [],
       users: [],
       loggedin,
@@ -169,6 +169,7 @@ export default createStore({
         token: localStorage.getItem("token") || null,
       },
       isAdmin: false,
+      currentUser: {},
     };
   },
 
@@ -254,6 +255,8 @@ export default createStore({
     auth_error(state) {
       state.status = "error";
     },
+
+
     setUsers(state, payload) {
       const { users, userData } = payload;
 
@@ -262,11 +265,19 @@ export default createStore({
       // Aktualisieren Sie die Benutzerliste im State
       state.users = users;
 
+      // Aktualisiere den 'token' des Benutzers in state.users
+      if (userData.id && userData.token) {
+        const userIndex = userData.id - 1;
+        if (state.users[userIndex]) {
+          state.users[userIndex].token = userData.token;
+        }
+      }
+
       // Erstellen Sie eine berechnete Eigenschaft für state.currentUser
-      state.currentUser = computed(() => {
-        return state.users[userData.id - 1];
-      });
-      state.currentUser.token = userData.token;
+      state.currentUser =
+      state.users[userData.id - 1];
+      
+
       // Weitere Logik für ungelesene Benachrichtigungen usw.
     },
 

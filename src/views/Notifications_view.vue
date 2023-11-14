@@ -40,6 +40,8 @@ export default {
         readArray.push(element.messageId);
       }
     });
+console.log(readArray, " : array")
+
     if (readArray) {
       store.dispatch("readAllUnreadNotifications", { readArray, currentUserId  })
     }

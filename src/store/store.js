@@ -10,6 +10,9 @@ import router from "../router/index.js";
 import io from "socket.io-client";
 import SocketService from "../services/SocketService.js";
 /* eslint-disable no-unused-vars */
+import { computed } from "vue";
+
+
 
 export function formatCreatedAt(createdAt) {
   const createdAtDate = dayjs(createdAt);
@@ -148,6 +151,7 @@ export default createStore({
     const loggedin = "true";
 
     return {
+      currentUser: null,
       topics: [],
       users: [],
       loggedin,
@@ -243,8 +247,8 @@ export default createStore({
       state.currentUser = user;
       localStorage.setItem("user", JSON.stringify(user));
       axios.defaults.headers.common["Authorization"] = `Bearer ${user.token}`;
-      console.log("aaanoken socket")
-             SocketService.init(user.id);
+      console.log("aaanoken socket");
+      SocketService.init(user.id);
     },
 
     auth_error(state) {
@@ -253,30 +257,16 @@ export default createStore({
     setUsers(state, payload) {
       const { users, userData } = payload;
 
+      console.log("userdata: ", userData);
+
       // Aktualisieren Sie die Benutzerliste im State
       state.users = users;
 
-      // Finden Sie den Index des aktuellen Benutzers in der Liste
-      if (userData?.id) {
-              const userIndex = users.findIndex(
-                (user) => user.id === userData.id
-              );
-
-              if (userIndex !== -1) {
-                // Aktualisieren Sie den aktuellen Benutzer, ohne seine bestehenden Eigenschaften zu überschreiben
-                state.currentUser = {
-                  ...state.currentUser,
-                  ...users[userIndex],
-                };
-              } else {
-                console.error("Benutzer mit der angegebenen ID nicht gefunden");
-              }
-      }
-
-      else {
-        console.log("noch nicht eingeloggd")
-      }
-
+      // Erstellen Sie eine berechnete Eigenschaft für state.currentUser
+      state.currentUser = computed(() => {
+        return state.users[userData.id - 1];
+      });
+      state.currentUser.token = userData.token;
       // Weitere Logik für ungelesene Benachrichtigungen usw.
     },
 
@@ -476,6 +466,7 @@ export default createStore({
     },
 
     TOGGLE_LIKE(state, { topicId, userId }) {
+      console.log("amk");
       const topic = state.topics.find((topic) => topic.id === topicId);
       const user = state.users.find((user) => user.id === userId);
 
@@ -1037,6 +1028,7 @@ export default createStore({
     },
     async readAllUnreadNotifications({ commit }, payload) {
       try {
+        console.log("probiere");
         const response = await axios.post(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/updateAllRead",
           payload
@@ -1329,6 +1321,9 @@ export default createStore({
     async fetchUsers({ commit, state }, payload) {
       try {
         const userData = payload;
+
+        console.log("userData: ", userData);
+
         const response = await axios.get(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/users"
         );
@@ -1336,7 +1331,6 @@ export default createStore({
         commit("setUsers", { users, userData });
 
         const currentUserChats = state.currentUser.activeChats;
-
 
         const responseChats = await axios.post(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/chats",
@@ -1383,7 +1377,7 @@ export default createStore({
           const user = getters.getUserById(userId);
           console.log(user);
           user.token = token;
-          commit("auth_success", user)
+          commit("auth_success", user);
           return { success: true, userId };
         } else {
           commit("auth_error");

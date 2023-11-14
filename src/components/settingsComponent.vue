@@ -1,4 +1,4 @@
-//settingsComponent.vue
+<!-- //settingsComponent.vue
 <template>
   <div class="profile-page">
     <div class="background-image"></div>
@@ -8,10 +8,10 @@
       </button>
 
       <div class="dropdown" v-if="showDropdown">
-        <!-- Dropdown-Inhalt hier -->
+  
         <ul class="dropdown-menu">
 
-          <!--Bookmarks-->
+
           <li>
             <div class="bookmark-container">
 
@@ -77,7 +77,7 @@
   <div class="profile-content">
     <div>
       <h5>{{ currentUser?.name }}</h5>
-      <!-- Umschalten zwischen Anzeige und Bearbeitungsmodus -->
+     
       <div class="edit-mode" v-if="!editMode">
         <p>{{ currentUser?.bio }}</p>
         <font-awesome-icon :icon="['fas', 'pencil-alt']" class="icon edit-icon" @click="enableEditMode"/>
@@ -99,7 +99,7 @@
       <template #comments>
         <div>
           <div v-for="comment in sortedCommentList" :key="comment.id">
-            <!-- Hier kannst du die Inhalte der procreated Topics anzeigen -->
+           
             <CommentBox :comment="comment" :topic="comment.topicId" :showreply="showreply" :anzeige="false" />
           </div>
 
@@ -107,7 +107,7 @@
       </template>
 
 
-      <!-- Inhalte für den "Replies"-Tab -->
+   
       <template #replies>
         <comment-reply v-for="reply in replySuche.reverse()" :key="reply.id" :reply="reply"
           :topic="reply.topicId"></comment-reply>
@@ -115,7 +115,7 @@
 
       </template>
 
-      <!-- Inhalte für den "Likes"-Tab -->
+   
               <template #votes>
                   <div>
                       <div v-for="topic in TopicUpVotes" :key="topic.id" :id="topic.id">
@@ -726,4 +726,4 @@ img {
   border-bottom: #ccc 1px solid;
   margin-top: 10px;
 }
-</style>
+</style> -->

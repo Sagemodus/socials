@@ -5,7 +5,8 @@
 
     <div class="sortieren">
       <select id="sort-select" v-model="sortBy"  >
-        <option value="recent">Recent</option>
+        <option hidden disabled selected>Filter...</option> 
+        <option  value="recent">Recent</option>
         <option value="popular">Popular</option>
       </select>
     </div>
@@ -389,6 +390,7 @@ select#sort-select {
     border: black;
       outline: none;
       background-color: transparent;
+      cursor: pointer;
 }
 input[type="text"] {
     outline: none;

@@ -23,8 +23,12 @@ import { iconColor } from "../src/components/farben";
           await store.dispatch("fetchTopics");
         await store.dispatch("fetchUsers", userData);
         }
+        else {
+          
         await store.dispatch("fetchUsers");
         await store.dispatch("fetchTopics");
+        }
+
       } catch (error) {
         console.error("Error fetching data:", error);
       }

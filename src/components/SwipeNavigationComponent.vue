@@ -3,7 +3,7 @@
     <div class="tabs" ref="tabsContainer">
       <div class="tabs-inner">
         <div v-for="tab in tabs" :key="tab.path" class="tab" @click="switchTab(tab.path)"
-          :class="{ active: activeTab === tab.path }">
+          :class="{ active: activeTab1 === tab.path }">
           {{ tab.name }}
         </div>
       </div>
@@ -33,13 +33,13 @@ export default {
     ]);
 
     // Versuche, den aktiven Tab aus dem Local Storage zu laden oder setze den ersten Tab als Standard
-    const activeTab = shallowRef(sessionStorage.getItem('activeTab') || tabs[0].path);
+    const activeTab1 = shallowRef(sessionStorage.getItem('activeTab1') || tabs[0].path);
 
     const tabIndexes = tabs.reduce((acc, tab, i) => ({ ...acc, [tab.path]: i }), {});
 
     const switchTab = (path) => {
-      activeTab.value = path;
-      sessionStorage.setItem('activeTab', path); // Speichere den aktiven Tab im Local Storage
+      activeTab1.value = path;
+      sessionStorage.setItem('activeTab1', path); // Speichere den aktiven Tab im Local Storage
       props.onTabSwitch(path);
     };
 
@@ -49,12 +49,12 @@ export default {
     };
 
     const nextTab = () => {
-      const currentIndex = tabIndexes[activeTab.value];
+      const currentIndex = tabIndexes[activeTab1.value];
       switchToTabByIndex(currentIndex + 1);
     };
 
     const previousTab = () => {
-      const currentIndex = tabIndexes[activeTab.value];
+      const currentIndex = tabIndexes[activeTab1.value];
       switchToTabByIndex(currentIndex - 1);
     };
 
@@ -70,7 +70,7 @@ export default {
 
     });
 
-    return { activeTab, nextTab, previousTab, switchTab, tabs };
+    return { activeTab1, nextTab, previousTab, switchTab, tabs };
   },
 };
 </script>

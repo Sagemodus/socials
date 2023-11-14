@@ -315,10 +315,8 @@ const userSockets = {}; // Objekt zur Speicherung der Zuordnung zwischen Benutze
 const onlineUsers = [];
 
 io.on("connection", (socket) => {
-  
-
   socket.on("register", (userId) => {
-    console.log("Ein Benutzer ist verbunden:",userId +" ", socket.id);
+    console.log("Ein Benutzer ist verbunden:", userId + " ", socket.id);
     if (!userSockets[userId]) {
       userSockets[userId] = [];
     }
@@ -373,7 +371,7 @@ io.on("connection", (socket) => {
         if (recipientSocketId) {
           console.log("Socketid", recipientSocketId, userSockets);
           io.to(recipientSocketId).emit("message", message);
-        } 
+        }
       } else {
         console.log("Chat nicht gefunden");
       }
@@ -405,35 +403,29 @@ io.on("connection", (socket) => {
     }
   });
 
-
   socket.on("update-request", async (chatId) => {
     const chat = await Chat.findOne({ chatId: chatId });
-    
-     let recipientId = chat.participants.find((id) => id == chat.startedBy);
-        console.log("mrk", recipientId);
-        if (!recipientId) {
-          console.log("Nachricht an sich selbst gesendet.");
-          recipientId = chat.participants[0];
-        }
 
-        console.log(recipientId, " :id");
-        console.log(userSockets, " usersockets");
-        // Senden Sie die Nachricht nur an den gewünschten Benutzer
-        const recipientSocketId = userSockets[recipientId];
-        console.log("versueche", recipientSocketId);
+    let recipientId = chat.participants.find((id) => id == chat.startedBy);
+    console.log("mrk", recipientId);
+    if (!recipientId) {
+      console.log("Nachricht an sich selbst gesendet.");
+      recipientId = chat.participants[0];
+    }
 
-        if (recipientSocketId) {
-          console.log("Socketidmokömk,", recipientSocketId, userSockets);
-          io.to(recipientSocketId).emit("request", chatId);
-        } 
-      else {
-        console.log("Chat nicht gefunden");
-      }
+    console.log(recipientId, " :id");
+    console.log(userSockets, " usersockets");
+    // Senden Sie die Nachricht nur an den gewünschten Benutzer
+    const recipientSocketId = userSockets[recipientId];
+    console.log("versueche", recipientSocketId);
 
+    if (recipientSocketId) {
+      console.log("Socketidmokömk,", recipientSocketId, userSockets);
+      io.to(recipientSocketId).emit("request", chatId);
+    } else {
+      console.log("Chat nicht gefunden");
+    }
   });
-
-
-
 });
 app.get("/api/online-status", (req, res) => {
   res.json(onlineUsers);
@@ -445,7 +437,7 @@ server.listen(port, () => {
 app.post("/api/createchat", async (req, res) => {
   const { currentUserId, propuserId } = req.body;
   console.log("kolleg: ", req.body);
-    console.log(" propuserId: ", propuserId);
+  console.log(" propuserId: ", propuserId);
   console.log(" currentUserId: ", currentUserId);
   try {
     // Find entity based on payloadVariable2
@@ -461,19 +453,18 @@ app.post("/api/createchat", async (req, res) => {
     }
     console.log(currentUserId, propuserId);
     // Check if a chat already exists between these two users
-const existingChat = await Chat.findOne({
-  participants: { $all: [currentUserId, propuserId] },
-});
+    const existingChat = await Chat.findOne({
+      participants: { $all: [currentUserId, propuserId] },
+    });
 
-if (existingChat && existingChat.isPending) {
-  console.log(existingChat);
-  return res.status(400).send({
-    success: false,
-    message: "Ein Chat zwischen diesen Benutzern existiert bereits.",
-    chat: existingChat,
-  });
-}
-
+    if (existingChat && existingChat.isPending) {
+      console.log(existingChat);
+      return res.status(400).send({
+        success: false,
+        message: "Ein Chat zwischen diesen Benutzern existiert bereits.",
+        chat: existingChat,
+      });
+    }
 
     const chat = {
       participants: [currentUserId, propuserId],
@@ -524,6 +515,7 @@ app.post("/api/updateAllRead", async (req, res) => {
       });
     }
 
+    console.log("kurensi ", user.notifications);
     // Durchlaufen Sie das user.notifications Array
     user.notifications.forEach((notification) => {
       // Wenn die messageId der Benachrichtigung im readArray enthalten ist, setzen Sie read auf true
@@ -852,7 +844,9 @@ app.post("/send-notification", async (req, res) => {
     }
 
     message2.data.objekt = JSON.stringify(notification);
-console.log("alter: ", !message2.tokens || message2.tokens.length === 0);
+    console.log("alter: ", !message2.tokens || message2.tokens.length === 0);
+
+    console.log("alter2: ", message2.tokens);
     if (!message2.tokens || message2.tokens.length === 0) {
       console.warn(
         "Warnung: Der Benutzer hat die Benachrichtigung nicht autorisiert.1"
@@ -860,6 +854,14 @@ console.log("alter: ", !message2.tokens || message2.tokens.length === 0);
       // Optional: Senden Sie eine Antwort zurück, dass kein Token vorhanden ist, aber als Warnung, nicht als Fehler
       return res.status(200).json({
         warning: "Der Benutzer hat die Benachrichtigung nicht autorisiert.2",
+      });
+    } else if (userId == zielId) {
+      console.warn(
+        "Warnung: Der Benutzer sendet eine Nachricht an sich selbst"
+      );
+      // Optional: Senden Sie eine Antwort zurück, dass kein Token vorhanden ist, aber als Warnung, nicht als Fehler
+      return res.status(200).json({
+        warning: "Der Benutzer sendet eine Nachricht an sich selbst",
       });
     } else {
       console.log("moruk");

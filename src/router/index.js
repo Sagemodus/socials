@@ -25,11 +25,10 @@ import bookmarkSaves from '../components/profilebutton/bookmarkSaves.vue';
 import profileAndereUser from '../components/profilebutton/profileAndereUser.vue';
 
 
-/* import PasswordForgottenComponent from '../components/PasswordForgottenComponent.vue';
-import ResetPassword from '../components/ResetPasswordComponent.vue' */
-/* 
-import store from '../store/store.js'
-*/
+ import PasswordForgottenComponent from '../components/PasswordForgottenComponent.vue';
+import ResetPassword from '../components/ResetPasswordComponent.vue';
+
+
 
 
 import store from '../store/store.js'; // Import your Vuex store

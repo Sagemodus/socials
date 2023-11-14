@@ -16,11 +16,11 @@
 </template>
 
 <script>
-
-// eslint-disable-next-line no-unused-vars
-import { computed, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import notificationComponent from "../components/notificationsComponent.vue";
+
+
 export default {
   components: {
     notificationComponent,
@@ -28,38 +28,28 @@ export default {
   setup() {
     const store = useStore();
     const currentUser = computed(() => store.state.currentUser);
-    const currentUserId = currentUser.value.id;
-    const notificationCurrenUserArray = currentUser.value.notifications.reverse();
-    const readArray = [];
+    const notificationCurrenUserArray = ref([]); // Verwendung von ref, um eine reaktive Referenz zu erstellen
 
+    onMounted(async () => {
+      if (currentUser.value && currentUser.value.notifications) {
+        notificationCurrenUserArray.value = [...currentUser.value.notifications].reverse(); // Kopie des Arrays erstellen und umkehren
+      }
 
+      const readArray = notificationCurrenUserArray.value.filter(notification => !notification.read).map(notification => notification.messageId);
+      console.log(readArray, " : array");
 
-
-    notificationCurrenUserArray.forEach(element => {
-      if (!element.read) { // Überprüfen, ob read false ist
-        readArray.push(element.messageId);
+      if (readArray.length > 0) {
+        store.dispatch("readAllUnreadNotifications", { readArray, currentUserId: currentUser.value.id });
       }
     });
-console.log(readArray, " : array")
 
-    if (readArray) {
-      store.dispatch("readAllUnreadNotifications", { readArray, currentUserId  })
-    }
-
-
- /*    const updateRead = (messageId) => {    // wird verwendet um ein einzelnes element al gelesen zu deklarieren
-      store.dispatch("updateRead", { messageId, currentUserId })
-     
-    } */
-    // Gib die Variablen und Funktionen zurück, die im Template verwendet werden sollen
     return {
-        notificationCurrenUserArray,
+      notificationCurrenUserArray,
       currentUser,
-      readArray,
-/*       updateRead */
     };
   },
 };
+
 </script>
 
 <style scoped>

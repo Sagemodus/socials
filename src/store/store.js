@@ -1359,9 +1359,15 @@ export default createStore({
 
     logout({ commit }) {
       console.log("logout");
-      router.push("/login");
-      commit("updateCurrentUser", { token: null });
-      commit("auth_logout");
+      router.push("/login").then(() => { 
+                    setTimeout(() => {
+     commit("updateCurrentUser", { token: null });
+     commit("auth_logout");
+                    }, 1500);
+
+
+      })
+
     },
 
     async login({ commit, getters, dispatch }, user) {

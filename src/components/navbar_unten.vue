@@ -44,7 +44,7 @@ import { fas } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { iconColor } from './farben';
 import { useStore } from 'vuex'; // Importiere das useStore-Hook
-import { computed,ref, watchEffect } from 'vue'; /// Importiere das useStore-Hook
+import { computed, ref, watchEffect } from 'vue'; /// Importiere das useStore-Hook
 
 library.add(fas);
 
@@ -55,14 +55,12 @@ export default {
   setup() {
     const store = useStore(); // Erhalte Zugriff auf den Vuex-Store
 
-    const currentUser = computed(() => store.state.currentUser);
-
-    const currentUserId = computed(() => store.state.currentUser.id);
+    const currentUser = computed(() => store.state.currentUser || {}); // Stellen Sie sicher, dass currentUser ein leeres Objekt ist, wenn nicht vorhanden
+    const currentUserId = computed(() => currentUser.value.id || null); // Stellen Sie sicher, dass currentUserId null ist, wenn nicht vorhanden
     const hasUnreadNotifications = ref(false);
     const hasUnreadChats = ref(false);
 
     watchEffect(() => {
-
       if (store.state.chats) {
         hasUnreadChats.value = store.state.chats.some(
           (chat) => !chat.read
@@ -70,9 +68,6 @@ export default {
       } else {
         hasUnreadChats.value = false;
       }
-
-
-
 
       if (currentUser.value.notifications) {
         hasUnreadNotifications.value = currentUser.value.notifications.some(
@@ -82,6 +77,7 @@ export default {
         hasUnreadNotifications.value = false;
       }
     });
+
     return {
       iconColor,
       currentUser, // Mache den currentUser verfügbar

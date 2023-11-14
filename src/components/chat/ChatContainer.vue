@@ -49,7 +49,7 @@ export default {
     created() {
 
 
-        SocketService.onMessage((message) => {
+        SocketService.onMessage(     (message) => {
             console.log("kure", this.store.state.currentUser)
             console.log("on message jeztzt", message)
 

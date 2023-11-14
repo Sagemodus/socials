@@ -33,7 +33,7 @@
         <button @click="acceptRequest">accept</button>
         <button>reject</button>
     </div>
-    <div v-if="chat.isPending && isStarter">
+    <div v-if="chat.isPending && isStarter && chat.messages.length == 1">
         <p>the invitation must first be accepted before you can write further messages </p>
     </div>
 </template>
@@ -47,6 +47,8 @@ import { watch, ref, nextTick } from 'vue';
 import { onMounted, onBeforeUnmount } from 'vue';
 import { iconColor } from '../farben';
 import InfoModal from './InfoModal';
+import SocketService from "../../services/SocketService";
+
 
 export default {
     props: ['messages', 'chat'],
@@ -93,7 +95,12 @@ export default {
         };
         const acceptRequest = () => {
             try {
-                store.dispatch("acceptRequest", props.chat.chatId)
+                store.dispatch("acceptRequest", props.chat.chatId).then((response) => {
+
+                    console.log("response :",response)
+
+                    SocketService.updateRequest(props.chat.chatId)
+                })
             } catch (error) {
                 console.error("fehler beim weiterleiten zur action", error)
             }
@@ -129,6 +136,7 @@ export default {
             }
 
         }
+           
 
         watch(() => props.messages, () => {
             nextTick(() => {
@@ -190,7 +198,19 @@ export default {
         this.$nextTick(() => {
             window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
         });
-    }
+    },
+     created() {
+
+
+         SocketService.onRequestupdate(       () => {
+              /* eslint-disable */
+            this.chat.isPending = false;
+            /* eslint-disable */
+
+        });
+
+
+    },
 };
 </script>
 
@@ -217,7 +237,6 @@ h2 {
     justify-content: center;
 }
 
-.info-button {}
 
 .arrow {
     height: 18px;

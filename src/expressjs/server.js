@@ -315,9 +315,10 @@ const userSockets = {}; // Objekt zur Speicherung der Zuordnung zwischen Benutze
 const onlineUsers = [];
 
 io.on("connection", (socket) => {
-  console.log("Ein Benutzer ist verbunden:", socket.id);
+  
 
   socket.on("register", (userId) => {
+    console.log("Ein Benutzer ist verbunden:",userId +" ", socket.id);
     if (!userSockets[userId]) {
       userSockets[userId] = [];
     }
@@ -403,6 +404,36 @@ io.on("connection", (socket) => {
       }
     }
   });
+
+
+  socket.on("update-request", async (chatId) => {
+    const chat = await Chat.findOne({ chatId: chatId });
+    
+     let recipientId = chat.participants.find((id) => id == chat.startedBy);
+        console.log("mrk", recipientId);
+        if (!recipientId) {
+          console.log("Nachricht an sich selbst gesendet.");
+          recipientId = chat.participants[0];
+        }
+
+        console.log(recipientId, " :id");
+        console.log(userSockets, " usersockets");
+        // Senden Sie die Nachricht nur an den gewünschten Benutzer
+        const recipientSocketId = userSockets[recipientId];
+        console.log("versueche", recipientSocketId);
+
+        if (recipientSocketId) {
+          console.log("Socketidmokömk,", recipientSocketId, userSockets);
+          io.to(recipientSocketId).emit("request", chatId);
+        } 
+      else {
+        console.log("Chat nicht gefunden");
+      }
+
+  });
+
+
+
 });
 app.get("/api/online-status", (req, res) => {
   res.json(onlineUsers);
@@ -862,7 +893,6 @@ console.log("alter: ", !message2.tokens || message2.tokens.length === 0);
 
 app.post("/api/updateBio", async (req, res) => {
   const { editableBiOhneValue, userId } = req.body;
-  console.log("amk");
   try {
     const user = await User.findOne({ id: userId });
 

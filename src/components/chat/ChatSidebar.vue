@@ -42,7 +42,7 @@
             </div>
         </div>
         <div class="request-button"  v-if="!openRequests">
-         <button class="anfrage-button" @click="toggleOpenRequests">Requests</button>
+         <button class="anfrage-button" @click="toggleOpenRequests">{{ pendingChatsLength}} Requests</button>
 
         </div>
         <div v-if="openRequests">
@@ -100,6 +100,10 @@ export default {
 
 
         const pendingChats = props.chats.filter(chat => chat.isPending && chat.startedBy != currentUser.id);
+
+        const pendingChatsLength = computed(() => {
+           return pendingChats.length
+        })
 
         const chatsFiltered = props.chats.filter(chat => !chat.isPending || chat.isPending && chat.startedBy == currentUser.id);
         const selectedUser = (user) => {
@@ -175,7 +179,8 @@ export default {
             pendingChats,
             openRequests,
             toggleOpenRequests,
-            chatsFiltered
+            chatsFiltered,
+            pendingChatsLength
         };
     },
     data() {

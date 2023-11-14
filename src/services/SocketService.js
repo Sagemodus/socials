@@ -9,25 +9,44 @@ const SocketService = {
     this.socket = io("https://c964nzv2-3000.euw.devtunnels.ms");
 
     this.socket.on("connect", () => {
+      console.log("register")
       this.socket.emit("register", userId); // Senden Sie die userId an den Server, sobald Sie verbunden sind
     });
   },
-/*   updateFrontend(message) {
+  /*   updateFrontend(message) {
     store.commit("ADD_MESSAGE", message);
   }, */
 
+  updateRequest(chatId) {
+    console.log("amk update de shit")
+      try {
+        this.socket.emit("update-request", chatId);
+
+      } catch (error) {
+        console.error(error);
+      }
+},
+
+  onRequestupdate(callback) {
+    
+    this.socket.on("request", () => {
+
+      callback();
+
+
+
+    });
+  },
+
   onMessage(callback) {
-    console.log("kuree");
     this.socket.on("message", (message) => {
       console.log("kuree", message);
       try {
         if (message.senderId == store.state.currentUser) {
-          console.log("an sich serlber")
+          console.log("an sich serlber");
         } else {
-        callback(message);
+          callback(message);
         }
-
-  
       } catch (error) {
         console.error("Fehler beim fetchen des chats: ", error);
       }
@@ -39,12 +58,10 @@ const SocketService = {
     try {
       this.socket.emit("send-message", message);
       if (store.state.currentUser.id == message.zielId) {
-        console.log("zurück ta qi rob")
+        console.log("zurück ta qi rob");
+      } else {
+        store.commit("ADD_MESSAGE", message);
       }
-      else {
-              store.commit("ADD_MESSAGE", message); 
-      }
-
     } catch (error) {
       console.error(error);
     }

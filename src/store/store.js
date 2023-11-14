@@ -243,6 +243,7 @@ export default createStore({
       state.currentUser = user;
       localStorage.setItem("user", JSON.stringify(user));
       axios.defaults.headers.common["Authorization"] = `Bearer ${user.token}`;
+      console.log("aaanoken socket")
              SocketService.init(user.id);
     },
 
@@ -1328,15 +1329,14 @@ export default createStore({
     async fetchUsers({ commit, state }, payload) {
       try {
         const userData = payload;
-        console.log("currentuserId: ", userData);
         const response = await axios.get(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/users"
         );
         const users = response.data;
         commit("setUsers", { users, userData });
-        console.log(" response.data ", response.data);
+
         const currentUserChats = state.currentUser.activeChats;
-        console.log("amj: ", state.currentUser);
+
 
         const responseChats = await axios.post(
           "https://c964nzv2-3000.euw.devtunnels.ms/api/chats",

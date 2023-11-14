@@ -1,6 +1,6 @@
 <template>
     <div class="kommentieren">
-        <div class="send-message-form" v-if="!chat.isPending">
+        <div class="send-message-form" v-if="!chat.isPending || chat.isPending && chat.messages.length == 0">
             <textarea v-model="messageContent" ref="messageTextarea" @keyup.enter="sendMessage"
                 placeholder="Nachricht eingeben..."></textarea>
             <button @click="sendMessage"> <font-awesome-icon :icon="['fas', 'paper-plane']" /></button>

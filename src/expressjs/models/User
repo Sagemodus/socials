@@ -27,8 +27,6 @@ const UserShema =
         tweets: Array,
         fcmTokens: [String],
         activeChats: Array,
-        hashedPassword: String,
-        resetPasswordToken: String,
         resetPasswordExpires: Date,
         blocklist: [Number],
         isAdmin:Boolean,

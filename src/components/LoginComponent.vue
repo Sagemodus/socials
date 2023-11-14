@@ -16,7 +16,7 @@
                 name="email"
                 v-model="email"
                 class="form-control"
-              >
+                >
             </div>
             <div class="form-group">
               <label for="password">Password</label>
@@ -32,6 +32,7 @@
             <input type="submit" class="btn btn-primary" value="Login">
             &nbsp;&nbsp;&nbsp;&nbsp;
             <router-link to="/register" class="card-link">Need and account?</router-link>
+            <router-link to="/resetPassword" class="card-link">Forgot your password?</router-link>
           </form>
         </div>
       </div>
